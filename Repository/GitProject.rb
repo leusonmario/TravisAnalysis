@@ -61,7 +61,7 @@ class GitProject
 		return @mergeScenarios.length
 	end
 
-	def getForksList
+	def getForksList()
 		Dir.chdir @path
 		Octokit.auto_paginate = true
 		client = Octokit::Client.new :access_token => ENV["05a950d0fdd651dc724c636ebf668fd18d1ef31b"]
@@ -69,10 +69,9 @@ class GitProject
 		forksProject.each do |fork|
 			begin  
 				raise buildProjeto = Travis::Repository.find(fork.html_url)
-					@forksList.push(fork.html_url)
-					#newName = fork.html_url.partition('github.com/').last.gsub('/','')
-					#clone = %x(git clone #{fork.html_url} #{newName})
-					#puts clone
+					newName = fork.html_url.partition('github.com/').last.gsub('/','')
+					clone = %x(git clone #{fork.html_url} #{newName})
+					puts clone
 				rescue Exception => e  
 				  	puts "NO TRAVIS PROJECT"
 			end
