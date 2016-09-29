@@ -17,7 +17,8 @@ class GitProject
 	def initialize(pathProject)
 		@path = pathProject
 		@projetcName = findProjectName()
-		@mergeScenarios = []
+		@mergeScenarios = Array.new
+		getMergesScenariosByProject()
 		@forksList = []
 	end
 
@@ -50,9 +51,10 @@ class GitProject
 	end
 
 	def getMergesScenariosByProject()
-		mergeScenarios = %x(git log --pretty=format:'%H' --merges)
-		mergeScenarios.each_line do |mergeScenario|
-			@mergeScenarios.push(mergeScenario.gsub('commit ',''))
+		@mergeScenarios = Array.new
+		merges = %x(git log --pretty=format:'%H' --merges)
+		merges.each_line do |mergeScenario|
+			@mergeScenarios.push(mergeScenario.gsub('\\n',''))
 		end
 	end
 
@@ -64,16 +66,21 @@ class GitProject
 	def getForksList()
 		Dir.chdir @path
 		Octokit.auto_paginate = true
-		client = Octokit::Client.new :access_token => ENV["05a950d0fdd651dc724c636ebf668fd18d1ef31b"]
-		forksProject = client.forks(@projectName)
+
+		client = Octokit::Client.new \
+	  		:login    => 'leusonmario',
+	  		:password => '<password>'
+		
+		forksProject = client.forks(project)
 		forksProject.each do |fork|
 			begin  
-				raise buildProjeto = Travis::Repository.find(fork.html_url)
-					newName = fork.html_url.partition('github.com/').last.gsub('/','')
-					clone = %x(git clone #{fork.html_url} #{newName})
-					puts clone
+				puts fork.html_url
+				buildProjeto = Travis::Repository.find(fork.html_url.gsub('https://github.com/','')) 
+				newName = fork.html_url.partition('github.com/').last.gsub('/','-')
+				clone = %x(git clone #{fork.html_url} #{newName})
+				puts clone
 				rescue Exception => e  
-				  	puts "NO TRAVIS PROJECT"
+				 	puts "NO TRAVIS PROJECT"
 			end
 		end
 	end
@@ -87,4 +94,24 @@ class GitProject
 		Dir.chdir @path
 		update = %x(git pull origin)
 	end
+
+	def conflictScenario(parentsMerge, projectBuilds, build)		
+		parentOne = false
+		parentTwo = false
+		
+		projectBuilds.each_build do |mergeBuild|
+			if(parentsMerge[0].include?(mergeBuild.commit.sha) and mergeBuild.state=='passed')
+				parentOne = true
+			elsif (parentsMerge[1].include?(mergeBuild.commit.sha) and mergeBuild.state=='passed')
+				parentTwo = true
+			end
+
+			if (parentOne and parentTwo)
+				return true
+			end
+		end	
+		
+		return false
+	end
+
 end

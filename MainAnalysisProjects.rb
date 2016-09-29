@@ -1,31 +1,28 @@
 #!/usr/bin/env ruby
 
-require 'travis'
 require 'csv'
 require 'fileutils'
 require 'find'
 require './Repository/GitProject.rb'
+require './Repository/ProjectInfo.rb'
 require './Travis/BuildTravis.rb'
 
 class MainAnalysisProjects
 
 	def initialize(pathAnalysis)
 		@pathAnalysis = pathAnalysis
-		@pathProjects = Array.new 
-		getPathProjects()
-		result = creatingResultsDirectories()
-		@projectNames = Array.new 
-		findProjectNames()
-		@pathAllResults = result[0]
-		@pathResultByProject = result[1]
+		@pathAllResults = ""
+		@pathResultByProject = ""
+		@pathConflicstAnalysis = ""
+		@pathMergeScenariosAnalysis = ""
+		@pathConflictsAnalysis = ""
+		creatingResultsDirectories()
+		@projectsInfo = ProjectInfo.new(pathAnalysis)
+		travisAnalysis()
 	end
 
 	def getPathAnalysis()
 		@pathAnalysis
-	end
-
-	def getPathProjects()
-		@pathProjects
 	end
 
 	def getPathAllResults()
@@ -36,54 +33,107 @@ class MainAnalysisProjects
 		@pathResultByProject
 	end
 
-	def getProjectNames()
-		@projectNames
+	def getPathConflicstAnalysis()
+		@pathConflicstAnalysis
 	end
 
-	def findProjectNames()
-		@pathProjects.each do |path|
-			gitProject = GitProject.new(path)
-			@projectNames.push(gitProject.getProjectName)
-		end
-		@projectNames.sort_by!{ |e| e.downcase }
-
+	def getPathMergeScenariosAnalysis()
+		@pathMergeScenariosAnalysis
 	end
 
-	def getPathProjects()
-		Find.find(@pathAnalysis) do |path|
-	  		@pathProjects << path if path =~ /.*\.travis.yml$/
-		end
-		@pathProjects.sort_by!{ |e| e.downcase }
+	def getPathConflictsCauses()
+		@pathConflictsCauses
+	end
+
+	def travisAnalysis()
+		puts "*************************************"
+		puts "########## TRAVIS ANALYSIS ##########"
+		puts "-------------------------------------"
+		puts "RootPath: #{@pathAnalysis}"
+		puts "-------------------------------------"
+		puts "-------------------------------------"
+
 	end
 
 	def creatingResultsDirectories()
 		FileUtils::mkdir_p 'ResultsAll/ResultsByProject'
+		FileUtils::mkdir_p 'ResultsAll/ConflictsAnalysis'
+		FileUtils::mkdir_p 'ResultsAll/MergeScenariosAnalysis'
+		FileUtils::mkdir_p 'ResultsAll/ConflictsCauses'
 		Dir.chdir "ResultsAll"
-		pathAll = Dir.pwd
+		@pathAllResults = Dir.pwd
 		Dir.chdir "ResultsByProject"
-		pathResultBy = Dir.pwd
-		return pathAll, pathResultBy
+		@pathResultByProject = Dir.pwd
+		Dir.chdir @pathAllResults
+		Dir.chdir "ConflictsAnalysis"
+		@pathConflicstAnalysis = Dir.pwd
+		Dir.chdir @pathAllResults
+		Dir.chdir "MergeScenariosAnalysis"
+		@pathMergeScenariosAnalysis = Dir.pwd
+		Dir.chdir @pathAllResults
+		Dir.chdir "ConflictsCauses"
+		@pathConflictsCauses = Dir.pwd
+		
 	end
 
 	def runAnalysis()
 		Dir.chdir getPathAllResults
-		CSV.open("resultsAllFinalTest.csv", "wb") do |csv|
+		CSV.open("resultsAllFinal.csv", "wb") do |csv|
 			csv << ["Project", "TotalBuildPush", "TotalPushPassed", "TotalPushErrored", "TotalPushFailed", "TotalPushCanceled", 
 				"TotalBuildPull", "TotalPullPassed", "TotalPullErrored", "TotalPullFailed", "TotalPullCanceled"]
 		end
+
+		Dir.chdir getPathMergeScenariosAnalysis
+		CSV.open("TotalMergeScenariosFinal.csv", "wb") do |csv|
+			csv << ["Project", "TotalMS", "TotalMSBuilded", "AllBuilds", "TotalRepeatedMSB", "TotalMSPassed", "TotalMSErrored", "TotalMSFailed", "TotalMSCanceled"]
+		end
+
+		Dir.chdir getPathConflictsCauses
+		CSV.open("CausesBuildConflicts.csv", "wb") do |csv|
+			csv << ["ProjectName",	"Total", "NO FOUND SYMBOL", "GIT PROBLEM", "REMOTE ERROR", "COMPILER ERROR", "PERMISSION", "ANOTHER ERROR"]
+		end
+
+		CSV.open("CausesTestConflicts.csv", "wb") do |csv|
+			csv << ["ProjectName",	"Total", "FAILED", "GIT PROBLEM", "REMOTE ERROR", "PERMISSION", "ANOTHER ERROR"]
+		end
+
+		Dir.chdir getPathConflicstAnalysis
+		CSV.open("ConflictsAnalysisFinal.csv", "w") do |csv|
+ 			csv << ["ProjectName", "MergeScenarios", "PushesNotBuilt", "TotalRepeat", "TotalBuiltPushes","PushesPassed", "PassedTravis", "PassedTravisConf", "PassedConfig", 
+ 				"PassedConfigConf", "PassedSource", "PassedSourceConf", "PassedAll", "PassedAllConf", "PushesErrored", "ErroredTravis", "ErroredTravisConf", "ErroredConfig", "ErroredConfigConf", "ErroredSource", "ErroredSourceConf", 
+ 				"ErroredAll", "ErroredAllConf", "PushesFailed", "FailedTravis", "FailedTravisConf", "FailedConfig", "FailedConfigConf","FailedSource", "FailedSourceConf", "FailedAll", "FailedAllConf", "PushesCanceled", "CanceledTravis", "CanceledTravisConf", "CanceledConfig", 
+ 				"CanceledConfigConf", "CanceledSource", "CanceledSourceConf", "CanceledAll", "CanceledAllConf"]
+ 		end
 		
-		@projectNames.each do |projectName|
-			buildTravis = BuildTravis.new()
-			projectAnalysis = buildTravis.getStatusBuildsProject(projectName, @pathResultByProject)
+		index = 0
+		@projectsInfo.getProjectNames().each do |projectName|
+			puts "Project: #{projectName}"
+			buildTravis = BuildTravis.new(projectName, @projectsInfo.getPathProjects()[index])
+			projectAnalysis = buildTravis.getStatusBuildsProject(projectName, getPathResultByProject, getPathConflicstAnalysis, getPathMergeScenariosAnalysis, getPathConflictsCauses)
 			Dir.chdir getPathAllResults
-			CSV.open("resultsAllFinalTest.csv", "a+") do |csv|
+			CSV.open("resultsAllFinal.csv", "a+") do |csv|
 				csv << [projectAnalysis[0], projectAnalysis[1], projectAnalysis[2], projectAnalysis[3], projectAnalysis[4], projectAnalysis[5], 
 				projectAnalysis[6], projectAnalysis[7], projectAnalysis[8], projectAnalysis[9], projectAnalysis[10]]
 			end
+			index += 1
 		end
+		puts "************* FINISH :) *************"
 	end
-
 end
 
-project = MainAnalysisProjects.new("/home/leuson/TesteFork")
+parameters = []
+File.open("properties", "r") do |text|
+	indexLine = 0
+	text.each_line do |line|
+		parameters[indexLine] = line[/\<(.*?)\>/, 1]
+		indexLine += 1
+	end
+end
+
+actualPath = Dir.pwd
+project = MainAnalysisProjects.new(parameters[0])
 project.runAnalysis()
+
+Dir.chdir actualPath
+Dir.chdir "R"
+%x(Rscript r-analysis.r)
