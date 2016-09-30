@@ -48,7 +48,7 @@ class BuildTravis
 		buildPullErrored = 0
 		buildPullFailed = 0
 		buildPullCanceled = 0
-		type = ""
+		typeBuild = ""
 		
 		builtMergeScenarios = Array.new
 		totalPushesNoBuilt = 0
@@ -83,7 +83,7 @@ class BuildTravis
 				status = confBuild.getBuildStatus(build)
 				if build.pull_request
 					buildTotalPull += 1
-					type = "pull"
+					typeBuild = "pull"
 					if (status == "passed")
 						buildPullPassed += 1
 					elsif (status == "errored")
@@ -95,7 +95,7 @@ class BuildTravis
 					end
 				else
 					buildTotalPush += 1
-					type = "push"
+					typeBuild = "push"
 					if (status == "passed")
 						buildPushPassed += 1
 					elsif (status == "errored")
@@ -151,7 +151,7 @@ class BuildTravis
 
  			Dir.chdir pathResultByProject
 			CSV.open(projectName.partition('/').last+"Final.csv", "a+") do |csv|
-				csv << [build.state, type, build.commit.sha, build.id]
+				csv << [build.state, typeBuild, build.commit.sha, build.id]
 			end
 		end
 		

@@ -69,7 +69,7 @@ class ConflictCategoryErrored
 					build.jobs[indexJob].log.body do |part|
 						if (part[/#{stringSymbol}[\n]*(.*)[\n]*(.*)/] || part[/(.*)#{stringDoesNotExist}[\n]*(.*)/])
 							@unvailableSymbol += 1
-						elsif (part[/#{stringBuildFail}\s*([^\n\r]*)\s*([^\n\r]*)\s*([^\n\r]*)failed/] || part[/#{stringTheCommand}("mvn|"\.\/mvnw)+(.*)failed(.*)/])
+						elsif (part[/#{stringTheCommand}("mvn|"\.\/mvnw)+(.*)failed(.*)/])
 							@compilerError += 1
 						elsif (part[/#{stringTheCommand}("git clone |"git checkout)(.*?)failed(.*)[\n]*/])
 							@gitProblem += 1
