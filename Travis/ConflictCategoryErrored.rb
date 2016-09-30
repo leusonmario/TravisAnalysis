@@ -61,6 +61,7 @@ class ConflictCategoryErrored
 		stringStopped = "Your build has been stopped"
 		stringTerminated = "The build has been terminated"
 		stringDoesNotExist = "does not exist"
+		stringTheCommand = "The command "
 
 		indexJob = 0
 		while (indexJob < build.job_ids.size)
