@@ -51,6 +51,7 @@ class GitProject
 	end
 
 	def getMergesScenariosByProject()
+		Dir.chdir getPath().gsub('.travis.yml','')
 		@mergeScenarios = Array.new
 		merges = %x(git log --pretty=format:'%H' --merges)
 		merges.each_line do |mergeScenario|

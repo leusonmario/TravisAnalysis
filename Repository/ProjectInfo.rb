@@ -12,9 +12,7 @@ class ProjectInfo
 	def initialize(pathAnalysis)
 		@pathAnalysis = pathAnalysis
 		@pathProjects = Array.new
-		getPathProjects() 
-		@projectNames = Array.new
-		findProjectNames()
+		findPathProjects() 
 	end
 
 	def getPathAnalysis()
@@ -29,20 +27,12 @@ class ProjectInfo
 		@projectNames
 	end
 
-	def findProjectNames()
-		@pathProjects.each do |path|
-			gitProject = GitProject.new(path)
-			@projectNames.push(gitProject.getProjectName)
-		end
-		@projectNames.sort_by!{ |e| e.downcase }
-
-	end
-
-	def getPathProjects()
+	def findPathProjects()
 		Find.find(@pathAnalysis) do |path|
 	  		@pathProjects << path if path =~ /.*\.travis.yml$/
 		end
 		@pathProjects.sort_by!{ |e| e.downcase }
+
 	end
 
 end

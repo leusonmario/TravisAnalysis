@@ -106,9 +106,11 @@ class MainAnalysisProjects
  		end
 		
 		index = 0
-		@projectsInfo.getProjectNames().each do |projectName|
-			puts "Project: #{projectName}"
-			buildTravis = BuildTravis.new(projectName, @projectsInfo.getPathProjects()[index])
+		@projectsInfo.getPathProjects().each do |pathProject|
+			gitProject = GitProject.new(pathProject)
+			projectName = gitProject.getProjectName()
+			puts "Project [#{index+1}]: #{projectName}"
+			buildTravis = BuildTravis.new(projectName, pathProject)
 			projectAnalysis = buildTravis.getStatusBuildsProject(projectName, getPathResultByProject, getPathConflicstAnalysis, getPathMergeScenariosAnalysis, getPathConflictsCauses)
 			Dir.chdir getPathAllResults
 			CSV.open("resultsAllFinal.csv", "a+") do |csv|
