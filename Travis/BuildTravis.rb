@@ -120,30 +120,24 @@ class BuildTravis
 						result = @gitProject.conflictScenario(mergeCommit, projectBuild, build)
 						if (result)
 							totalPushes += 1
-							type = confBuild.typeConflict(build)
-							if (status == "passed")
-								confBuild.conflictAnalysisCategories(passedConflicts, type, result)
-							elsif (status == "errored")
-								confBuild.conflictAnalysisCategories(erroredConflicts, type, result)
-								confErrored.findConflictCause(build)
-							elsif (status == "failed")
-								confBuild.conflictAnalysisCategories(failedConflicts, type, result)
-								confFailed.findConflictCause(build)
-							else
-								confBuild.conflictAnalysisCategories(canceledConflicts, type, result)
-							end
-						else
+						else (!result)
 							totalPushesNoBuilt+=1		
 						end
-
+						type = confBuild.typeConflict(build)
 						if (status == "passed")
 							totalMSPassed += 1
+							confBuild.conflictAnalysisCategories(passedConflicts, type, result)
 						elsif (status == "errored")
 							totalMSErrored += 1
+							confBuild.conflictAnalysisCategories(erroredConflicts, type, result)
+							confErrored.findConflictCause(build)
 						elsif (status == "failed")
 							totalMSFailed += 1
+							confBuild.conflictAnalysisCategories(failedConflicts, type, result)
+							confFailed.findConflictCause(build)
 						else
 							totalMSCanceled += 1
+							confBuild.conflictAnalysisCategories(canceledConflicts, type, result)
 						end
 					end
 				end
@@ -173,13 +167,15 @@ class BuildTravis
 
 		Dir.chdir pathConflicstAnalysis
 		CSV.open("ConflictsAnalysisFinal.csv", "a+") do |csv|
-			csv << [projectName, @projectMergeScenarios.size, @projectMergeScenarios.size - builtMergeScenarios.size, totalRepeatedBuilds, totalPushesNoBuilt,totalPushes, passedConflicts.getTotalPushes, passedConflicts.getTotalTravis,
-					passedConflicts.getTotalTravisConf, passedConflicts.getTotalConfig, passedConflicts.getTotalConfigConf, passedConflicts.getTotalSource, passedConflicts.getTotalSourceConf,
-					passedConflicts.getTotalAll, passedConflicts.getTotalAllConf, erroredConflicts.getTotalPushes, erroredConflicts.getTotalTravis,erroredConflicts.getTotalTravisConf, 
-					erroredConflicts.getTotalConfig, erroredConflicts.getTotalConfigConf, erroredConflicts.getTotalSource, erroredConflicts.getTotalSourceConf,erroredConflicts.getTotalAll, 
-					erroredConflicts.getTotalAllConf, failedConflicts.getTotalPushes, failedConflicts.getTotalTravis,failedConflicts.getTotalTravisConf, failedConflicts.getTotalConfig, 
-					failedConflicts.getTotalConfigConf, failedConflicts.getTotalSource, failedConflicts.getTotalSourceConf,failedConflicts.getTotalAll, failedConflicts.getTotalAllConf, 
-					canceledConflicts.getTotalPushes, canceledConflicts.getTotalTravis,canceledConflicts.getTotalTravisConf, canceledConflicts.getTotalConfig, canceledConflicts.getTotalConfigConf, 
+			csv << [projectName, @projectMergeScenarios.size, @projectMergeScenarios.size - builtMergeScenarios.size, totalRepeatedBuilds, totalPushesNoBuilt, totalPushes, 
+					passedConflicts.getTotalPushes, passedConflicts.getTotalTravis, passedConflicts.getTotalTravisConf, passedConflicts.getTotalConfig, 
+					passedConflicts.getTotalConfigConf, passedConflicts.getTotalSource, passedConflicts.getTotalSourceConf, passedConflicts.getTotalAll, 
+					passedConflicts.getTotalAllConf, erroredConflicts.getTotalPushes, erroredConflicts.getTotalTravis, erroredConflicts.getTotalTravisConf, 
+					erroredConflicts.getTotalConfig, erroredConflicts.getTotalConfigConf, erroredConflicts.getTotalSource, erroredConflicts.getTotalSourceConf, 
+					erroredConflicts.getTotalAll, erroredConflicts.getTotalAllConf, failedConflicts.getTotalPushes, failedConflicts.getTotalTravis, 
+					failedConflicts.getTotalTravisConf, failedConflicts.getTotalConfig, failedConflicts.getTotalConfigConf, failedConflicts.getTotalSource, 
+					failedConflicts.getTotalSourceConf,failedConflicts.getTotalAll, failedConflicts.getTotalAllConf, canceledConflicts.getTotalPushes, 
+					canceledConflicts.getTotalTravis,canceledConflicts.getTotalTravisConf, canceledConflicts.getTotalConfig, canceledConflicts.getTotalConfigConf, 
 					canceledConflicts.getTotalSource, canceledConflicts.getTotalSourceConf,canceledConflicts.getTotalAll, canceledConflicts.getTotalAllConf]
 		end
 		
