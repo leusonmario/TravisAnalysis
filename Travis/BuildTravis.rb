@@ -157,7 +157,7 @@ class BuildTravis
 		
 		Dir.chdir pathMergeScenariosAnalysis
 		CSV.open("TotalMergeScenariosFinal.csv", "a+") do |csv|
-			csv << [projectName, totalPushesMergeScenarios, builtMergeScenarios.size, totalBuilds, totalRepeatedBuilds, totalMSPassed, totalMSErrored, totalMSFailed, totalMSCanceled]
+			csv << [projectName, @projectMergeScenarios.size, builtMergeScenarios.size, totalBuilds, totalRepeatedBuilds, totalMSPassed, totalMSErrored, totalMSFailed, totalMSCanceled]
 		end
 
 		Dir.chdir pathConflicsCauses
@@ -173,7 +173,7 @@ class BuildTravis
 
 		Dir.chdir pathConflicstAnalysis
 		CSV.open("ConflictsAnalysisFinal.csv", "a+") do |csv|
-			csv << [projectName, totalPushesMergeScenarios, totalPushesNoBuilt, totalRepeatedBuilds, totalPushes, passedConflicts.getTotalPushes, passedConflicts.getTotalTravis,
+			csv << [projectName, @projectMergeScenarios.size, @projectMergeScenarios.size - builtMergeScenarios.size, totalRepeatedBuilds, totalPushesNoBuilt,totalPushes, passedConflicts.getTotalPushes, passedConflicts.getTotalTravis,
 					passedConflicts.getTotalTravisConf, passedConflicts.getTotalConfig, passedConflicts.getTotalConfigConf, passedConflicts.getTotalSource, passedConflicts.getTotalSourceConf,
 					passedConflicts.getTotalAll, passedConflicts.getTotalAllConf, erroredConflicts.getTotalPushes, erroredConflicts.getTotalTravis,erroredConflicts.getTotalTravisConf, 
 					erroredConflicts.getTotalConfig, erroredConflicts.getTotalConfigConf, erroredConflicts.getTotalSource, erroredConflicts.getTotalSourceConf,erroredConflicts.getTotalAll, 

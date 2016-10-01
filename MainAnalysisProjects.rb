@@ -99,7 +99,7 @@ class MainAnalysisProjects
 
 		Dir.chdir getPathConflicstAnalysis
 		CSV.open("ConflictsAnalysisFinal.csv", "w") do |csv|
- 			csv << ["ProjectName", "MergeScenarios", "PushesNotBuilt", "TotalRepeat", "TotalBuiltPushes","PushesPassed", "PassedTravis", "PassedTravisConf", "PassedConfig", 
+ 			csv << ["ProjectName", "MergeScenarios", "PushesNotBuilt", "TotalRepeat", "MSNoParent","TotalBuiltPushes","PushesPassed", "PassedTravis", "PassedTravisConf", "PassedConfig", 
  				"PassedConfigConf", "PassedSource", "PassedSourceConf", "PassedAll", "PassedAllConf", "PushesErrored", "ErroredTravis", "ErroredTravisConf", "ErroredConfig", "ErroredConfigConf", "ErroredSource", "ErroredSourceConf", 
  				"ErroredAll", "ErroredAllConf", "PushesFailed", "FailedTravis", "FailedTravisConf", "FailedConfig", "FailedConfigConf","FailedSource", "FailedSourceConf", "FailedAll", "FailedAllConf", "PushesCanceled", "CanceledTravis", "CanceledTravisConf", "CanceledConfig", 
  				"CanceledConfigConf", "CanceledSource", "CanceledSourceConf", "CanceledAll", "CanceledAllConf"]
