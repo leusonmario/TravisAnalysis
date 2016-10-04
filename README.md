@@ -2,7 +2,9 @@
 
 Initial Analysis of Travis Projects
 
-TravisAnalysis is a project in Ruby that analyses some characteristics of Travis projects. For that end, it uses two external libraries: Octokit for accessing information from GitHub Projects, and Travis, for build information related to projects hosted on Github.
+TravisAnalysis is a project in Ruby that analyses some characteristics of Travis projects. For that end, it uses two external libraries: 
+ - Octokit for accessing information from GitHub Projects, and
+ - Travis, for build information related to projects hosted on Github.
 
 The project saves the output in a set of .csv file, and additionally, a initial statistical analysis is done by a R script.
 
