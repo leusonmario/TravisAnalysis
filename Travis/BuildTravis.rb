@@ -4,6 +4,7 @@
 require 'travis'
 require 'csv'
 require 'rubygems'
+require 'fileutils'
 require './Repository/MergeCommit.rb'
 require './Travis/ConflictCategoryErrored.rb'
 require './Travis/ConflictCategoryFailed.rb'
@@ -74,7 +75,9 @@ class BuildTravis
 		confBuild = ConflictBuild.new(@projectPath)
 		confErrored = ConflictCategoryErrored.new()
 		confFailed = ConflictCategoryFailed.new()
-
+		
+		projectNameFile = projectName.partition('/').last
+		createConfictFiles(pathErroredCases, pathFailedCases, projectNameFile)
 		Dir.chdir pathResultByProject
 		CSV.open(projectName.partition('/').last+"Final.csv", "w") do |csv|
  			csv << ["Status", "Type", "Commit", "ID"]
@@ -82,7 +85,7 @@ class BuildTravis
 		
 		projectBuild = Travis::Repository.find(projectName)
 		projectBuild.each_build do |build|
-			createConfictFiles(pathErroredCases, pathFailedCases, projectName)
+
 			if (build != nil)
 				status = confBuild.getBuildStatus(build)
 				if build.pull_request
@@ -133,13 +136,17 @@ class BuildTravis
 							confBuild.conflictAnalysisCategories(passedConflicts, type, result)
 						elsif (status == "errored")
 							totalMSErrored += 1
-							confBuild.conflictAnalysisCategories(erroredConflicts, type, result)
-							printConflict(status, build)
+							isConflict = confBuild.conflictAnalysisCategories(erroredConflicts, type, result)
+							if (isConflict) 
+								printConflictBuild(build, pathErroredCases, projectNameFile)
+							end
 							confErrored.findConflictCause(build)
 						elsif (status == "failed")
 							totalMSFailed += 1
-							confBuild.conflictAnalysisCategories(failedConflicts, type, result)
-							printConflict(status, build)
+							isConflict = confBuild.conflictAnalysisCategories(failedConflicts, type, result)
+							if (isConflict) 
+								printConflictTest(build, pathFailedCases, projectNameFile)
+							end
 							confFailed.findConflictCause(build)
 						else
 							totalMSCanceled += 1
@@ -188,18 +195,28 @@ class BuildTravis
 		return projectName, buildTotalPush, buildPushPassed, buildPushErrored, buildPushFailed, buildPushCanceled, buildTotalPull, buildPullPassed, buildPullErrored, buildPullFailed, buildPullCanceled
 	end
 
-	def printConflict(status, build)
-		if(status=="errored")
-			fileErrored.puts(build.id)
-		else
-			fileFailed.puts(build.id)
+	def printConflictBuild(build, path, projectName)
+		Dir.chdir path
+		CSV.open("Errored"+projectName+".csv", "a+") do |csv|
+			csv << [build.id]
+		end
+	end
+
+	def printConflictTest(build, path, projectName)
+		Dir.chdir path
+		CSV.open("Failed"+projectName+".csv", "a+") do |csv|
+			csv << [build.id]
 		end
 	end
 
 	def createConfictFiles(pathErrored, pathFailed, projectName)
 		Dir.chdir pathErrored
-		fileErrored = File.new("errored"+projectName".txt", "w")
+		CSV.open("Errored"+projectName+".csv", "w") do |csv|
+			csv << ["BuildID"]
+		end		
 		Dir.chdir pathFailed
-		fileFailed = File.new("failed"+projectName".txt", "w")
+		CSV.open("Failed"+projectName+".csv", "w") do |csv|
+			csv << ["BuildID"]
+		end		
 	end
 end
