@@ -130,9 +130,9 @@ averagePushErroredBuilds = mean(averagePushesErrored)
 
 #Agregated
 #Agregated - Not Errored Broken Builds (passed, failed and canceled builds)
-agregatedPushNotErroredBuilds = mean(agregatedPushesCanceled+agregatedPushesPassed+agregatedPushesFailed)*100/totalPushes
+agregatedPushNotErroredBuilds = (agregatedPushesCanceled+agregatedPushesPassed+agregatedPushesFailed)*100/totalPushes
 #Agregated - Errored Broken Builds (errored builds)
-agregatedPushErroredBuilds = mean(agregatedPushesErrored)*100/totalPushes
+agregatedPushErroredBuilds = (agregatedPushesErrored)*100/totalPushes
 
 #Pull Requests
 #Average
@@ -143,9 +143,9 @@ averagePRErroredBuilds = mean(averagePRErrored)
 
 #Agregated
 #Agregated - Not Errored Pulls (passed and canceled builds)
-agregatedPRNotErroredBuilds = mean(agregatedPRCanceled+agregatedPRPassed+agregatedPRFailed)*100/totalPR
+agregatedPRNotErroredBuilds = (agregatedPRCanceled+agregatedPRPassed+agregatedPRFailed)*100/totalPR
 #Average - Errored Pulls (errored builds)
-agregatedPRErroredBuilds = mean(agregatedPRErrored)*100/totalPR
+agregatedPRErroredBuilds = (agregatedPRErrored)*100/totalPR
 
 #Txt File with the informations about the RQ2
 sink("rq2.txt")
@@ -204,9 +204,9 @@ averagePushFailedBuilds = mean(averagePushesFailed)
 
 #Agregated
 #Agregated - Not Failed Broken Builds (passed, errored and canceled builds)
-agregatedPushNotFailedBuilds = mean(agregatedPushesCanceled+agregatedPushesPassed+agregatedPushesErrored)*100/totalPushes
+agregatedPushNotFailedBuilds = (agregatedPushesCanceled+agregatedPushesPassed+agregatedPushesErrored)*100/totalPushes
 #Agregated - Failed Broken Builds (Failed builds)
-agregatedPushFailedBuilds = mean(agregatedPushesFailed)*100/totalPushes
+agregatedPushFailedBuilds = (agregatedPushesFailed)*100/totalPushes
 
 #Pull Requests
 #Average
@@ -217,9 +217,9 @@ averagePRFailedBuilds = mean(averagePRFailed)
 
 #Agregated
 #Agregated - Not Failed Pulls (passed, errored and canceled builds)
-agregatedPRNotFailedBuilds = mean(agregatedPRCanceled+agregatedPRPassed+agregatedPRErrored)*100/totalPR
+agregatedPRNotFailedBuilds = (agregatedPRCanceled+agregatedPRPassed+agregatedPRErrored)*100/totalPR
 #Average - Failed Pulls (failed builds)
-agregatedPRFailedBuilds = mean(agregatedPRFailed)*100/totalPR
+agregatedPRFailedBuilds = (agregatedPRFailed)*100/totalPR
 
 #Txt File with the informations about the RQ3
 sink("rq3.txt")
@@ -273,15 +273,12 @@ setwd(file.path(mainDir, rq4))
 #Average
 averageMergeScenarios = (totalMergeScenarios$TotalMSBuilded)*100/totalMergeScenarios$TotalMS
 averageMergeScenrioPerc = mean(averageMergeScenarios, na=TRUE)
-
-# 
-# VERIFICAR SE NO SCRIPT SE REPEATEDMSB ESTÁ INCLUSO EM MSBUILDED
-#
 averageNotBuildedMS = (totalMergeScenarios$TotalMS - totalMergeScenarios$TotalMSBuilded)*100/totalMergeScenarios$TotalMS
 averageNotMergeScenrioPerc = mean(averageNotBuildedMS, na=TRUE)
+
 #Agregated
-agregatedMergeScenarios = sum(totalMergeScenarios$TotalMSBuilded-totalMergeScenarios$TotalRepeatedMSB)*100/sum(totalMergeScenarios$TotalMS)
-agregatedNotMergeScenarios = sum(totalMergeScenarios$TotalMS - (totalMergeScenarios$TotalMSBuilded-totalMergeScenarios$TotalRepeatedMSB))*100/sum(totalMergeScenarios$TotalMS)
+agregatedMergeScenarios = sum(totalMergeScenarios$TotalMSBuilded)*100/sum(totalMergeScenarios$TotalMS)
+agregatedNotMergeScenarios = sum(totalMergeScenarios$TotalMS - totalMergeScenarios$TotalMSBuilded)*100/sum(totalMergeScenarios$TotalMS)
 
 #Txt File with the informations about the RQ4
 sink("rq4.txt")
@@ -316,10 +313,10 @@ dir.create(file.path(mainDir, rq5), showWarnings = FALSE)
 setwd(file.path(mainDir, rq5))
 
 #Average
-averageMergeScenariosErrored = mergeScenarios$PushesErrored*100/(totalMergeScenarios$TotalMSBuilded-totalMergeScenarios$TotalRepeatedMSB)
+averageMergeScenariosErrored = mergeScenarios$PushesErrored*100/(totalMergeScenarios$TotalMSBuilded)
 averageMergeScenariosErroredPerc = mean(averageMergeScenariosErrored, na=TRUE)
 #Agregated
-agregatedMergeScenariosErrored = sum(mergeScenarios$PushesErrored)*100/sum(totalMergeScenarios$TotalMSBuilded-totalMergeScenarios$TotalRepeatedMSB)
+agregatedMergeScenariosErrored = sum(mergeScenarios$PushesErrored)*100/sum(totalMergeScenarios$TotalMSBuilded)
 
 #Changes Distributions on modified Files
 
@@ -377,10 +374,10 @@ dir.create(file.path(mainDir, rq6), showWarnings = FALSE)
 setwd(file.path(mainDir, rq6))
 
 #Average
-averageMergeScenariosFailed = mergeScenarios$PushesFailed*100/(totalMergeScenarios$TotalMSBuilded-totalMergeScenarios$TotalRepeatedMSB)
+averageMergeScenariosFailed = mergeScenarios$PushesFailed*100/(totalMergeScenarios$TotalMSBuilded)
 averageMergeScenariosFailedPerc = mean(averageMergeScenariosFailed, na=TRUE)
 #Agregated
-agregatedMergeScenariosFailed = sum(mergeScenarios$PushesFailed)*100/sum((totalMergeScenarios$TotalMSBuilded-totalMergeScenarios$TotalRepeatedMSB))
+agregatedMergeScenariosFailed = sum(mergeScenarios$PushesFailed)*100/sum(totalMergeScenarios$TotalMSBuilded)
 
 failedPushTravisAll = mergeScenarios$FailedTravis*100/mergeScenarios$PushesFailed
 failedPushConfigAll = mergeScenarios$FailedConfig*100/mergeScenarios$PushesFailed
@@ -455,10 +452,10 @@ agregatedErroredConf = (sum(mergeScenarios$ErroredTravisConf, na.rm=TRUE) + sum(
 
 #Build Conflicts - All Merge Scenarios
 #Average
-averageErroredPushTravisConfAll = mergeScenarios$ErroredTravisConf*100/totalMergeScenarios$TotalMSBuilded-totalMergeScenarios$TotalRepeatedMSB
-averageErroredPushConfigConfAll = mergeScenarios$ErroredConfigConf*100/totalMergeScenarios$TotalMSBuilded-totalMergeScenarios$TotalRepeatedMSB
-averageErroredPushSourceConfAll = mergeScenarios$ErroredSourceConf*100/totalMergeScenarios$TotalMSBuilded-totalMergeScenarios$TotalRepeatedMSB
-averageErroredPushAllTogetherConfAll = mergeScenarios$ErroredAllConf*100/totalMergeScenarios$TotalMSBuilded-totalMergeScenarios$TotalRepeatedMSB
+averageErroredPushTravisConfAll = mergeScenarios$ErroredTravisConf*100/(totalMergeScenarios$TotalMSBuilded)
+averageErroredPushConfigConfAll = mergeScenarios$ErroredConfigConf*100/(totalMergeScenarios$TotalMSBuilded)
+averageErroredPushSourceConfAll = mergeScenarios$ErroredSourceConf*100/(totalMergeScenarios$TotalMSBuilded)
+averageErroredPushAllTogetherConfAll = mergeScenarios$ErroredAllConf*100/(totalMergeScenarios$TotalMSBuilded)
 
 averageErroredPushTravisConfAllPerc = mean(averageErroredPushTravisConfAll, na=TRUE)
 averageErroredPushConfigConfAllPerc = mean(averageErroredPushConfigConfAll, na=TRUE)
@@ -467,7 +464,7 @@ averageErroredPushAllTogetherConfAllPerc = mean(averageErroredPushAllTogetherCon
 averageErroredBuildConflictAll = averageErroredPushTravisConfAllPerc + averageErroredPushConfigConfAllPerc + averageErroredPushSourceConfAllPerc + averageErroredPushAllTogetherConfAllPerc
 
 #Agregated
-agregatedErroredConfAll = (sum(mergeScenarios$ErroredTravisConf, na.rm=TRUE) + sum(mergeScenarios$ErroredConfigConf, na.rm=TRUE) + sum(mergeScenarios$ErroredSourceConf, na.rm=TRUE) + sum(mergeScenarios$ErroredAllConf, na.rm=TRUE))*100/sum(totalMergeScenarios$TotalMSBuilded-totalMergeScenarios$TotalRepeatedMSB, na.rm=TRUE)
+agregatedErroredConfAll = (sum(mergeScenarios$ErroredTravisConf, na.rm=TRUE) + sum(mergeScenarios$ErroredConfigConf, na.rm=TRUE) + sum(mergeScenarios$ErroredSourceConf, na.rm=TRUE) + sum(mergeScenarios$ErroredAllConf, na.rm=TRUE))*100/sum(totalMergeScenarios$TotalMSBuilded, na.rm=TRUE)
 
 #Txt File with the informations about the RQ7
 sink("rq7.txt")
@@ -518,10 +515,10 @@ agregatedFailedConf = (sum(mergeScenarios$FailedTravisConf, na.rm=TRUE) + sum(me
 
 #Build Conflicts - All Merge Scenarios
 #Average
-averageFailedPushTravisConfAll = mergeScenarios$FailedTravisConf*100/totalMergeScenarios$TotalMSBuilded-totalMergeScenarios$TotalRepeatedMSB
-averageFailedPushConfigConfAll = mergeScenarios$FailedConfigConf*100/totalMergeScenarios$TotalMSBuilded-totalMergeScenarios$TotalRepeatedMSB
-averageFailedPushSourceConfAll = mergeScenarios$FailedSourceConf*100/totalMergeScenarios$TotalMSBuilded-totalMergeScenarios$TotalRepeatedMSB
-averageFailedPushAllTogetherConfAll = mergeScenarios$FailedAllConf*100/totalMergeScenarios$TotalMSBuilded-totalMergeScenarios$TotalRepeatedMSB
+averageFailedPushTravisConfAll = mergeScenarios$FailedTravisConf*100/(totalMergeScenarios$TotalMSBuilded)
+averageFailedPushConfigConfAll = mergeScenarios$FailedConfigConf*100/(totalMergeScenarios$TotalMSBuilded)
+averageFailedPushSourceConfAll = mergeScenarios$FailedSourceConf*100/(totalMergeScenarios$TotalMSBuilded)
+averageFailedPushAllTogetherConfAll = mergeScenarios$FailedAllConf*100/(totalMergeScenarios$TotalMSBuilded)
 
 averageFailedPushTravisConfAllPerc = mean(averageFailedPushTravisConfAll, na=TRUE)
 averageFailedPushConfigConfAllPerc = mean(averageFailedPushConfigConfAll, na=TRUE)
@@ -530,7 +527,7 @@ averageFailedPushAllTogetherConfAllPerc = mean(averageFailedPushAllTogetherConfA
 averageFailedBuildConflictAll = averageFailedPushTravisConfAllPerc + averageFailedPushConfigConfAllPerc + averageFailedPushSourceConfAllPerc + averageFailedPushAllTogetherConfAllPerc
 
 #Agregated
-agregatedFailedConfAll = (sum(mergeScenarios$FailedTravisConf, na.rm=TRUE) + sum(mergeScenarios$FailedConfigConf, na.rm=TRUE) + sum(mergeScenarios$FailedSourceConf, na.rm=TRUE) + sum(mergeScenarios$FailedAllConf, na.rm=TRUE))*100/sum(totalMergeScenarios$TotalMSBuilded-totalMergeScenarios$TotalRepeatedMSB, na.rm=TRUE)
+agregatedFailedConfAll = (sum(mergeScenarios$FailedTravisConf, na.rm=TRUE) + sum(mergeScenarios$FailedConfigConf, na.rm=TRUE) + sum(mergeScenarios$FailedSourceConf, na.rm=TRUE) + sum(mergeScenarios$FailedAllConf, na.rm=TRUE))*100/sum(totalMergeScenarios$TotalMSBuilded, na.rm=TRUE)
 
 #Txt File with the informations about the RQ8
 sink("rq8.txt")
