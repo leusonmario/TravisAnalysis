@@ -16,3 +16,6 @@ To run this project, you need to follow the next instructions:
 2 - Run "./MainAnalysisProjects"
 
 3 - After the execution, a new folder containing the .csv files will be created. The output of R script will be available on the directory R.
+
+
+It is important that the ruby version used locally be compatible with the versions used by the external libraries.
