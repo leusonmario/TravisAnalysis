@@ -7,7 +7,7 @@ TravisAnalysis is a project in Ruby that analyses some characteristics of Travis
  - Travis, for build information related to projects hosted on Github, and
  - R, for statistic analysis.
 
-The project saves the output in a set of .csv file, and additionally, a initial statistical analysis is done by a R script.
+The project saves the output in a set of .csv files, and additionally, a initial statistical analysis is done by a R script.
 
 To run this project, you need to follow the next instructions: 
 
