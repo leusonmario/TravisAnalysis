@@ -37,7 +37,7 @@ class BuildTravis
 		return resultMergeCommit
 	end
 
-	def getStatusBuildsProject(projectName, pathResultByProject, pathConflicstAnalysis, pathMergeScenariosAnalysis, pathConflicsCauses)
+	def getStatusBuildsProject(projectName, pathResultByProject, pathConflicstAnalysis, pathMergeScenariosAnalysis, pathConflicsCauses, pathErroredCases, pathFailedCases)
 		buildTotalPush = 0
 		buildTotalPull = 0
 		buildPushPassed = 0
@@ -62,6 +62,9 @@ class BuildTravis
 		totalMSErrored = 0
 		totalMSFailed = 0
 		totalMSCanceled = 0
+
+		fileErrored = ""
+		fileFailed = ""
 		
 		passedConflicts = ConflictAnalysis.new()
 		erroredConflicts = ConflictAnalysis.new()
@@ -79,6 +82,7 @@ class BuildTravis
 		
 		projectBuild = Travis::Repository.find(projectName)
 		projectBuild.each_build do |build|
+			createConfictFiles(pathErroredCases, pathFailedCases, projectName)
 			if (build != nil)
 				status = confBuild.getBuildStatus(build)
 				if build.pull_request
@@ -130,10 +134,12 @@ class BuildTravis
 						elsif (status == "errored")
 							totalMSErrored += 1
 							confBuild.conflictAnalysisCategories(erroredConflicts, type, result)
+							printConflict(status, build)
 							confErrored.findConflictCause(build)
 						elsif (status == "failed")
 							totalMSFailed += 1
 							confBuild.conflictAnalysisCategories(failedConflicts, type, result)
+							printConflict(status, build)
 							confFailed.findConflictCause(build)
 						else
 							totalMSCanceled += 1
@@ -182,4 +188,18 @@ class BuildTravis
 		return projectName, buildTotalPush, buildPushPassed, buildPushErrored, buildPushFailed, buildPushCanceled, buildTotalPull, buildPullPassed, buildPullErrored, buildPullFailed, buildPullCanceled
 	end
 
+	def printConflict(status, build)
+		if(status=="errored")
+			fileErrored.puts(build.id)
+		else
+			fileFailed.puts(build.id)
+		end
+	end
+
+	def createConfictFiles(pathErrored, pathFailed, projectName)
+		Dir.chdir pathErrored
+		fileErrored = File.new("errored"+projectName".txt", "w")
+		Dir.chdir pathFailed
+		fileFailed = File.new("failed"+projectName".txt", "w")
+	end
 end

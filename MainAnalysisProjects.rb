@@ -16,6 +16,8 @@ class MainAnalysisProjects
 		@pathConflicstAnalysis = ""
 		@pathMergeScenariosAnalysis = ""
 		@pathConflictsAnalysis = ""
+		@pathErroredCases = ""
+		@pathFailedCases = ""
 		creatingResultsDirectories()
 		@projectsInfo = ProjectInfo.new(pathAnalysis)
 		travisAnalysis()
@@ -23,6 +25,14 @@ class MainAnalysisProjects
 
 	def getPathAnalysis()
 		@pathAnalysis
+	end
+
+	def getPathErroredCases()
+		@pathErroredCases
+	end
+
+	def getPathFailedCases()
+		@pathFailedCases
 	end
 
 	def getPathAllResults()
@@ -60,6 +70,8 @@ class MainAnalysisProjects
 		FileUtils::mkdir_p 'ResultsAll/ConflictsAnalysis'
 		FileUtils::mkdir_p 'ResultsAll/MergeScenariosAnalysis'
 		FileUtils::mkdir_p 'ResultsAll/ConflictsCauses'
+		FileUtils::mkdir_p 'ResultsAll/ErroredCases'
+		FileUtils::mkdir_p 'ResultsAll/FailedCases'
 		Dir.chdir "ResultsAll"
 		@pathAllResults = Dir.pwd
 		Dir.chdir "ResultsByProject"
@@ -73,6 +85,12 @@ class MainAnalysisProjects
 		Dir.chdir @pathAllResults
 		Dir.chdir "ConflictsCauses"
 		@pathConflictsCauses = Dir.pwd
+		Dir.chdir @pathAllResults
+		Dir.chdir "ErroredCases"
+		@pathErroredCases = Dir.pwd
+		Dir.chdir @pathAllResults
+		Dir.chdir "FailedCases"
+		@pathFailedCases = Dir.pwd
 		
 	end
 
@@ -111,7 +129,8 @@ class MainAnalysisProjects
 			projectName = gitProject.getProjectName()
 			puts "Project [#{index+1}]: #{projectName}"
 			buildTravis = BuildTravis.new(projectName, pathProject)
-			projectAnalysis = buildTravis.getStatusBuildsProject(projectName, getPathResultByProject, getPathConflicstAnalysis, getPathMergeScenariosAnalysis, getPathConflictsCauses)
+			projectAnalysis = buildTravis.getStatusBuildsProject(projectName, getPathResultByProject, getPathConflicstAnalysis, getPathMergeScenariosAnalysis, 
+				getPathConflictsCauses, getPathErroredCases, getPathFailedCases)
 			Dir.chdir getPathAllResults
 			CSV.open("resultsAllFinal.csv", "a+") do |csv|
 				csv << [projectAnalysis[0], projectAnalysis[1], projectAnalysis[2], projectAnalysis[3], projectAnalysis[4], projectAnalysis[5], 
