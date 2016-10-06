@@ -36,9 +36,9 @@ averagePushesErrored = resultsAll$TotalPushErrored*100/resultsAll$TotalBuildPush
 averagePushesFailed = resultsAll$TotalPushFailed*100/resultsAll$TotalBuildPush
 averagePushesCanceled = resultsAll$TotalPushCanceled*100/resultsAll$TotalBuildPush
 #Average - Not Broken Builds (passed and canceled builds)
-averagePushNotBrokenBuilds = mean(averagePushesCanceled+averagePushesPassed)
+averagePushNotBrokenBuilds = mean(averagePushesCanceled+averagePushesPassed, na=TRUE)
 #Average - Broken Builds (errored and failed builds)
-averagePushBrokenBuilds = mean(averagePushesErrored+averagePushesFailed)
+averagePushBrokenBuilds = mean(averagePushesErrored+averagePushesFailed, na=TRUE)
 
 #Agregated
 totalPushes = sum(resultsAll$TotalBuildPush)
@@ -58,9 +58,9 @@ averagePRErrored = resultsAll$TotalPullErrored*100/resultsAll$TotalBuildPull
 averagePRFailed = resultsAll$TotalPullFailed*100/resultsAll$TotalBuildPull
 averagePRCanceled = resultsAll$TotalPullCanceled*100/resultsAll$TotalBuildPull
 #Average - Not Broken Builds (passed and canceled builds)
-averagePRNotBrokenBuilds = mean(averagePRCanceled+averagePRPassed)
+averagePRNotBrokenBuilds = mean(averagePRCanceled+averagePRPassed, na=TRUE)
 #Average - Broken Builds (errored and failed builds)
-averagePRBrokenBuilds = mean(averagePRErrored+averagePRFailed)
+averagePRBrokenBuilds = mean(averagePRErrored+averagePRFailed, na=TRUE)
 
 #Agregated
 totalPR = sum(resultsAll$TotalBuildPull)
@@ -124,9 +124,9 @@ setwd(file.path(mainDir, rq2))
 #Pushes
 #Average
 #Average - Not Errored Broken Builds (passed, failed and canceled builds)
-averagePushNotErroredBuilds = mean(averagePushesCanceled+averagePushesPassed+averagePushesFailed)
+averagePushNotErroredBuilds = mean(averagePushesCanceled+averagePushesPassed+averagePushesFailed, na=TRUE)
 #Average - Errored Broken Builds (errored builds)
-averagePushErroredBuilds = mean(averagePushesErrored)
+averagePushErroredBuilds = mean(averagePushesErrored, na=TRUE)
 
 #Agregated
 #Agregated - Not Errored Broken Builds (passed, failed and canceled builds)
@@ -137,9 +137,9 @@ agregatedPushErroredBuilds = (agregatedPushesErrored)*100/totalPushes
 #Pull Requests
 #Average
 #Average - Not Errored Pulls (passed, errored and canceled pulls)
-averagePRNotErroredBuilds = mean(averagePRCanceled+averagePRPassed+averagePRFailed)
+averagePRNotErroredBuilds = mean(averagePRCanceled+averagePRPassed+averagePRFailed, na=TRUE)
 #Average - Errored Pulls (passed, errored and canceled pulls)
-averagePRErroredBuilds = mean(averagePRErrored)
+averagePRErroredBuilds = mean(averagePRErrored, na=TRUE)
 
 #Agregated
 #Agregated - Not Errored Pulls (passed and canceled builds)
@@ -198,9 +198,9 @@ setwd(file.path(mainDir, rq3))
 #Pushes
 #Average
 #Average - Not Failed Broken Builds (passed, errored and canceled builds)
-averagePushNotFailedBuilds = mean(averagePushesCanceled+averagePushesPassed+averagePushesErrored)
+averagePushNotFailedBuilds = mean(averagePushesCanceled+averagePushesPassed+averagePushesErrored, na=TRUE)
 #Average - Failed Broken Builds (Failed builds)
-averagePushFailedBuilds = mean(averagePushesFailed)
+averagePushFailedBuilds = mean(averagePushesFailed, na=TRUE)
 
 #Agregated
 #Agregated - Not Failed Broken Builds (passed, errored and canceled builds)
@@ -211,9 +211,9 @@ agregatedPushFailedBuilds = (agregatedPushesFailed)*100/totalPushes
 #Pull Requests
 #Average
 #Average - Not Failed Pulls (passed, errored and canceled pulls)
-averagePRNotFailedBuilds = mean(averagePRCanceled+averagePRPassed+averagePRErrored)
+averagePRNotFailedBuilds = mean(averagePRCanceled+averagePRPassed+averagePRErrored, na=TRUE)
 #Average - Failed Pulls (Failed pulls)
-averagePRFailedBuilds = mean(averagePRFailed)
+averagePRFailedBuilds = mean(averagePRFailed, na=TRUE)
 
 #Agregated
 #Agregated - Not Failed Pulls (passed, errored and canceled builds)
