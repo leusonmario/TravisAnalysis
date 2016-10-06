@@ -47,23 +47,28 @@ class ConflictBuild
 			conflictAnalysis.setTotalTravis(1)
 			if (mergeScenario) 
 				conflictAnalysis.setTotalTravisConf(1)
+				return true
 			end
 		elsif (type=="Config")
 			conflictAnalysis.setTotalConfig(1)
 			if (mergeScenario) 
 				conflictAnalysis.setTotalConfigConf(1)
+				return true
 			end
 		elsif (type=="SourceCode")
 			conflictAnalysis.setTotalSource(1)
 			if (mergeScenario) 
 				conflictAnalysis.setTotalSourceConf(1)
+				return true
 			end
 		else
 			conflictAnalysis.setTotalAll(1)
 			if (mergeScenario) 
 				conflictAnalysis.setTotalAllConf(1)
+				return true
 			end
 		end
+		return false
 	end
 
 	def getBuildStatus(build)
