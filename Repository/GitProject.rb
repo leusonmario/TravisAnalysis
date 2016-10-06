@@ -53,7 +53,8 @@ class GitProject
 	def getMergesScenariosByProject()
 		Dir.chdir getPath().gsub('.travis.yml','')
 		@mergeScenarios = Array.new
-		merges = %x(git log --pretty=format:'%H' --merges)
+		commitTravisInput = %x(git log --format=%aD .travis.yml | tail -1)
+		merges = %x(git log --pretty=format:'%H' --merges --since="#{commitTravisInput}")
 		merges.each_line do |mergeScenario|
 			@mergeScenarios.push(mergeScenario.gsub('\\n',''))
 		end
