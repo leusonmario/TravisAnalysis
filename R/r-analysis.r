@@ -37,6 +37,7 @@ averagePushesFailed = resultsAll$TotalPushFailed*100/resultsAll$TotalBuildPush
 averagePushesCanceled = resultsAll$TotalPushCanceled*100/resultsAll$TotalBuildPush
 #Average - Not Broken Builds (passed and canceled builds)
 averagePushNotBrokenBuilds = mean(averagePushesCanceled+averagePushesPassed, na=TRUE)
+print (resultsAll$TotalPushErrored*100/resultsAll$TotalBuildPush)
 #Average - Broken Builds (errored and failed builds)
 averagePushBrokenBuilds = mean(averagePushesErrored+averagePushesFailed, na=TRUE)
 
