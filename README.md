@@ -19,3 +19,5 @@ To run this project, you need to follow the next instructions:
 
 
 It is important that the ruby version used locally be compatible with the versions used by the external libraries.
+
+Teste Bruno_Santos
