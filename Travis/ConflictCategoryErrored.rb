@@ -47,36 +47,37 @@ class ConflictCategoryErrored
 	end
 
 	def findConflictCause(build)
-		stringCompError = "COMPILATION ERROR"
-	
-		stringCompilerError = "internal compiler error"
-
-		stringSymbol = "COMPILATION ERROR"
-		stringEndSymbol = "error: cannot find symbol"
-			
-		stringExcetion = "Exception in thread"
-		stringGitProblemClone = "The command \"git clone"
-		stringGitProblemCheckout = "The command \"git checkout"
-		stringNoOutput = "No output has been received"
-		stringStopped = "Your build has been stopped"
-		stringTerminated = "The build has been terminated"
-		stringDoesNotExist = "does not exist"
+		stringCompError = "\[ERROR\] COMPILATION ERROR :"
+		stringNotFind = "cannot finf symbol"
+		stringInfo = "\[INFO\]"
+		
 		stringTheCommand = "The command "
+		stringMoveCMD = "\"[\.\/]?mvn[w]?"
+		stringGitClone = "\"git clone"
+		stringGitCheckout = "\"git checkout"
+		stringFailed = "failed"
+		stringError = "error[s]?"
+		stringPermission = "\"cd|\"sudo|\"echo|\"eval"
 
+		stringNoOutput = "No output has been received"
+		stringWrong = "wrong"
+		stringTerminated = "The build has been terminated"
+		
 		indexJob = 0
 		while (indexJob < build.job_ids.size)
 			if (build.jobs[indexJob].state == "errored")
 				if (build.jobs[indexJob].log != nil)
 					build.jobs[indexJob].log.body do |part|
-						if (part[/#{stringSymbol}[\n]*(.*)[\n]*(.*)/] || part[/(.*)#{stringDoesNotExist}[\n]*(.*)/])
+						if (part[/#{stringCompError}[(\n\s)(a-zA-Z0-9)(\-\/\.\:\,\[\])]*#{stringInfo}[(\s)(0-9)]*#{stringError}/])
 							@unvailableSymbol += 1
-						elsif (part[/#{stringTheCommand}("mvn|"\.\/mvnw)+(.*)failed(.*)/])
+						elsif (part[/#{stringTheCommand}#{stringMoveCMD}+(.*)#{stringFailed}(.*)/])
+							puts build.id
 							@compilerError += 1
-						elsif (part[/#{stringTheCommand}("git clone |"git checkout)(.*?)failed(.*)[\n]*/])
+						elsif (part[/#{stringTheCommand}(#{stringGitClone}|#{stringGitCheckout})(.*?)#{stringFailed}(.*)[\n]*/])
 							@gitProblem += 1
-						elsif (part[/#{stringNoOutput}(.*)wrong(.*)[\n]*#{stringTerminated}/])
+						elsif (part[/#{stringNoOutput}(.*)#{stringWrong}(.*)[\n]*#{stringTerminated}/])
 							@remoteError += 1
-						elsif (part[/#{stringTheCommand}("cd|"sudo|"echo|"eval)+ (.*)failed(.*)/])
+						elsif (part[/#{stringTheCommand}#{stringPermission}+(.*)#{stringFailed}(.*)/])
 							@permission += 1
 						else
 							@otherError += 1
