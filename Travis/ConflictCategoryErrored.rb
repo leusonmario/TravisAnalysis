@@ -15,7 +15,6 @@ class ConflictCategoryErrored
 		@compilerError = 0
 		@unvailableSymbol = 0
 		@otherError = 0
-		@permission = 0
 	end
 
 	def getGitProblem()
@@ -38,48 +37,57 @@ class ConflictCategoryErrored
 		@otherError
 	end
 
-	def getPermission()
-		@permission
-	end
-
 	def getTotal()
-		return getGitProblem() + getRemoteError() + getCompilerError() + getUnvailableSymbol() + getOtherError() + getPermission()
+		return getGitProblem() + getRemoteError() + getCompilerError() + getUnvailableSymbol() + getOtherError()
 	end
 
 	def findConflictCause(build)
-		stringCompError = "\[ERROR\] COMPILATION ERROR :"
+		stringCompError = " COMPILATION ERROR :"
 		stringNotFind = "cannot finf symbol"
-		stringInfo = "\[INFO\]"
+		stringNoConvert = "cannot be converted to"
+		stringInfo = "INFO"
 		
 		stringTheCommand = "The command "
-		stringMoveCMD = "\"[\.\/]?mvn[w]?"
+		stringMoveCMD = "mvn"
 		stringGitClone = "\"git clone"
 		stringGitCheckout = "\"git checkout"
 		stringFailed = "failed"
-		stringError = "error[s]?"
+		stringError = "error"
+		stringElement = "Element"
+		stringNoExist = "does not exist"
+		stringErro = "ERROR"
 		stringPermission = "\"cd|\"sudo|\"echo|\"eval"
 
 		stringNoOutput = "No output has been received"
 		stringWrong = "wrong"
 		stringTerminated = "The build has been terminated"
+		stringStopped = "Your build has been stopped"
 		
 		indexJob = 0
 		while (indexJob < build.job_ids.size)
 			if (build.jobs[indexJob].state == "errored")
 				if (build.jobs[indexJob].log != nil)
 					build.jobs[indexJob].log.body do |part|
-						if (part[/#{stringCompError}[(\n\s)(a-zA-Z0-9)(\-\/\.\:\,\[\])]*#{stringInfo}[(\s)(0-9)]*#{stringError}/])
+						#if (part[/\[ERROR\] COMPILATION ERROR :[(\n\s)(a-zA-Z0-9)(\-\/\.\:\,\[\])]*\[INFO\][(\s)(0-9)]*error[s]?/])
+						#(\[ERROR\] COMPILATION ERROR :)[\n]*(.*)[\n]*(.*)[\n]*(.*)cannot find symbol
+						#	(symbol:[\s]*variable[\s]*)
+						#	location: 
+						#(\[INFO\])[\s0-9]*error[s]?
+						if (part[/\[#{stringErro}\]#{stringCompError}[(\n\s)(a-zA-Z0-9)(\-\/\.\:\,\[\]\=\")]*\[#{stringInfo}\][(\s)(0-9)]*#{stringError}[s]?/] || part[/\[#{stringErro}\]#{stringCompError}[\s\S]*[.java][\s\S]*#{stringNoConvert}/])
+							puts "Symbol #{build.id}"
 							@unvailableSymbol += 1
-						elsif (part[/#{stringTheCommand}#{stringMoveCMD}+(.*)#{stringFailed}(.*)/])
-							puts build.id
+						#elsif (part[/The command "[\.]?[\/]?mvn[(\n\s)(a-zA-Z0-9)(\-\/\.\:\,\[\]\=\")]*Your build has been stopped/] || part[/#{stringTheCommand}#{stringPermission}+(.*)#{stringFailed}(.*)/] || part[/#{stringElement}[(\n\s)(a-zA-Z0-9)(\'\-\/\.\:\,\[\])]*#{stringNoExist}/])
+					elsif (part[/#{stringTheCommand}\"[\.]?[\/]?[#{stringMoveCMD}]?[w]?[\s\S]*#{stringStopped}/] || part[/#{stringTheCommand}#{stringPermission}+(.*)#{stringFailed}(.*)/] || part[/#{stringElement}[(\n\s)(a-zA-Z0-9)(\'\-\/\.\:\,\[\])]*#{stringNoExist}/])
+							puts "Compile #{build.id}"
 							@compilerError += 1
 						elsif (part[/#{stringTheCommand}(#{stringGitClone}|#{stringGitCheckout})(.*?)#{stringFailed}(.*)[\n]*/])
+							puts "gitProblem #{build.id}"
 							@gitProblem += 1
-						elsif (part[/#{stringNoOutput}(.*)#{stringWrong}(.*)[\n]*#{stringTerminated}/])
+						elsif (part[/#{stringNoOutput}[(\n\s)(a-zA-Z0-9)(\-\/\.\:\,\[\]\=\")]*#{stringTerminated}/])
+							puts "Remote #{build.id}"
 							@remoteError += 1
-						elsif (part[/#{stringTheCommand}#{stringPermission}+(.*)#{stringFailed}(.*)/])
-							@permission += 1
 						else
+							puts "Outro #{build.id}"
 							@otherError += 1
 						end
 					end
