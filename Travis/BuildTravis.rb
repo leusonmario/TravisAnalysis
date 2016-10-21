@@ -170,7 +170,7 @@ class BuildTravis
 		Dir.chdir pathConflicsCauses
 		CSV.open("CausesBuildConflicts.csv", "a+") do |csv|
 			csv << [projectName, confErrored.getTotal(), confErrored.getUnvailableSymbol(), confErrored.getGitProblem(), confErrored.getRemoteError(), 
-					confErrored.getCompilerError(), confErrored.getPermission(), confErrored.getOtherError()]
+					confErrored.getCompilerError(), confErrored.getOtherError()]
 		end
 
 		CSV.open("CausesTestConflicts.csv", "a+") do |csv|

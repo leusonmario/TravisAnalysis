@@ -108,11 +108,11 @@ class MainAnalysisProjects
 
 		Dir.chdir getPathConflictsCauses
 		CSV.open("CausesBuildConflicts.csv", "wb") do |csv|
-			csv << ["ProjectName",	"Total", "NO FOUND SYMBOL", "GIT PROBLEM", "REMOTE ERROR", "COMPILER ERROR", "PERMISSION", "ANOTHER ERROR"]
+			csv << ["ProjectName",	"Total", "NO FOUND SYMBOL", "GIT PROBLEM", "REMOTE ERROR", "COMPILER ERROR", "ANOTHER ERROR"]
 		end
 
 		CSV.open("CausesTestConflicts.csv", "wb") do |csv|
-			csv << ["ProjectName",	"Total", "FAILED", "GIT PROBLEM", "REMOTE ERROR", "PERMISSION", "ANOTHER ERROR"]
+			csv << ["ProjectName",	"Total", "FAILED", "GIT PROBLEM", "REMOTE ERROR", "ANOTHER ERROR"]
 		end
 
 		Dir.chdir getPathConflicstAnalysis
