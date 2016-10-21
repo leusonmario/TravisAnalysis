@@ -74,20 +74,15 @@ class ConflictCategoryErrored
 						#	location: 
 						#(\[INFO\])[\s0-9]*error[s]?
 						if (part[/\[#{stringErro}\]#{stringCompError}[(\n\s)(a-zA-Z0-9)(\-\/\.\:\,\[\]\=\")]*\[#{stringInfo}\][(\s)(0-9)]*#{stringError}[s]?/] || part[/\[#{stringErro}\]#{stringCompError}[\s\S]*[.java][\s\S]*#{stringNoConvert}/])
-							puts "Symbol #{build.id}"
 							@unvailableSymbol += 1
 						#elsif (part[/The command "[\.]?[\/]?mvn[(\n\s)(a-zA-Z0-9)(\-\/\.\:\,\[\]\=\")]*Your build has been stopped/] || part[/#{stringTheCommand}#{stringPermission}+(.*)#{stringFailed}(.*)/] || part[/#{stringElement}[(\n\s)(a-zA-Z0-9)(\'\-\/\.\:\,\[\])]*#{stringNoExist}/])
 					elsif (part[/#{stringTheCommand}\"[\.]?[\/]?[#{stringMoveCMD}]?[w]?[\s\S]*#{stringStopped}/] || part[/#{stringTheCommand}#{stringPermission}+(.*)#{stringFailed}(.*)/] || part[/#{stringElement}[(\n\s)(a-zA-Z0-9)(\'\-\/\.\:\,\[\])]*#{stringNoExist}/])
-							puts "Compile #{build.id}"
 							@compilerError += 1
 						elsif (part[/#{stringTheCommand}(#{stringGitClone}|#{stringGitCheckout})(.*?)#{stringFailed}(.*)[\n]*/])
-							puts "gitProblem #{build.id}"
 							@gitProblem += 1
 						elsif (part[/#{stringNoOutput}[(\n\s)(a-zA-Z0-9)(\-\/\.\:\,\[\]\=\")]*#{stringTerminated}/])
-							puts "Remote #{build.id}"
 							@remoteError += 1
 						else
-							puts "Outro #{build.id}"
 							@otherError += 1
 						end
 					end
