@@ -9,7 +9,7 @@ require './Travis/BuildTravis.rb'
 
 class MainAnalysisProjects
 
-	def initialize(pathAnalysis)
+	def initialize(pathAnalysis, pathGumTree)
 		@pathAnalysis = pathAnalysis
 		@pathAllResults = ""
 		@pathResultByProject = ""
@@ -18,6 +18,7 @@ class MainAnalysisProjects
 		@pathConflictsAnalysis = ""
 		@pathErroredCases = ""
 		@pathFailedCases = ""
+		@pathGumTree = pathGumTree
 		creatingResultsDirectories()
 		@projectsInfo = ProjectInfo.new(pathAnalysis)
 		travisAnalysis()
@@ -55,6 +56,10 @@ class MainAnalysisProjects
 		@pathConflictsCauses
 	end
 
+	def getPathGumTree()
+		@pathGumTree
+	end
+
 	def travisAnalysis()
 		puts "*************************************"
 		puts "########## TRAVIS ANALYSIS ##########"
@@ -72,6 +77,7 @@ class MainAnalysisProjects
 		FileUtils::mkdir_p 'ResultsAll/ConflictsCauses'
 		FileUtils::mkdir_p 'ResultsAll/ErroredCases'
 		FileUtils::mkdir_p 'ResultsAll/FailedCases'
+		actualPath = Dir.pwd
 		Dir.chdir "ResultsAll"
 		@pathAllResults = Dir.pwd
 		Dir.chdir "ResultsByProject"
@@ -130,7 +136,7 @@ class MainAnalysisProjects
 			puts "Project [#{index+1}]: #{projectName}"
 			buildTravis = BuildTravis.new(projectName, pathProject)
 			projectAnalysis = buildTravis.getStatusBuildsProject(projectName, getPathResultByProject, getPathConflicstAnalysis, getPathMergeScenariosAnalysis, 
-				getPathConflictsCauses, getPathErroredCases, getPathFailedCases)
+				getPathConflictsCauses, getPathErroredCases, getPathFailedCases, getPathGumTree)
 			Dir.chdir getPathAllResults
 			CSV.open("resultsAllFinal.csv", "a+") do |csv|
 				csv << [projectAnalysis[0], projectAnalysis[1], projectAnalysis[2], projectAnalysis[3], projectAnalysis[4], projectAnalysis[5], 
@@ -152,7 +158,7 @@ File.open("properties", "r") do |text|
 end
 
 actualPath = Dir.pwd
-project = MainAnalysisProjects.new(parameters[0])
+project = MainAnalysisProjects.new(parameters[0], parameters[3])
 project.runAnalysis()
 
 Dir.chdir actualPath

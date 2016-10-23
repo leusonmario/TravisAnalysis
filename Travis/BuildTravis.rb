@@ -38,7 +38,7 @@ class BuildTravis
 		return resultMergeCommit
 	end
 
-	def getStatusBuildsProject(projectName, pathResultByProject, pathConflicstAnalysis, pathMergeScenariosAnalysis, pathConflicsCauses, pathErroredCases, pathFailedCases)
+	def getStatusBuildsProject(projectName, pathResultByProject, pathConflicstAnalysis, pathMergeScenariosAnalysis, pathConflicsCauses, pathErroredCases, pathFailedCases, pathGumTree)
 		buildTotalPush = 0
 		buildTotalPull = 0
 		buildPushPassed = 0
@@ -140,7 +140,7 @@ class BuildTravis
 							if (isConflict) 
 								printConflictBuild(build, pathErroredCases, projectNameFile)
 							end
-							confErrored.findConflictCause(build)
+							confErrored.findConflictCause(build, getProjectPath(), pathGumTree)
 						elsif (status == "failed")
 							totalMSFailed += 1
 							isConflict = confBuild.conflictAnalysisCategories(failedConflicts, type, result)

@@ -4,6 +4,8 @@
 require 'travis'
 require 'csv'
 require 'rubygems'
+require './Repository/MergeCommit.rb'
+require './GumTree/GTAnalysis.rb'
 require_relative 'ConflictCategories'
 
 class ConflictCategoryErrored
@@ -41,7 +43,7 @@ class ConflictCategoryErrored
 		return getGitProblem() + getRemoteError() + getCompilerError() + getUnvailableSymbol() + getOtherError()
 	end
 
-	def findConflictCause(build)
+	def findConflictCause(build, pathProject, pathGumTree)
 		stringCompError = " COMPILATION ERROR :"
 		stringNotFind = "cannot finf symbol"
 		stringNoConvert = "cannot be converted to"
@@ -64,19 +66,17 @@ class ConflictCategoryErrored
 		stringStopped = "Your build has been stopped"
 		
 		indexJob = 0
+		gtAnalysis = GTAnalysis.new(pathGumTree)
 		while (indexJob < build.job_ids.size)
 			if (build.jobs[indexJob].state == "errored")
 				if (build.jobs[indexJob].log != nil)
 					build.jobs[indexJob].log.body do |part|
-						#if (part[/\[ERROR\] COMPILATION ERROR :[(\n\s)(a-zA-Z0-9)(\-\/\.\:\,\[\])]*\[INFO\][(\s)(0-9)]*error[s]?/])
-						#(\[ERROR\] COMPILATION ERROR :)[\n]*(.*)[\n]*(.*)[\n]*(.*)cannot find symbol
-						#	(symbol:[\s]*variable[\s]*)
-						#	location: 
-						#(\[INFO\])[\s0-9]*error[s]?
 						if (part[/\[#{stringErro}\]#{stringCompError}[(\n\s)(a-zA-Z0-9)(\-\/\.\:\,\[\]\=\")]*\[#{stringInfo}\][(\s)(0-9)]*#{stringError}[s]?/] || part[/\[#{stringErro}\]#{stringCompError}[\s\S]*[.java][\s\S]*#{stringNoConvert}/])
+							text = part[/\[ERROR\] COMPILATION ERROR :[\s\S]*\[ERROR\](.*?)\[INFO\] [0-9]+/m, 1]
+							fileConflict = text.match(/[A-Za-z]+\.java/)[0].to_s
+							#gtAnalysis.getGumTreeAnalysis(pathProject, build, fileConflict)
 							@unvailableSymbol += 1
-						#elsif (part[/The command "[\.]?[\/]?mvn[(\n\s)(a-zA-Z0-9)(\-\/\.\:\,\[\]\=\")]*Your build has been stopped/] || part[/#{stringTheCommand}#{stringPermission}+(.*)#{stringFailed}(.*)/] || part[/#{stringElement}[(\n\s)(a-zA-Z0-9)(\'\-\/\.\:\,\[\])]*#{stringNoExist}/])
-					elsif (part[/#{stringTheCommand}\"[\.]?[\/]?[#{stringMoveCMD}]?[w]?[\s\S]*#{stringStopped}/] || part[/#{stringTheCommand}#{stringPermission}+(.*)#{stringFailed}(.*)/] || part[/#{stringElement}[(\n\s)(a-zA-Z0-9)(\'\-\/\.\:\,\[\])]*#{stringNoExist}/])
+						elsif (part[/#{stringTheCommand}\"[\.]?[\/]?[#{stringMoveCMD}]?[w]?[\s\S]*#{stringStopped}/] || part[/#{stringTheCommand}#{stringPermission}+(.*)#{stringFailed}(.*)/] || part[/#{stringElement}[(\n\s)(a-zA-Z0-9)(\'\-\/\.\:\,\[\])]*#{stringNoExist}/])
 							@compilerError += 1
 						elsif (part[/#{stringTheCommand}(#{stringGitClone}|#{stringGitCheckout})(.*?)#{stringFailed}(.*)[\n]*/])
 							@gitProblem += 1
