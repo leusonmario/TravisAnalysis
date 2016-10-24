@@ -37,7 +37,7 @@ TravisAnalysis is a project in Ruby that analyses some characteristics of Travis
   </tr>
 </table>
 
-For use GumTree, we recommend to download the zip file, see the table above, unzip and inform the directory where it was saved.
+For using GumTree, we recommend to download the zip file, see the table above, unzip and inform the directory where it was saved.
 
 # Running the Analysis
 
