@@ -2,6 +2,7 @@
 #file: GTAnalysis.rb
 
 require 'rubygems'
+require 'fileutils'
 require './Repository/MergeCommit.rb'
 
 class GTAnalysis
@@ -16,14 +17,56 @@ class GTAnalysis
 		
 		pathCopies = createCopyProject(parents, pathProject)
 
-		puts @pathGT
 		Dir.chdir @pathGT
-		
-		gumLeft = %x(./gumtree webdiff #{pathCopies[0]} #{pathCopies[1]})
-		gumRigth = %x(./gumtree webdiff #{pathCopies[0]} #{pathCopies[2]})
-		
+		diffGT(pathCopies[0], pathCopies[1], pathCopies[2])
 		deleteProjectCopies(pathCopies)
 		Dir.chdir actualPath
+	end
+
+	def diffGT(base, left, rigth)
+		baseFiles = getAllFiles(base)
+		leftFiles = getAllFiles(left)
+		rigthFiles = getAllFiles(rigth)
+		
+		leftDiff = ""
+		rigthDiff = ""
+
+		baseFiles.each do |baseFile|
+			leftFiles.each do |leftFile|
+				if (baseFile[/\/+[a-zA-Z]*\.java/] == leftFile[/\/+[a-zA-Z]*\.java/])
+					leftDiff = leftFile
+					break
+				end
+			end
+			rigthFiles.each do |rigthFile|
+				if (baseFile[/\/+[a-zA-Z]*\.java/] == rigthFile[/\/+[a-zA-Z]*\.java/])
+					rigthDiff = rigthFile
+					break
+				end
+			end
+
+			if (leftDiff != "")
+				leftDiffGT = runGTDiff(baseFile, leftDiff)
+			end
+			if (rigthDiff != "")
+				rigthDiffGT = runGTDiff(baseFile, rigthDiff)
+			end
+			leftDiff = ""
+			rigthDiff = ""
+		end
+	end
+
+	def runGTDiff(baseFile, branchFile)
+		diff = %x(./gumtree diff #{baseFile} #{branchFile})
+	end
+
+	def getAllFiles(pathFiles)
+		pathAllFiles = []
+		Find.find(pathFiles) do |path|
+	  		pathAllFiles << path if path =~ /.*\.java$/
+		end
+		pathAllFiles.sort_by!{ |e| e.downcase }
+		return pathAllFiles
 	end
 
 	def createCopyProject(parents, pathProject)
