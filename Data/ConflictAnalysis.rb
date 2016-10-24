@@ -1,9 +1,6 @@
 #!/usr/bin/env ruby
 #file: buildTravis.rb
 
-require 'travis'
-require 'csv'
-require 'rubygems'
 require './Repository/MergeCommit.rb'
 
 class ConflictAnalysis

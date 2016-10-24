@@ -1,9 +1,6 @@
 #!/usr/bin/env ruby
 #file: conflictCategory.rb
 
-require 'travis'
-require 'csv'
-require 'rubygems'
 require_relative 'ConflictCategories'
 
 class ConflictCategoryFailed

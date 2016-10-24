@@ -1,9 +1,6 @@
 #!/usr/bin/env ruby
 #file: conflictCategory.rb
 
-require 'travis'
-require 'csv'
-require 'rubygems'
 require './Repository/MergeCommit.rb'
 require './GumTree/GTAnalysis.rb'
 require_relative 'ConflictCategories'

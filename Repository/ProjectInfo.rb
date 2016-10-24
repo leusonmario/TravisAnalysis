@@ -1,10 +1,6 @@
 #!/usr/bin/env ruby
 #file: projectInfo.rb
 
-require 'travis'
-require 'csv'
-require 'fileutils'
-require 'find'
 require_relative 'GitProject.rb'
 
 class ProjectInfo

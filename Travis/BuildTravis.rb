@@ -2,9 +2,6 @@
 #file: buildTravis.rb
 
 require 'travis'
-require 'csv'
-require 'rubygems'
-require 'fileutils'
 require './Repository/MergeCommit.rb'
 require './Travis/ConflictCategoryErrored.rb'
 require './Travis/ConflictCategoryFailed.rb'

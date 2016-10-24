@@ -1,8 +1,6 @@
 #!/usr/bin/env ruby
 #file: conflictBuild.rb
 
-require 'rubygems'
-
 class ConflictBuild
 
 	def initialize(projectPath)

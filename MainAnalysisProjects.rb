@@ -1,8 +1,8 @@
 #!/usr/bin/env ruby
 
-require 'csv'
 require 'fileutils'
 require 'find'
+require 'csv'
 require './Repository/GitProject.rb'
 require './Repository/ProjectInfo.rb'
 require './Travis/BuildTravis.rb'

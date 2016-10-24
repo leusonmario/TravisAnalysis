@@ -1,8 +1,6 @@
 #!/usr/bin/env ruby
 #file: GTAnalysis.rb
 
-require 'rubygems'
-require 'fileutils'
 require './Repository/MergeCommit.rb'
 
 class GTAnalysis

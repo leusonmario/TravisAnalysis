@@ -1,17 +1,6 @@
 #!/usr/bin/env ruby
 #file: mergeCommit.rb
 
-require 'travis'
-require 'csv'
-require 'rubygems'
-require 'fileutils'
-require 'find'
-require 'octokit'
-require 'github_api'
-require 'json'
-require 'find'
-require 'fileutils'
-
 class MergeCommit
 
 	def initialize()
