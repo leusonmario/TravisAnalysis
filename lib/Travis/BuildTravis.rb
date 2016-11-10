@@ -10,10 +10,10 @@ require_relative 'ConflictBuild.rb'
 
 class BuildTravis
 
-	def initialize(projectName, projectPath)
+	def initialize(projectName, pathProject)
 		@projectName = projectName
-		@projectPath = projectPath.gsub('.travis.yml', '')
-		@gitProject = GitProject.new(projectPath)
+		@pathProject = pathProject.gsub('.travis.yml', '')
+		@gitProject = GitProject.new(pathProject)
 		@projectMergeScenarios = @gitProject.getMergeScenarios()
 	end
 
@@ -21,8 +21,8 @@ class BuildTravis
 		@projectName
 	end
 
-	def getProjectPath()
-		@projectPath
+	def getPathProject()
+		@pathProject
 	end
 
 	def getMergeScenarios()
@@ -31,11 +31,11 @@ class BuildTravis
 
 	def mergeScenariosAnalysis(build)
 		mergeCommit = MergeCommit.new()
-		resultMergeCommit = mergeCommit.getParentsMergeIfTrue(@projectPath, build.commit.sha)
+		resultMergeCommit = mergeCommit.getParentsMergeIfTrue(@pathProject, build.commit.sha)
 		return resultMergeCommit
 	end
 
-	def getStatusBuildsProject(projectName, pathResultByProject, pathConflicstAnalysis, pathMergeScenariosAnalysis, pathConflicsCauses, pathErroredCases, pathFailedCases, pathGumTree)
+	def getStatusBuildsProject(projectName, writeCSVs, pathGumTree)
 		buildTotalPush = 0
 		buildTotalPull = 0
 		buildPushPassed = 0
@@ -69,16 +69,13 @@ class BuildTravis
 		failedConflicts = ConflictAnalysis.new()
 		canceledConflicts = ConflictAnalysis.new()
 		
-		confBuild = ConflictBuild.new(@projectPath)
+		confBuild = ConflictBuild.new(@pathProject)
 		confErrored = ConflictCategoryErrored.new()
 		confFailed = ConflictCategoryFailed.new()
 		
-		projectNameFile = projectName.partition('/').last
-		createConfictFiles(pathErroredCases, pathFailedCases, projectNameFile)
-		Dir.chdir pathResultByProject
-		CSV.open(projectName.partition('/').last+"Final.csv", "w") do |csv|
- 			csv << ["Status", "Type", "Commit", "ID"]
- 		end
+		projectNameFile = getProjectName().partition('/').last
+		writeCSVs.createConflictFiles(projectNameFile)
+		writeCSVs.createResultByProjectFiles(projectName.partition('/').last)
 		
 		projectBuild = Travis::Repository.find(projectName)
 		projectBuild.each_build do |build|
@@ -135,16 +132,16 @@ class BuildTravis
 							totalMSErrored += 1
 							isConflict = confBuild.conflictAnalysisCategories(erroredConflicts, type, result)
 							if (isConflict) 
-								printConflictBuild(build, pathErroredCases, projectNameFile)
+								writeCSVs.printConflictBuild(build, projectNameFile)
+								confErrored.findConflictCause(build, getPathProject(), pathGumTree)
 							end
-							confErrored.findConflictCause(build, getProjectPath(), pathGumTree)
 						elsif (status == "failed")
 							totalMSFailed += 1
 							isConflict = confBuild.conflictAnalysisCategories(failedConflicts, type, result)
 							if (isConflict) 
-								printConflictTest(build, pathFailedCases, projectNameFile)
+								writeCSVs.printConflictTest(build, projectNameFile)
+								confFailed.findConflictCause(build)
 							end
-							confFailed.findConflictCause(build)
 						else
 							totalMSCanceled += 1
 							confBuild.conflictAnalysisCategories(canceledConflicts, type, result)
@@ -153,42 +150,30 @@ class BuildTravis
 				end
 			end
 
- 			Dir.chdir pathResultByProject
-			CSV.open(projectName.partition('/').last+"Final.csv", "a+") do |csv|
-				csv << [build.state, typeBuild, build.commit.sha, build.id]
-			end
+			writeCSVs.writeResultByProject(projectName.partition('/').last, typeBuild, build)
+ 			
 		end
 		
-		Dir.chdir pathMergeScenariosAnalysis
-		CSV.open("TotalMergeScenariosFinal.csv", "a+") do |csv|
-			csv << [projectName, @projectMergeScenarios.size, builtMergeScenarios.size, totalBuilds, totalRepeatedBuilds, totalMSPassed, totalMSErrored, totalMSFailed, totalMSCanceled]
-		end
-
-		Dir.chdir pathConflicsCauses
-		CSV.open("CausesBuildConflicts.csv", "a+") do |csv|
-			csv << [projectName, confErrored.getTotal(), confErrored.getUnvailableSymbol(), confErrored.getGitProblem(), confErrored.getRemoteError(), 
-					confErrored.getCompilerError(), confErrored.getOtherError()]
-		end
-
-		CSV.open("CausesTestConflicts.csv", "a+") do |csv|
-			csv << [projectName, confFailed.getTotal(), confFailed.getFailed(), confFailed.getGitProblem(), confFailed.getRemoteError(), confFailed.getPermission(), 
-				confFailed.getOtherError()]
-		end
-
-		Dir.chdir pathConflicstAnalysis
-		CSV.open("ConflictsAnalysisFinal.csv", "a+") do |csv|
-			csv << [projectName, @projectMergeScenarios.size, @projectMergeScenarios.size - builtMergeScenarios.size, totalRepeatedBuilds, totalPushesNoBuilt, totalPushes, 
-					passedConflicts.getTotalPushes, passedConflicts.getTotalTravis, passedConflicts.getTotalTravisConf, passedConflicts.getTotalConfig, 
-					passedConflicts.getTotalConfigConf, passedConflicts.getTotalSource, passedConflicts.getTotalSourceConf, passedConflicts.getTotalAll, 
-					passedConflicts.getTotalAllConf, erroredConflicts.getTotalPushes, erroredConflicts.getTotalTravis, erroredConflicts.getTotalTravisConf, 
-					erroredConflicts.getTotalConfig, erroredConflicts.getTotalConfigConf, erroredConflicts.getTotalSource, erroredConflicts.getTotalSourceConf, 
-					erroredConflicts.getTotalAll, erroredConflicts.getTotalAllConf, failedConflicts.getTotalPushes, failedConflicts.getTotalTravis, 
-					failedConflicts.getTotalTravisConf, failedConflicts.getTotalConfig, failedConflicts.getTotalConfigConf, failedConflicts.getTotalSource, 
-					failedConflicts.getTotalSourceConf,failedConflicts.getTotalAll, failedConflicts.getTotalAllConf, canceledConflicts.getTotalPushes, 
-					canceledConflicts.getTotalTravis,canceledConflicts.getTotalTravisConf, canceledConflicts.getTotalConfig, canceledConflicts.getTotalConfigConf, 
-					canceledConflicts.getTotalSource, canceledConflicts.getTotalSourceConf,canceledConflicts.getTotalAll, canceledConflicts.getTotalAllConf]
-		end
+		writeCSVs.writeMergeScenariosFinal(projectName, @projectMergeScenarios.size, builtMergeScenarios.size, totalBuilds, totalRepeatedBuilds, totalMSPassed, totalMSErrored, 
+				totalMSFailed, totalMSCanceled)
 		
+		writeCSVs.writeBuildConflicts(projectName, confErrored.getTotal(), confErrored.getUnvailableSymbol(), confErrored.getGitProblem(), confErrored.getRemoteError(), 
+			confErrored.getCompilerError(), confErrored.getOtherError())
+
+		writeCSVs.writeTestConflicts(projectName, confFailed.getTotal(), confFailed.getFailed(), confFailed.getGitProblem(), confFailed.getRemoteError(), confFailed.getPermission(), 
+			confFailed.getOtherError())
+
+		writeCSVs.writeConflictsAnalysisFinal(projectName, @projectMergeScenarios.size, @projectMergeScenarios.size - builtMergeScenarios.size, totalRepeatedBuilds, totalPushesNoBuilt, totalPushes, 
+						passedConflicts.getTotalPushes, passedConflicts.getTotalTravis, passedConflicts.getTotalTravisConf, passedConflicts.getTotalConfig, 
+						passedConflicts.getTotalConfigConf, passedConflicts.getTotalSource, passedConflicts.getTotalSourceConf, passedConflicts.getTotalAll, 
+						passedConflicts.getTotalAllConf, erroredConflicts.getTotalPushes, erroredConflicts.getTotalTravis, erroredConflicts.getTotalTravisConf, 
+						erroredConflicts.getTotalConfig, erroredConflicts.getTotalConfigConf, erroredConflicts.getTotalSource, erroredConflicts.getTotalSourceConf, 
+						erroredConflicts.getTotalAll, erroredConflicts.getTotalAllConf, failedConflicts.getTotalPushes, failedConflicts.getTotalTravis, 
+						failedConflicts.getTotalTravisConf, failedConflicts.getTotalConfig, failedConflicts.getTotalConfigConf, failedConflicts.getTotalSource, 
+						failedConflicts.getTotalSourceConf,failedConflicts.getTotalAll, failedConflicts.getTotalAllConf, canceledConflicts.getTotalPushes, 
+						canceledConflicts.getTotalTravis,canceledConflicts.getTotalTravisConf, canceledConflicts.getTotalConfig, canceledConflicts.getTotalConfigConf, 
+						canceledConflicts.getTotalSource, canceledConflicts.getTotalSourceConf,canceledConflicts.getTotalAll, canceledConflicts.getTotalAllConf)
+
 		return projectName, buildTotalPush, buildPushPassed, buildPushErrored, buildPushFailed, buildPushCanceled, buildTotalPull, buildPullPassed, buildPullErrored, buildPullFailed, buildPullCanceled
 	end
 

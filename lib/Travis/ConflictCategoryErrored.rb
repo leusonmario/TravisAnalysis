@@ -72,7 +72,7 @@ class ConflictCategoryErrored
 							text = part[/\[ERROR\] COMPILATION ERROR :[\s\S]*\[ERROR\](.*?)\[INFO\] [0-9]+/m, 1]
 							fileConflict = text.match(/[A-Za-z]+\.java/)[0].to_s
 							puts build.id
-							gtAnalysis.getGumTreeAnalysis(pathProject, build, fileConflict)
+							#gtAnalysis.getGumTreeAnalysis(pathProject, build, fileConflict)
 							@unvailableSymbol += 1
 						elsif (part[/#{stringTheCommand}\"[\.]?[\/]?[#{stringMoveCMD}]?[w]?[\s\S]*#{stringStopped}/] || part[/#{stringTheCommand}#{stringPermission}+(.*)#{stringFailed}(.*)/] || part[/#{stringElement}[(\n\s)(a-zA-Z0-9)(\'\-\/\.\:\,\[\])]*#{stringNoExist}/])
 							@compilerError += 1
