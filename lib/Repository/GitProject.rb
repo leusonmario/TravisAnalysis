@@ -1,22 +1,40 @@
 #!/usr/bin/env ruby
 #file: gitProject.rb
 
+require 'octokit'
+
 class GitProject
 
-	def initialize(pathProject)
-		@path = pathProject
-		@projetcName = findProjectName()
-		@mergeScenarios = Array.new
-		getMergesScenariosByProject()
-		@forksList = []
+	def initialize(project, localClone, login, password)
+		@projectAvailable = isProjectAvailable(project, login, password)
+		if(getProjectAvailable())
+			@projetcName = project
+			@localClone = localClone
+			@path = cloneProjectLocally(project, localClone)
+			@mergeScenarios = Array.new
+			getMergesScenariosByProject()
+			@forksList = []
+		end
 	end
 
 	def getPath()
 		@path
 	end
 
+	def getProjectAvailable()
+		@projectAvailable
+	end
+
+	def getLocalClone()
+		@localClone
+	end
+
+	def getLocalName()
+		@localName
+	end
+
 	def getProjectName()
-		@projectName
+		@projetcName
 	end
 
 	def getMergeScenarios()
@@ -25,6 +43,19 @@ class GitProject
 
 	def getForksList()
 		@forksList
+	end
+
+	def cloneProjectLocally(project, localClone)
+		Dir.chdir localClone
+		@localName = project.gsub('/','')
+		clone = %x(git clone https://github.com/#{project} #{getLocalName()})
+		Dir.chdir getLocalName()
+		return Dir.pwd
+	end
+
+	def deleteProject()
+		Dir.chdir getLocalClone()
+		delete = %x(rm -rf #{getLocalName()})
 	end
 
 	def findProjectName()
@@ -74,6 +105,20 @@ class GitProject
 				 	puts "NO TRAVIS PROJECT"
 			end
 		end
+	end
+
+	def isProjectAvailable(projectName, login, password)
+		Octokit.auto_paginate = true
+		client = Octokit::Client.new \
+	  		:login    => login,
+	  		:password => password
+		begin
+			contentsProject = client.contents(projectName)
+			return true
+		rescue Exception => e  
+			puts "PROJECT NOT FOUND"
+		end
+		return false
 	end
 	
 	def getNumberForks()

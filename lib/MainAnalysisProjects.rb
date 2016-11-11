@@ -10,17 +10,17 @@ require './Out/WriteCSVs.rb'
 
 class MainAnalysisProjects
 
-	def initialize(pathAnalysis, loginUser, passwordUser, pathGumTree)
-		@pathAnalysis = pathAnalysis
+	def initialize(loginUser, passwordUser, pathGumTree, projectsList)
 		@loginUser = loginUser
 		@passwordUser = passwordUser
 		@pathGumTree = pathGumTree
+		@localClone = Dir.pwd
 		@writeCSVs = WriteCSVs.new(Dir.pwd)
-		@projectsInfo = ProjectInfo.new(pathAnalysis)
+		@projectsList = projectsList
 	end
 
-	def getPathAnalysis()
-		@pathAnalysis
+	def getLocalCLone()
+		@localClone
 	end
 
 	def getLoginUser()
@@ -39,8 +39,8 @@ class MainAnalysisProjects
 		@writeCSVs
 	end
 
-	def getProjectsInfo()
-		@projectsInfo
+	def getProjectsList()
+		@projectsList
 	end
 
 	def printStartAnalysis()
@@ -67,13 +67,17 @@ class MainAnalysisProjects
 		printStartAnalysis()
 		index = 1
 		
-		@projectsInfo.getPathProjects().each do |pathProject|
-			gitProject = GitProject.new(pathProject)
-			projectName = gitProject.getProjectName()
-			printProjectInformation(index, projectName)
-			buildTravis = BuildTravis.new(projectName, pathProject)
-			projectAnalysis = buildTravis.getStatusBuildsProject(projectName, getWriteCSVs(), getPathGumTree())
-			getWriteCSVs().writeResultsAll(projectAnalysis)
+		@projectsList.each do |project|
+			printProjectInformation(index, project)
+			gitProject = GitProject.new(project, getLocalCLone(), getLoginUser(), getPasswordUser())
+			if(gitProject.getProjectAvailable())
+				projectName = gitProject.getProjectName()
+				buildTravis = BuildTravis.new(projectName, gitProject)
+				projectAnalysis = buildTravis.getStatusBuildsProject(projectName, getWriteCSVs(), getPathGumTree())
+				if (projectAnalysis != nil)
+					getWriteCSVs().writeResultsAll(projectAnalysis)
+				end
+			end
 			index += 1
 		end
 
@@ -91,8 +95,17 @@ File.open("properties", "r") do |text|
 	end
 end
 
+projectsList = []
+File.open("projectsList", "r") do |text|
+	indexLine = 0
+	text.each_line do |line|
+		projectsList[indexLine] = line[/\"(.*?)\"/, 1]
+		indexLine += 1
+	end
+end
+
 actualPath = Dir.pwd
-project = MainAnalysisProjects.new(parameters[0], parameters[1], parameters[2], parameters[3])
+project = MainAnalysisProjects.new(parameters[1], parameters[2], parameters[3], projectsList)
 project.runAnalysis()
 
 Dir.chdir actualPath
