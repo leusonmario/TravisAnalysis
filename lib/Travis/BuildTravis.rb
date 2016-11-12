@@ -112,45 +112,45 @@ class BuildTravis
 						else
 							buildPushCanceled += 1
 						end
-					end
-					
-					if (@projectMergeScenarios.include? build.commit.sha+"\n" or @projectMergeScenarios.include? build.commit.sha)					
-						totalBuilds += 1
 
-						if(builtMergeScenarios.include? build.commit.sha+"\n" or builtMergeScenarios.include? build.commit.sha)
-							totalRepeatedBuilds += 1
-						else
-							totalPushesMergeScenarios += 1
-							builtMergeScenarios.push(build.commit.sha.gsub('\\n',''))
-							
-							mergeCommit = mergeScenariosAnalysis(build)
-							result = @gitProject.conflictScenario(mergeCommit, projectBuild, build)
-							if (result)
-								totalPushes += 1
-							else (!result)
-								totalPushesNoBuilt+=1		
-							end
-							type = confBuild.typeConflict(build)
-							if (status == "passed")
-								totalMSPassed += 1
-								confBuild.conflictAnalysisCategories(passedConflicts, type, result)
-							elsif (status == "errored")
-								totalMSErrored += 1
-								isConflict = confBuild.conflictAnalysisCategories(erroredConflicts, type, result)
-								if (isConflict) 
-									writeCSVs.printConflictBuild(build, projectNameFile)
-									confErrored.findConflictCause(build, getPathProject(), pathGumTree)
-								end
-							elsif (status == "failed")
-								totalMSFailed += 1
-								isConflict = confBuild.conflictAnalysisCategories(failedConflicts, type, result)
-								if (isConflict) 
-									writeCSVs.printConflictTest(build, projectNameFile)
-									confFailed.findConflictCause(build)
-								end
+						if (@projectMergeScenarios.include? build.commit.sha+"\n" or @projectMergeScenarios.include? build.commit.sha)					
+							totalBuilds += 1
+
+							if(builtMergeScenarios.include? build.commit.sha+"\n" or builtMergeScenarios.include? build.commit.sha)
+								totalRepeatedBuilds += 1
 							else
-								totalMSCanceled += 1
-								confBuild.conflictAnalysisCategories(canceledConflicts, type, result)
+								totalPushesMergeScenarios += 1
+								builtMergeScenarios.push(build.commit.sha.gsub('\\n',''))
+								
+								mergeCommit = mergeScenariosAnalysis(build)
+								result = @gitProject.conflictScenario(mergeCommit, projectBuild, build)
+								if (result)
+									totalPushes += 1
+								else (!result)
+									totalPushesNoBuilt+=1		
+								end
+								type = confBuild.typeConflict(build)
+								if (status == "passed")
+									totalMSPassed += 1
+									confBuild.conflictAnalysisCategories(passedConflicts, type, result)
+								elsif (status == "errored")
+									totalMSErrored += 1
+									isConflict = confBuild.conflictAnalysisCategories(erroredConflicts, type, result)
+									if (isConflict) 
+										writeCSVs.printConflictBuild(build, projectNameFile)
+										confErrored.findConflictCause(build, getPathProject(), pathGumTree)
+									end
+								elsif (status == "failed")
+									totalMSFailed += 1
+									isConflict = confBuild.conflictAnalysisCategories(failedConflicts, type, result)
+									if (isConflict) 
+										writeCSVs.printConflictTest(build, projectNameFile)
+										confFailed.findConflictCause(build)
+									end
+								else
+									totalMSCanceled += 1
+									confBuild.conflictAnalysisCategories(canceledConflicts, type, result)
+								end
 							end
 						end
 					end
