@@ -76,7 +76,7 @@ For example:
 </table>
   </li>
   <li>
-  On the <i>projectsList</i> file, inform the projects that you want to analysis. These projects will be downloaded and saved temporally for the analysis execution. Each line of the file represents a project that is formed by:
+  On the <i>projectsList</i> file, inform the projects that you want to analysis. These projects will be downloaded and saved temporarily for the analysis execution. Each line of the file represents a project that is formed by:
     <ul>
     <li>
       The owner of the project, for example "jpds", and
