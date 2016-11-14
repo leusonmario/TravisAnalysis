@@ -74,7 +74,6 @@ class BuildTravis
 		confFailed = ConflictCategoryFailed.new()
 		
 		projectNameFile = getProjectName().partition('/').last
-		writeCSVs.createConflictFiles(projectNameFile)
 		writeCSVs.createResultByProjectFiles(projectName.partition('/').last)
 		
 		projectBuild = nil
@@ -124,32 +123,30 @@ class BuildTravis
 								
 								mergeCommit = mergeScenariosAnalysis(build)
 								result = @gitProject.conflictScenario(mergeCommit, projectBuild, build)
-								if (result)
+								if (result[0])
 									totalPushes += 1
-								else (!result)
-									totalPushesNoBuilt+=1		
-								end
-								type = confBuild.typeConflict(build)
-								if (status == "passed")
-									totalMSPassed += 1
-									confBuild.conflictAnalysisCategories(passedConflicts, type, result)
-								elsif (status == "errored")
-									totalMSErrored += 1
-									isConflict = confBuild.conflictAnalysisCategories(erroredConflicts, type, result)
-									if (isConflict) 
-										writeCSVs.printConflictBuild(build, projectNameFile)
-										confErrored.findConflictCause(build, getPathProject(), pathGumTree)
-									end
-								elsif (status == "failed")
-									totalMSFailed += 1
-									isConflict = confBuild.conflictAnalysisCategories(failedConflicts, type, result)
-									if (isConflict) 
-										writeCSVs.printConflictTest(build, projectNameFile)
-										confFailed.findConflictCause(build)
+									type = confBuild.typeConflict(build)
+									if (status == "passed")
+										totalMSPassed += 1
+										confBuild.conflictAnalysisCategories(passedConflicts, type, result)
+									elsif (status == "errored")
+										totalMSErrored += 1
+										isConflict = confBuild.conflictAnalysisCategories(erroredConflicts, type, result)
+										if (isConflict) 
+											writeCSVs.printConflictBuild(build, result[1], result[2], confErrored.findConflictCause(build, getPathProject(), pathGumTree), projectNameFile)
+										end
+									elsif (status == "failed")
+										totalMSFailed += 1
+										isConflict = confBuild.conflictAnalysisCategories(failedConflicts, type, result)
+										if (isConflict) 
+											writeCSVs.printConflictTest(build, result[1], result[2], confFailed.findConflictCause(build), projectNameFile)
+										end
+									else
+										totalMSCanceled += 1
+										confBuild.conflictAnalysisCategories(canceledConflicts, type, result)
 									end
 								else
-									totalMSCanceled += 1
-									confBuild.conflictAnalysisCategories(canceledConflicts, type, result)
+									totalPushesNoBuilt+=1		
 								end
 							end
 						end

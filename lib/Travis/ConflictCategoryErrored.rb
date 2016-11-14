@@ -63,6 +63,7 @@ class ConflictCategoryErrored
 		stringStopped = "Your build has been stopped"
 		
 		indexJob = 0
+		result = ""
 		gtAnalysis = GTAnalysis.new(pathGumTree)
 		while (indexJob < build.job_ids.size)
 			if (build.jobs[indexJob].state == "errored")
@@ -72,14 +73,19 @@ class ConflictCategoryErrored
 							text = part[/\[ERROR\] COMPILATION ERROR :[\s\S]*\[ERROR\](.*?)\[INFO\] [0-9]+/m, 1]
 							fileConflict = text.match(/[A-Za-z]+\.java/)[0].to_s
 							#gtAnalysis.getGumTreeAnalysis(pathProject, build, fileConflict)
+							result = "unvailableSymbol"
 							@unvailableSymbol += 1
 						elsif (part[/#{stringTheCommand}\"[\.]?[\/]?[#{stringMoveCMD}]?[w]?[\s\S]*#{stringStopped}/] || part[/#{stringTheCommand}#{stringPermission}+(.*)#{stringFailed}(.*)/] || part[/#{stringElement}[(\n\s)(a-zA-Z0-9)(\'\-\/\.\:\,\[\])]*#{stringNoExist}/])
+							result = "compilerError"
 							@compilerError += 1
 						elsif (part[/#{stringTheCommand}(#{stringGitClone}|#{stringGitCheckout})(.*?)#{stringFailed}(.*)[\n]*/])
+							result = "gitProblem"
 							@gitProblem += 1
 						elsif (part[/#{stringNoOutput}[(\n\s)(a-zA-Z0-9)(\-\/\.\:\,\[\]\=\")]*#{stringTerminated}/])
+							result = "remoteError"
 							@remoteError += 1
 						else
+							result = "otherError"
 							@otherError += 1
 						end
 					end
@@ -87,5 +93,6 @@ class ConflictCategoryErrored
 			end
 			indexJob += 1
 		end
+		return result
 	end
 end

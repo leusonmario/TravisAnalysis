@@ -193,17 +193,31 @@ class WriteCSVs
 		end
 	end
 
-	def printConflictBuild(build, projectName)
+	def printConflictBuild(build, buildOne, buildTwo, state, projectName)
 		Dir.chdir getPathErroredCases()
-		CSV.open("Errored"+projectName+".csv", "a+") do |csv|
-			csv << [build.id]
+		if (File.exists?("Errored"+projectName+".csv"))
+			CSV.open("Errored"+projectName+".csv", "a+") do |csv|
+				csv << [build.id, buildOne.id, buildTwo.id, state]
+			end
+		else
+			CSV.open("Errored"+projectName+".csv", "w") do |csv|
+				csv << ["BuildID", "BuildParentOne", "BuildParentTwo", "MessageState"]
+				csv << [build.id, buildOne.id, buildTwo.id, state]
+			end			
 		end
 	end
 
-	def printConflictTest(build, projectName)
+	def printConflictTest(build, buildOne, buildTwo, state, projectName)
 		Dir.chdir getPathFailedCases()
-		CSV.open("Failed"+projectName+".csv", "a+") do |csv|
-			csv << [build.id]
+		if (File.exists?("Failed"+projectName+".csv"))
+			CSV.open("Failed"+projectName+".csv", "a+") do |csv|
+				csv << [build.id, buildOne.id, buildTwo.id, state]
+			end
+		else
+			CSV.open("Failed"+projectName+".csv", "w") do |csv|
+				csv << ["BuildID", "BuildParentOne", "BuildParentTwo", "MessageState"]
+				csv << [build.id, buildOne.id, buildTwo.id, state]
+			end			
 		end
 	end
 

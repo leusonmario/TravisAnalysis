@@ -29,10 +29,6 @@ class GitProject
 		@localClone
 	end
 
-	def getLocalName()
-		@localName
-	end
-
 	def getProjectName()
 		@projetcName
 	end
@@ -47,15 +43,14 @@ class GitProject
 
 	def cloneProjectLocally(project, localClone)
 		Dir.chdir localClone
-		@localName = project.gsub('/','')
-		clone = %x(git clone https://github.com/#{project} #{getLocalName()})
-		Dir.chdir getLocalName()
+		clone = %x(git clone https://github.com/#{project} localProject)
+		Dir.chdir "localProject"
 		return Dir.pwd
 	end
 
 	def deleteProject()
 		Dir.chdir getLocalClone()
-		delete = %x(rm -rf #{getLocalName()})
+		delete = %x(rm -rf localProject)
 	end
 
 	def findProjectName()
@@ -133,21 +128,25 @@ class GitProject
 
 	def conflictScenario(parentsMerge, projectBuilds, build)		
 		parentOne = false
+		buildOne = ""
 		parentTwo = false
+		buildTwo = ""
 		
 		projectBuilds.each_build do |mergeBuild|
 			if(parentsMerge[0].include?(mergeBuild.commit.sha) and mergeBuild.state=='passed')
 				parentOne = true
+				buildOne = mergeBuild
 			elsif (parentsMerge[1].include?(mergeBuild.commit.sha) and mergeBuild.state=='passed')
 				parentTwo = true
+				buildTwo = mergeBuild
 			end
 
 			if (parentOne and parentTwo)
-				return true
+				return true, buildOne, buildTwo
 			end
 		end	
 		
-		return false
+		return false, nil, nil
 	end
 
 end
