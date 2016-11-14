@@ -66,13 +66,25 @@ class GitProject
 	end
 
 	def getMergesScenariosByProject()
-		Dir.chdir getPath().gsub('.travis.yml','')
+		Dir.chdir getPath()
 		@mergeScenarios = Array.new
-		commitTravisInput = %x(git log --format=%aD .travis.yml | tail -1)
+		#commitTravisInput = %x(git log --format=%aD .travis.yml | tail -1)
+		commitTravisInput = getDateFirstBuild()
 		merges = %x(git log --pretty=format:'%H' --merges --since="#{commitTravisInput}")
 		merges.each_line do |mergeScenario|
 			@mergeScenarios.push(mergeScenario.gsub('\\n',''))
 		end
+	end
+
+	def getDateFirstBuild()
+		result = ""
+		firstBuild = %x(travis show 1)
+		firstBuild.each_line do |line|
+			if(line.include? "Started:")
+				result = line.gsub('Started:       ','')
+			end
+		end
+		return result
 	end
 
 	def getNumberMergeScenarios()

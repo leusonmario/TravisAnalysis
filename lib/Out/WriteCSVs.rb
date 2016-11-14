@@ -114,18 +114,7 @@ class WriteCSVs
  		end
  	end
 
- 	def createConflictFiles(projectName)
-		Dir.chdir getPathErroredCases()
-		CSV.open("Errored"+projectName+".csv", "w") do |csv|
-			csv << ["BuildID"]
-		end		
-		Dir.chdir getPathFailedCases()
-		CSV.open("Failed"+projectName+".csv", "w") do |csv|
-			csv << ["BuildID"]
-		end		
-	end
-
-	def createResultByProjectFiles(projectName)
+ 	def createResultByProjectFiles(projectName)
 		Dir.chdir getPathResultByProject()
 		CSV.open(projectName+"Final.csv", "w") do |csv|
  			csv << ["Status", "Type", "Commit", "ID"]
