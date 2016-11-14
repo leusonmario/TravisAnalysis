@@ -50,9 +50,9 @@ To run this project, you need to follow the instructions:
     Once the project is cloned, execute <i>bundle install</i> to install the dependencies specified on the Gemfile. 
   </li>
   <li>
-  Set up your information on the file <i>properties</i>
+  Set up your information on the <i>properties</i> file.
   <p>
-  First, you need to inform the path of directory that contains the projets to be analysed. Following, inform your login and password from GitHub to allow the extraction of information by the library Octokit. Finally, inform the directory that GumTree project was saved.
+  First, you need to inform your login and password from GitHub to allow the extraction of information by the library Octokit. Following, inform the directory that GumTree project was saved.
 
 For example:
 
@@ -60,10 +60,6 @@ For example:
   <tr>
     <th>Property</th>
     <th>Example</th> 
-  </tr>
-  <tr>
-    <td>PathAnalysis</td> 
-    <td>/home/jpds/Projects/</td>
   </tr>
   <tr>
     <td>Login</td>
@@ -78,6 +74,18 @@ For example:
     <td>/home/jpds/GumTree/gumtree-20160921-2.1.0-SNAPSHOT/bin/</td> 
   </tr>
 </table>
+  </li>
+  <li>
+  On the <i>projectsList</i> file, inform the projects that you want to analysis. These projects will be downloaded and saved temporarily for the analysis execution. Each line of the file represents a project that is formed by:
+    <ul>
+    <li>
+      The owner of the project, for example "jpds", and
+    </li>
+    <li>
+      The name of the project, for instance "javaToy"
+    </li>
+    </ul>
+    Each project name needs to start and finish with ". For example, "leusonmario/javaToy"
   </li>
   <li>
     On the <i>lib</i> directory, run "./MainAnalysisProjects"
