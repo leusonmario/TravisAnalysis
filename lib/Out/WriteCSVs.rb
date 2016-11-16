@@ -55,13 +55,13 @@ class WriteCSVs
 
 	def creatingResultsDirectories(actualPath)
 		Dir.chdir actualPath
-		FileUtils::mkdir_p 'ResultsAll/ResultsByProject'
-		FileUtils::mkdir_p 'ResultsAll/ConflictsAnalysis'
-		FileUtils::mkdir_p 'ResultsAll/MergeScenariosAnalysis'
-		FileUtils::mkdir_p 'ResultsAll/ConflictsCauses'
-		FileUtils::mkdir_p 'ResultsAll/ErroredCases'
-		FileUtils::mkdir_p 'ResultsAll/FailedCases'
-		Dir.chdir "ResultsAll"
+		FileUtils::mkdir_p 'FinalResults/ResultsByProject'
+		FileUtils::mkdir_p 'FinalResults/ConflictsAnalysis'
+		FileUtils::mkdir_p 'FinalResults/MergeScenariosAnalysis'
+		FileUtils::mkdir_p 'FinalResults/ConflictsCauses'
+		FileUtils::mkdir_p 'FinalResults/ErroredCases'
+		FileUtils::mkdir_p 'FinalResults/FailedCases'
+		Dir.chdir "FinalResults"
 		@pathAllResults = Dir.pwd
 		Dir.chdir "ResultsByProject"
 		@pathResultByProject = Dir.pwd
@@ -86,22 +86,22 @@ class WriteCSVs
 	def createCSV()
 
 		Dir.chdir getPathAllResults
-		CSV.open("resultsAllFinal.csv", "wb") do |csv|
+		CSV.open("AllProjectsResult.csv", "wb") do |csv|
 			csv << ["Project", "TotalBuildPush", "TotalPushPassed", "TotalPushErrored", "TotalPushFailed", "TotalPushCanceled", 
 				"TotalBuildPull", "TotalPullPassed", "TotalPullErrored", "TotalPullFailed", "TotalPullCanceled"]
 		end
 		
 		Dir.chdir getPathMergeScenariosAnalysis
-		CSV.open("TotalMergeScenariosFinal.csv", "wb") do |csv|
-			csv << ["Project", "TotalMS", "TotalMSBuilded", "AllBuilds", "TotalRepeatedMSB", "TotalMSPassed", "TotalMSErrored", "TotalMSFailed", "TotalMSCanceled"]
+		CSV.open("MergeScenariosProjects.csv", "wb") do |csv|
+			csv << ["Project", "TotalMS", "TotalMSBuilt", "AllBuilds", "TotalRepeatedMSB", "TotalMSPassed", "TotalMSErrored", "TotalMSFailed", "TotalMSCanceled"]
 		end
 		
 		Dir.chdir getPathConflictsCauses
-		CSV.open("CausesBuildConflicts.csv", "wb") do |csv|
+		CSV.open("BuildConflictsCauses.csv", "wb") do |csv|
 			csv << ["ProjectName",	"Total", "NO FOUND SYMBOL", "GIT PROBLEM", "REMOTE ERROR", "COMPILER ERROR", "ANOTHER ERROR"]
 		end
 
-		CSV.open("CausesTestConflicts.csv", "wb") do |csv|
+		CSV.open("TestConflictsCauses.csv", "wb") do |csv|
 			csv << ["ProjectName",	"Total", "FAILED", "GIT PROBLEM", "REMOTE ERROR", "ANOTHER ERROR"]
 		end
 
@@ -123,7 +123,7 @@ class WriteCSVs
 
  	def writeResultsAll(projectInfo)
  		Dir.chdir getPathAllResults
-	 	CSV.open("resultsAllFinal.csv", "a+") do |csv|
+	 	CSV.open("AllProjectsResult.csv", "a+") do |csv|
  			csv << [projectInfo[0], projectInfo[1], projectInfo[2], projectInfo[3], projectInfo[4], projectInfo[5], projectInfo[6], projectInfo[7], projectInfo[8], 
 			projectInfo[9], projectInfo[10]]
 		end
@@ -138,21 +138,21 @@ class WriteCSVs
 
 	def writeMergeScenariosFinal(projectName, projectMergeScenariosSize, builtMergeScenariosSize, totalBuilds, totalRepeatedBuilds, totalMSPassed, totalMSErrored, totalMSFailed, totalMSCanceled)
 		Dir.chdir getPathMergeScenariosAnalysis()
-		CSV.open("TotalMergeScenariosFinal.csv", "a+") do |csv|
+		CSV.open("MergeScenariosProjects.csv", "a+") do |csv|
 			csv << [projectName, projectMergeScenariosSize, builtMergeScenariosSize, totalBuilds, totalRepeatedBuilds, totalMSPassed, totalMSErrored, totalMSFailed, totalMSCanceled]
 		end
 	end
 
 	def writeBuildConflicts(projectName, confErroredTotal, confErroredUnvailableSymbol, confErroredGitProblem, confErroredRemoteError, confErroredCompilerError, confErroredOtherError)
 		Dir.chdir getPathConflictsCauses()
-		CSV.open("CausesBuildConflicts.csv", "a+") do |csv|
+		CSV.open("BuildConflictsCauses.csv", "a+") do |csv|
 			csv << [projectName, confErroredTotal, confErroredUnvailableSymbol, confErroredGitProblem, confErroredRemoteError, confErroredCompilerError, confErroredOtherError]
 		end
 	end
 
 	def writeTestConflicts(projectName, confFailedTotal, confFailedFailed, confFailedGitProblem, confFailedRemoteError, confFailedPermission, confFailedOtherError)
 		Dir.chdir getPathConflictsCauses()
-		CSV.open("CausesTestConflicts.csv", "a+") do |csv|
+		CSV.open("TestConflictsCauses.csv", "a+") do |csv|
 			csv << [projectName, confFailedTotal, confFailedFailed, confFailedRemoteError, confFailedPermission, confFailedOtherError]
 		end
 	end

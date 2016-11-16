@@ -133,22 +133,22 @@ class BuildTravis
 								type = confBuild.typeConflict(build)
 								if (status == "passed")
 									totalMSPassed += 1
-									confBuild.conflictAnalysisCategories(passedConflicts, type, result)
+									confBuild.conflictAnalysisCategories(passedConflicts, type, result[0])
 								elsif (status == "errored")
 									totalMSErrored += 1
-									isConflict = confBuild.conflictAnalysisCategories(erroredConflicts, type, result)
+									isConflict = confBuild.conflictAnalysisCategories(erroredConflicts, type, result[0])
 									if (isConflict and result[0]) 
 										writeCSVs.printConflictBuild(build, result[1], result[2], confErrored.findConflictCause(build, getPathProject(), pathGumTree), projectNameFile)
 									end
 								elsif (status == "failed")
 									totalMSFailed += 1
-									isConflict = confBuild.conflictAnalysisCategories(failedConflicts, type, result)
+									isConflict = confBuild.conflictAnalysisCategories(failedConflicts, type, result[0])
 									if (isConflict and result[0]) 
 										writeCSVs.printConflictTest(build, result[1], result[2], confFailed.findConflictCause(build), projectNameFile)
 									end
 								else
 									totalMSCanceled += 1
-									confBuild.conflictAnalysisCategories(canceledConflicts, type, result)
+									confBuild.conflictAnalysisCategories(canceledConflicts, type, result[0])
 								end
 							end
 						end

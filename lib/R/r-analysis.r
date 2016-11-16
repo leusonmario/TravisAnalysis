@@ -1,23 +1,23 @@
 rAnalysisPath = getwd()
 setwd("..")
 rootPathProject = getwd()
-pathResultsAll = c(rootPathProject, "/ResultsAll/resultsAllFinal.csv")
+pathResultsAll = c(rootPathProject, "/FinalResults/AllProjectsResult.csv")
 resultsAll = read.csv(paste(pathResultsAll, collapse=""), header=T)
 
 setwd(rootPathProject)
-pathTotalMergesScenarios = c(rootPathProject, "/ResultsAll/MergeScenariosAnalysis/TotalMergeScenariosFinal.csv")
+pathTotalMergesScenarios = c(rootPathProject, "/FinalResults/MergeScenariosAnalysis/MergeScenariosProjects.csv")
 totalMergeScenarios = read.csv(paste(pathTotalMergesScenarios, collapse=""), header=T)
 
 setwd(rootPathProject)
-pathMergeScenarios = c(rootPathProject, "/ResultsAll/ConflictsAnalysis/ConflictsAnalysisFinal.csv")
+pathMergeScenarios = c(rootPathProject, "/FinalResults/ConflictsAnalysis/ConflictsAnalysisFinal.csv")
 mergeScenarios = read.csv(paste(pathMergeScenarios, collapse=""), header=T)
 
 setwd(rootPathProject)
-pathCausesFailed = c(rootPathProject, "/ResultsAll/ConflictsCauses/CausesTestConflicts.csv")
+pathCausesFailed = c(rootPathProject, "/FinalResults/ConflictsCauses/TestConflictsCauses.csv")
 causesFailedBuilds = read.csv(paste(pathCausesFailed, collapse=""), header=T)
 
 setwd(rootPathProject)
-pathCausesErrored = c(rootPathProject, "/ResultsAll/ConflictsCauses/CausesBuildConflicts.csv")
+pathCausesErrored = c(rootPathProject, "/FinalResults/ConflictsCauses/BuildConflictsCauses.csv")
 causesErroredBuilds = read.csv(paste(pathCausesErrored, collapse=""), header=T)
 
 setwd(rAnalysisPath)
@@ -264,25 +264,25 @@ dev.off()
 
 setwd(file.path(mainDir))
 
-#Slide - How frequently are Merge Scenario from Master Builded on Travis?
+#Slide - How frequently are Merge Scenario from Master Built on Travis?
 rq4 = "RQ4"
 dir.create(file.path(mainDir, rq4), showWarnings = FALSE)
 setwd(file.path(mainDir, rq4))
 
 #Merge Scenarios
 #Average
-averageMergeScenarios = (totalMergeScenarios$TotalMSBuilded)*100/totalMergeScenarios$TotalMS
+averageMergeScenarios = (totalMergeScenarios$TotalMSBuilt)*100/totalMergeScenarios$TotalMS
 averageMergeScenrioPerc = mean(averageMergeScenarios, na=TRUE)
-averageNotBuildedMS = (totalMergeScenarios$TotalMS - totalMergeScenarios$TotalMSBuilded)*100/totalMergeScenarios$TotalMS
-averageNotMergeScenrioPerc = mean(averageNotBuildedMS, na=TRUE)
+averageNotBuiltMS = (totalMergeScenarios$TotalMS - totalMergeScenarios$TotalMSBuilt)*100/totalMergeScenarios$TotalMS
+averageNotMergeScenrioPerc = mean(averageNotBuiltMS, na=TRUE)
 
 #Agregated
-agregatedMergeScenarios = sum(totalMergeScenarios$TotalMSBuilded)*100/sum(totalMergeScenarios$TotalMS)
-agregatedNotMergeScenarios = sum(totalMergeScenarios$TotalMS - totalMergeScenarios$TotalMSBuilded)*100/sum(totalMergeScenarios$TotalMS)
+agregatedMergeScenarios = sum(totalMergeScenarios$TotalMSBuilt)*100/sum(totalMergeScenarios$TotalMS)
+agregatedNotMergeScenarios = sum(totalMergeScenarios$TotalMS - totalMergeScenarios$TotalMSBuilt)*100/sum(totalMergeScenarios$TotalMS)
 
 #Txt File with the informations about the RQ4
 sink("rq4.txt")
-cat("How frequently are Merge Scenarios from Master builded on Travis?")
+cat("How frequently are Merge Scenarios from Master Built on Travis?")
 cat("\n")
 cat("Merge Scenarios")
 cat("\n")
@@ -298,25 +298,25 @@ beanplot(averageMergeScenarios, col="gray")
 dev.off()
 
 png(paste("merge-scenario.png", sep=""), width=425, height=350)
-mydataMergeScenario <- data.frame(row.names =c("Agregated", "Average"), NotBuilded =c(agregatedNotMergeScenarios, averageNotMergeScenrioPerc), Builded =c(agregatedMergeScenarios, averageMergeScenrioPerc))
+mydataMergeScenario <- data.frame(row.names =c("Agregated", "Average"), NotBuilt =c(agregatedNotMergeScenarios, averageNotMergeScenrioPerc), Built =c(agregatedMergeScenarios, averageMergeScenrioPerc))
 x <- barplot(t(as.matrix(mydataMergeScenario)), col=c("gray", "cornflowerblue"), legend=TRUE, border=NA, xlim=c(0,4), args.legend=list(bty="n", border=NA), ylab="% Percentage")
-text(x, mydataMergeScenario$NotBuilded-8, labels=round(mydataMergeScenario$NotBuilded), col="black")
-text(x, mydataMergeScenario$NotBuilded+10, labels=round(mydataMergeScenario$Builded))
+text(x, mydataMergeScenario$NotBuilt-8, labels=round(mydataMergeScenario$NotBuilt), col="black")
+text(x, mydataMergeScenario$NotBuilt+10, labels=round(mydataMergeScenario$Built))
 dev.off()
 
 setwd(file.path(mainDir))
 
-#Slide - How frequently are Errored Builds resulting from Builded Merge Scenarios?
-#What files are modified in Builded Merge Scenarios of Errored Builds?
+#Slide - How frequently are Errored Builds resulting from Built Merge Scenarios?
+#What files are modified in Built Merge Scenarios of Errored Builds?
 rq5 = "RQ5"
 dir.create(file.path(mainDir, rq5), showWarnings = FALSE)
 setwd(file.path(mainDir, rq5))
 
 #Average
-averageMergeScenariosErrored = mergeScenarios$PushesErrored*100/(totalMergeScenarios$TotalMSBuilded)
+averageMergeScenariosErrored = mergeScenarios$PushesErrored*100/(totalMergeScenarios$TotalMSBuilt)
 averageMergeScenariosErroredPerc = mean(averageMergeScenariosErrored, na=TRUE)
 #Agregated
-agregatedMergeScenariosErrored = sum(mergeScenarios$PushesErrored)*100/sum(totalMergeScenarios$TotalMSBuilded)
+agregatedMergeScenariosErrored = sum(mergeScenarios$PushesErrored)*100/sum(totalMergeScenarios$TotalMSBuilt)
 
 #Changes Distributions on modified Files
 
@@ -332,7 +332,7 @@ averageErroredPushAllTogetherPerc = mean(erroredPushAllTogether, na=TRUE)
 
 #Txt File with the informations about the RQ5
 sink("rq5.txt")
-cat("How frequently are Errored Builds resulting from Builded Merge Scenarios?")
+cat("How frequently are Errored Builds resulting from Built Merge Scenarios?")
 cat("\n")
 cat("Errored Builds from Merge Scenarios")
 cat("\n")
@@ -342,7 +342,7 @@ print("Average Value - Errored Builds")
 print(averageMergeScenariosErroredPerc)
 cat("\n")
 cat("\n")
-cat("What files are modified in Builded Merge Scenarios of Errored Builds?")
+cat("What files are modified in Built Merge Scenarios of Errored Builds?")
 cat("\n")
 cat("Changes Distribution on Modified Files - Average")
 print("Travis Changes")
@@ -367,17 +367,17 @@ dev.off()
 
 setwd(file.path(mainDir))
 
-#Slide - How frequently are Failed Builds resulting from Builded Merge Scenarios?
-#What files are modified in Builded Merge Scenarios of Failed Builds?
+#Slide - How frequently are Failed Builds resulting from Built Merge Scenarios?
+#What files are modified in Built Merge Scenarios of Failed Builds?
 rq6 = "RQ6"
 dir.create(file.path(mainDir, rq6), showWarnings = FALSE)
 setwd(file.path(mainDir, rq6))
 
 #Average
-averageMergeScenariosFailed = mergeScenarios$PushesFailed*100/(totalMergeScenarios$TotalMSBuilded)
+averageMergeScenariosFailed = mergeScenarios$PushesFailed*100/(totalMergeScenarios$TotalMSBuilt)
 averageMergeScenariosFailedPerc = mean(averageMergeScenariosFailed, na=TRUE)
 #Agregated
-agregatedMergeScenariosFailed = sum(mergeScenarios$PushesFailed)*100/sum(totalMergeScenarios$TotalMSBuilded)
+agregatedMergeScenariosFailed = sum(mergeScenarios$PushesFailed)*100/sum(totalMergeScenarios$TotalMSBuilt)
 
 failedPushTravisAll = mergeScenarios$FailedTravis*100/mergeScenarios$PushesFailed
 failedPushConfigAll = mergeScenarios$FailedConfig*100/mergeScenarios$PushesFailed
@@ -391,9 +391,9 @@ averageFailedPushAllTogetherPerc = mean(failedPushAllTogether, na=TRUE)
 
 #Txt File with the informations about the RQ6
 sink("rq6.txt")
-cat("How frequently are Failed Builds resulting from Builded Merge Scenarios?")
+cat("How frequently are Failed Builds resulting from Built Merge Scenarios?")
 cat("\n")
-cat("What files are modified in Builded Merge Scenarios of Failed Builds?")
+cat("What files are modified in Built Merge Scenarios of Failed Builds?")
 cat("\n")
 cat("Failed Builds from Merge Scenarios")
 cat("\n")
@@ -403,7 +403,7 @@ print("Average Value - Failed Builds")
 print(averageMergeScenariosFailedPerc)
 cat("\n")
 cat("\n")
-cat("What files are modified in Builded Merge Scenarios of Failed Builds?")
+cat("What files are modified in Built Merge Scenarios of Failed Builds?")
 cat("\n")
 cat("Changes Distribution on Modified Files - Average")
 print("Travis Changes")
@@ -428,7 +428,7 @@ dev.off()
 
 setwd(file.path(mainDir))
 
-#Slide - How frequently do Build Conflicts happen on Builded Merge Scenarios of Errored Builds?
+#Slide - How frequently do Build Conflicts happen on Built Merge Scenarios of Errored Builds?
 #What files are modified on Build Conflicts Scenarios?
 rq7 = "RQ7"
 dir.create(file.path(mainDir, rq7), showWarnings = FALSE)
@@ -452,10 +452,10 @@ agregatedErroredConf = (sum(mergeScenarios$ErroredTravisConf, na.rm=TRUE) + sum(
 
 #Build Conflicts - All Merge Scenarios
 #Average
-averageErroredPushTravisConfAll = mergeScenarios$ErroredTravisConf*100/(totalMergeScenarios$TotalMSBuilded)
-averageErroredPushConfigConfAll = mergeScenarios$ErroredConfigConf*100/(totalMergeScenarios$TotalMSBuilded)
-averageErroredPushSourceConfAll = mergeScenarios$ErroredSourceConf*100/(totalMergeScenarios$TotalMSBuilded)
-averageErroredPushAllTogetherConfAll = mergeScenarios$ErroredAllConf*100/(totalMergeScenarios$TotalMSBuilded)
+averageErroredPushTravisConfAll = mergeScenarios$ErroredTravisConf*100/(totalMergeScenarios$TotalMSBuilt)
+averageErroredPushConfigConfAll = mergeScenarios$ErroredConfigConf*100/(totalMergeScenarios$TotalMSBuilt)
+averageErroredPushSourceConfAll = mergeScenarios$ErroredSourceConf*100/(totalMergeScenarios$TotalMSBuilt)
+averageErroredPushAllTogetherConfAll = mergeScenarios$ErroredAllConf*100/(totalMergeScenarios$TotalMSBuilt)
 
 averageErroredPushTravisConfAllPerc = mean(averageErroredPushTravisConfAll, na=TRUE)
 averageErroredPushConfigConfAllPerc = mean(averageErroredPushConfigConfAll, na=TRUE)
@@ -464,7 +464,7 @@ averageErroredPushAllTogetherConfAllPerc = mean(averageErroredPushAllTogetherCon
 averageErroredBuildConflictAll = averageErroredPushTravisConfAllPerc + averageErroredPushConfigConfAllPerc + averageErroredPushSourceConfAllPerc + averageErroredPushAllTogetherConfAllPerc
 
 #Agregated
-agregatedErroredConfAll = (sum(mergeScenarios$ErroredTravisConf, na.rm=TRUE) + sum(mergeScenarios$ErroredConfigConf, na.rm=TRUE) + sum(mergeScenarios$ErroredSourceConf, na.rm=TRUE) + sum(mergeScenarios$ErroredAllConf, na.rm=TRUE))*100/sum(totalMergeScenarios$TotalMSBuilded, na.rm=TRUE)
+agregatedErroredConfAll = (sum(mergeScenarios$ErroredTravisConf, na.rm=TRUE) + sum(mergeScenarios$ErroredConfigConf, na.rm=TRUE) + sum(mergeScenarios$ErroredSourceConf, na.rm=TRUE) + sum(mergeScenarios$ErroredAllConf, na.rm=TRUE))*100/sum(totalMergeScenarios$TotalMSBuilt, na.rm=TRUE)
 
 #Txt File with the informations about the RQ7
 sink("rq7.txt")
@@ -489,7 +489,7 @@ sink()
 
 setwd(file.path(mainDir))
 
-#Slide - How frequently do Test Conflicts happen on Builded Merge Scenarios of Failed Builds?
+#Slide - How frequently do Test Conflicts happen on Built Merge Scenarios of Failed Builds?
 #What files are modified on Test Conflicts Scenarios?
 rq8 = "RQ8"
 dir.create(file.path(mainDir, rq8), showWarnings = FALSE)
@@ -513,10 +513,10 @@ agregatedFailedConf = (sum(mergeScenarios$FailedTravisConf, na.rm=TRUE) + sum(me
 
 #Build Conflicts - All Merge Scenarios
 #Average
-averageFailedPushTravisConfAll = mergeScenarios$FailedTravisConf*100/(totalMergeScenarios$TotalMSBuilded)
-averageFailedPushConfigConfAll = mergeScenarios$FailedConfigConf*100/(totalMergeScenarios$TotalMSBuilded)
-averageFailedPushSourceConfAll = mergeScenarios$FailedSourceConf*100/(totalMergeScenarios$TotalMSBuilded)
-averageFailedPushAllTogetherConfAll = mergeScenarios$FailedAllConf*100/(totalMergeScenarios$TotalMSBuilded)
+averageFailedPushTravisConfAll = mergeScenarios$FailedTravisConf*100/(totalMergeScenarios$TotalMSBuilt)
+averageFailedPushConfigConfAll = mergeScenarios$FailedConfigConf*100/(totalMergeScenarios$TotalMSBuilt)
+averageFailedPushSourceConfAll = mergeScenarios$FailedSourceConf*100/(totalMergeScenarios$TotalMSBuilt)
+averageFailedPushAllTogetherConfAll = mergeScenarios$FailedAllConf*100/(totalMergeScenarios$TotalMSBuilt)
 
 averageFailedPushTravisConfAllPerc = mean(averageFailedPushTravisConfAll, na=TRUE)
 averageFailedPushConfigConfAllPerc = mean(averageFailedPushConfigConfAll, na=TRUE)
@@ -525,7 +525,7 @@ averageFailedPushAllTogetherConfAllPerc = mean(averageFailedPushAllTogetherConfA
 averageFailedBuildConflictAll = averageFailedPushTravisConfAllPerc + averageFailedPushConfigConfAllPerc + averageFailedPushSourceConfAllPerc + averageFailedPushAllTogetherConfAllPerc
 
 #Agregated
-agregatedFailedConfAll = (sum(mergeScenarios$FailedTravisConf, na.rm=TRUE) + sum(mergeScenarios$FailedConfigConf, na.rm=TRUE) + sum(mergeScenarios$FailedSourceConf, na.rm=TRUE) + sum(mergeScenarios$FailedAllConf, na.rm=TRUE))*100/sum(totalMergeScenarios$TotalMSBuilded, na.rm=TRUE)
+agregatedFailedConfAll = (sum(mergeScenarios$FailedTravisConf, na.rm=TRUE) + sum(mergeScenarios$FailedConfigConf, na.rm=TRUE) + sum(mergeScenarios$FailedSourceConf, na.rm=TRUE) + sum(mergeScenarios$FailedAllConf, na.rm=TRUE))*100/sum(totalMergeScenarios$TotalMSBuilt, na.rm=TRUE)
 
 #Txt File with the informations about the RQ8
 sink("rq8.txt")
