@@ -138,7 +138,7 @@ class BuildTravis
 									totalMSErrored += 1
 									isConflict = confBuild.conflictAnalysisCategories(erroredConflicts, type, result[0])
 									if (isConflict and result[0]) 
-										writeCSVs.printConflictBuild(build, result[1], result[2], confErrored.findConflictCause(build, getPathProject(), pathGumTree), projectNameFile)
+										writeCSVs.printConflictBuild(build, result[1], result[2], confErrored.findConflictCause(build, getPathProject(), pathGumTree, type), projectNameFile)
 									end
 								elsif (status == "failed")
 									totalMSFailed += 1
@@ -162,8 +162,8 @@ class BuildTravis
 			writeCSVs.writeMergeScenariosFinal(projectName, @projectMergeScenarios.size, builtMergeScenarios.size, totalBuilds, totalRepeatedBuilds, totalMSPassed, totalMSErrored, 
 					totalMSFailed, totalMSCanceled)
 			
-			writeCSVs.writeBuildConflicts(projectName, confErrored.getTotal(), confErrored.getUnvailableSymbol(), confErrored.getGitProblem(), confErrored.getRemoteError(), 
-				confErrored.getCompilerError(), confErrored.getOtherError())
+			writeCSVs.writeBuildConflicts(projectName, confErrored.getTotal(), confErrored.getUnvailableSymbol(), confErrored.getMalformedExp(), confErrored.getUpdateModifier(), 
+				confErrored.getDuplicateStatement(), confErrored.getDependencyProblem(), confErrored.getGitProblem(), confErrored.getRemoteError(), confErrored.getCompilerError(), confErrored.getOtherError())
 
 			writeCSVs.writeTestConflicts(projectName, confFailed.getTotal(), confFailed.getFailed(), confFailed.getGitProblem(), confFailed.getRemoteError(), confFailed.getPermission(), 
 				confFailed.getOtherError())

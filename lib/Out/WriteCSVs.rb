@@ -98,7 +98,7 @@ class WriteCSVs
 		
 		Dir.chdir getPathConflictsCauses
 		CSV.open("BuildConflictsCauses.csv", "wb") do |csv|
-			csv << ["ProjectName",	"Total", "NO FOUND SYMBOL", "GIT PROBLEM", "REMOTE ERROR", "COMPILER ERROR", "ANOTHER ERROR"]
+			csv << ["ProjectName",	"Total", "NO FOUND SYMBOL", "MALFORMED EXPRESSION", "UPDATE MODIFIER", "DUPLICATE STATEMENT", "DEPENDENCY","GIT PROBLEM", "REMOTE ERROR", "COMPILER ERROR", "ANOTHER ERROR"]
 		end
 
 		CSV.open("TestConflictsCauses.csv", "wb") do |csv|
@@ -143,10 +143,10 @@ class WriteCSVs
 		end
 	end
 
-	def writeBuildConflicts(projectName, confErroredTotal, confErroredUnvailableSymbol, confErroredGitProblem, confErroredRemoteError, confErroredCompilerError, confErroredOtherError)
+	def writeBuildConflicts(projectName, confErroredTotal, confErroredUnvailableSymbol, confErroredMalformedExp, confErroredUpdateModifier, confErroredDuplicate, confErroredDependency, confErroredGitProblem, confErroredRemoteError, confErroredCompilerError, confErroredOtherError)
 		Dir.chdir getPathConflictsCauses()
 		CSV.open("BuildConflictsCauses.csv", "a+") do |csv|
-			csv << [projectName, confErroredTotal, confErroredUnvailableSymbol, confErroredGitProblem, confErroredRemoteError, confErroredCompilerError, confErroredOtherError]
+			csv << [projectName, confErroredTotal, confErroredUnvailableSymbol, confErroredMalformedExp, confErroredUpdateModifier, confErroredDuplicate, confErroredDependency, confErroredGitProblem, confErroredRemoteError, confErroredCompilerError, confErroredOtherError]
 		end
 	end
 

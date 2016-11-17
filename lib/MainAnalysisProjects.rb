@@ -105,7 +105,7 @@ File.open("projectsList", "r") do |text|
 end
 
 actualPath = Dir.pwd
-project = MainAnalysisProjects.new(parameters[1], parameters[2], parameters[3], projectsList)
+project = MainAnalysisProjects.new(parameters[0], parameters[1], parameters[2], projectsList)
 project.runAnalysis()
 
 Dir.chdir actualPath

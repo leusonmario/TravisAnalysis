@@ -557,6 +557,10 @@ setwd(file.path(mainDir, rq9))
 
 totalCausesErrored = sum(causesErroredBuilds$Total, na.rm=TRUE)
 noFoundSymbolErrored = sum(causesErroredBuilds$NO.FOUND.SYMBOL, na.rm=TRUE)*100/totalCausesErrored
+malformedExpression = sum(causesErroredBuilds$MALFORMED.EXPRESSION, na.rm=TRUE)*100/totalCausesErrored
+updateModifier = sum(causesErroredBuilds$UPDATE.MODIFIER, na.rm=TRUE)*100/totalCausesErrored
+duplicate = sum(causesErroredBuilds$DUPLICATE.STATEMENT, na.rm=TRUE)*100/totalCausesErrored
+dependency = sum(causesErroredBuilds$DEPENDENCY, na.rm=TRUE)*100/totalCausesErrored
 gitProblemErrored = sum(causesErroredBuilds$GIT.PROBLEM, na.rm=TRUE)*100/totalCausesErrored
 remoteErrorErrored = sum(causesErroredBuilds$REMOTE.ERROR, na.rm=TRUE)*100/totalCausesErrored
 compilerErrorErrored = sum(causesErroredBuilds$COMPILER.ERROR, na.rm=TRUE)*100/totalCausesErrored
@@ -571,6 +575,14 @@ cat("Test Conflicts from Failed Scenarios")
 cat("\n")
 print("No Found Symbol")
 print(noFoundSymbolErrored)
+print("Malformed Expression")
+print(malformedExpression)
+print("Update Modifier")
+print(updateModifier)
+print("Duplicate Statement")
+print(duplicate)
+print("Dependency")
+print(dependency)
 print("Git Problem")
 print(gitProblemErrored)
 print("Remote Error")

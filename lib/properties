@@ -1,4 +1,3 @@
-pathAnalysis=<path>
-login=<login>
-password=<password>
+login=<usernameGitHub>
+password=<passwordGitHub>
 pathGumTree=<pathGumTree>
