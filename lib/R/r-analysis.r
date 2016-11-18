@@ -561,6 +561,7 @@ malformedExpression = sum(causesErroredBuilds$MALFORMED.EXPRESSION, na.rm=TRUE)*
 updateModifier = sum(causesErroredBuilds$UPDATE.MODIFIER, na.rm=TRUE)*100/totalCausesErrored
 duplicate = sum(causesErroredBuilds$DUPLICATE.STATEMENT, na.rm=TRUE)*100/totalCausesErrored
 dependency = sum(causesErroredBuilds$DEPENDENCY, na.rm=TRUE)*100/totalCausesErrored
+unimplementedMethod = sum(causesErroredBuilds$UNIMPLEMENTED.METHOD, na.rm=TRUE)*100/totalCausesErrored
 gitProblemErrored = sum(causesErroredBuilds$GIT.PROBLEM, na.rm=TRUE)*100/totalCausesErrored
 remoteErrorErrored = sum(causesErroredBuilds$REMOTE.ERROR, na.rm=TRUE)*100/totalCausesErrored
 compilerErrorErrored = sum(causesErroredBuilds$COMPILER.ERROR, na.rm=TRUE)*100/totalCausesErrored
@@ -583,6 +584,8 @@ print("Duplicate Statement")
 print(duplicate)
 print("Dependency")
 print(dependency)
+print("Unimplemented Method")
+print(unimplementedMethod)
 print("Git Problem")
 print(gitProblemErrored)
 print("Remote Error")

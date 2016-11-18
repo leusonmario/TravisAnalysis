@@ -55,6 +55,7 @@ class WriteCSVs
 
 	def creatingResultsDirectories(actualPath)
 		Dir.chdir actualPath
+		delete = %x(rm -rf FinalResults)
 		FileUtils::mkdir_p 'FinalResults/ResultsByProject'
 		FileUtils::mkdir_p 'FinalResults/ConflictsAnalysis'
 		FileUtils::mkdir_p 'FinalResults/MergeScenariosAnalysis'
@@ -98,7 +99,8 @@ class WriteCSVs
 		
 		Dir.chdir getPathConflictsCauses
 		CSV.open("BuildConflictsCauses.csv", "wb") do |csv|
-			csv << ["ProjectName",	"Total", "NO FOUND SYMBOL", "MALFORMED EXPRESSION", "UPDATE MODIFIER", "DUPLICATE STATEMENT", "DEPENDENCY","GIT PROBLEM", "REMOTE ERROR", "COMPILER ERROR", "ANOTHER ERROR"]
+			csv << ["ProjectName",	"Total", "NO FOUND SYMBOL", "MALFORMED EXPRESSION", "UPDATE MODIFIER", "DUPLICATE STATEMENT", "DEPENDENCY", "UNIMPLEMENTED METHOD", 
+					"GIT PROBLEM", "REMOTE ERROR", "COMPILER ERROR", "ANOTHER ERROR"]
 		end
 
 		CSV.open("TestConflictsCauses.csv", "wb") do |csv|
@@ -107,10 +109,12 @@ class WriteCSVs
 
 		Dir.chdir getPathConflicstAnalysis
 		CSV.open("ConflictsAnalysisFinal.csv", "w") do |csv|
- 			csv << ["ProjectName", "MergeScenarios", "PushesNotBuilt", "TotalRepeat", "MSNoParent","TotalBuiltPushes","PushesPassed", "PassedTravis", "PassedTravisConf", "PassedConfig", 
- 				"PassedConfigConf", "PassedSource", "PassedSourceConf", "PassedAll", "PassedAllConf", "PushesErrored", "ErroredTravis", "ErroredTravisConf", "ErroredConfig", "ErroredConfigConf", "ErroredSource", "ErroredSourceConf", 
- 				"ErroredAll", "ErroredAllConf", "PushesFailed", "FailedTravis", "FailedTravisConf", "FailedConfig", "FailedConfigConf","FailedSource", "FailedSourceConf", "FailedAll", "FailedAllConf", "PushesCanceled", "CanceledTravis", "CanceledTravisConf", "CanceledConfig", 
- 				"CanceledConfigConf", "CanceledSource", "CanceledSourceConf", "CanceledAll", "CanceledAllConf"]
+ 			csv << ["ProjectName", "MergeScenarios", "PushesNotBuilt", "TotalRepeat", "MSNoParent","TotalBuiltPushes","PushesPassed", "PassedTravis", "PassedTravisConf", 
+ 				"PassedConfig", "PassedConfigConf", "PassedSource", "PassedSourceConf", "PassedAll", "PassedAllConf", "PushesErrored", "ErroredTravis", 
+ 				"ErroredTravisConf", "ErroredConfig", "ErroredConfigConf", "ErroredSource", "ErroredSourceConf", "ErroredAll", "ErroredAllConf", "PushesFailed", 
+ 				"FailedTravis", "FailedTravisConf", "FailedConfig", "FailedConfigConf","FailedSource", "FailedSourceConf", "FailedAll", "FailedAllConf", 
+ 				"PushesCanceled", "CanceledTravis", "CanceledTravisConf", "CanceledConfig", "CanceledConfigConf", "CanceledSource", "CanceledSourceConf", "CanceledAll", 
+ 				"CanceledAllConf"]
  		end
  	end
 
@@ -136,17 +140,21 @@ class WriteCSVs
 		end
 	end
 
-	def writeMergeScenariosFinal(projectName, projectMergeScenariosSize, builtMergeScenariosSize, totalBuilds, totalRepeatedBuilds, totalMSPassed, totalMSErrored, totalMSFailed, totalMSCanceled)
+	def writeMergeScenariosFinal(projectName, projectMergeScenariosSize, builtMergeScenariosSize, totalBuilds, totalRepeatedBuilds, totalMSPassed, totalMSErrored, 
+								totalMSFailed, totalMSCanceled)
 		Dir.chdir getPathMergeScenariosAnalysis()
 		CSV.open("MergeScenariosProjects.csv", "a+") do |csv|
-			csv << [projectName, projectMergeScenariosSize, builtMergeScenariosSize, totalBuilds, totalRepeatedBuilds, totalMSPassed, totalMSErrored, totalMSFailed, totalMSCanceled]
+			csv << [projectName, projectMergeScenariosSize, builtMergeScenariosSize, totalBuilds, totalRepeatedBuilds, totalMSPassed, totalMSErrored, totalMSFailed, 
+					totalMSCanceled]
 		end
 	end
 
-	def writeBuildConflicts(projectName, confErroredTotal, confErroredUnvailableSymbol, confErroredMalformedExp, confErroredUpdateModifier, confErroredDuplicate, confErroredDependency, confErroredGitProblem, confErroredRemoteError, confErroredCompilerError, confErroredOtherError)
+	def writeBuildConflicts(projectName, confErroredTotal, confErroredUnvailableSymbol, confErroredMalformedExp, confErroredUpdateModifier, confErroredDuplicate, 
+							confErroredDependency, confErroredMethod, confErroredGitProblem, confErroredRemoteError, confErroredCompilerError, confErroredOtherError)
 		Dir.chdir getPathConflictsCauses()
 		CSV.open("BuildConflictsCauses.csv", "a+") do |csv|
-			csv << [projectName, confErroredTotal, confErroredUnvailableSymbol, confErroredMalformedExp, confErroredUpdateModifier, confErroredDuplicate, confErroredDependency, confErroredGitProblem, confErroredRemoteError, confErroredCompilerError, confErroredOtherError]
+			csv << [projectName, confErroredTotal, confErroredUnvailableSymbol, confErroredMalformedExp, confErroredUpdateModifier, confErroredDuplicate, 
+					confErroredDependency, confErroredMethod, confErroredGitProblem, confErroredRemoteError, confErroredCompilerError, confErroredOtherError]
 		end
 	end
 

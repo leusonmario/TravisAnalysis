@@ -31,7 +31,11 @@ class ConflictBuild
 			else
 				# depois dividir em apenas arquivos de codigo fonte, e a juncao dos outros
 				if (filesConflict.include?('pom.xml') || filesConflict.include?('build.gradle') || filesConflict.include?('.travis.yml'))
-					return "All"	
+					if (filesConflict.include?('pom.xml'))
+						return "All-Config"
+					else
+						return "All"
+					end	
 				else
 					return "SourceCode"
 				end

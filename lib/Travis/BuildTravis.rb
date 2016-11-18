@@ -162,8 +162,9 @@ class BuildTravis
 			writeCSVs.writeMergeScenariosFinal(projectName, @projectMergeScenarios.size, builtMergeScenarios.size, totalBuilds, totalRepeatedBuilds, totalMSPassed, totalMSErrored, 
 					totalMSFailed, totalMSCanceled)
 			
-			writeCSVs.writeBuildConflicts(projectName, confErrored.getTotal(), confErrored.getUnvailableSymbol(), confErrored.getMalformedExp(), confErrored.getUpdateModifier(), 
-				confErrored.getDuplicateStatement(), confErrored.getDependencyProblem(), confErrored.getGitProblem(), confErrored.getRemoteError(), confErrored.getCompilerError(), confErrored.getOtherError())
+			writeCSVs.writeBuildConflicts(projectName, confErrored.getTotal(), confErrored.getUnvailableSymbol(), confErrored.getMalformedExp(), 
+				confErrored.getUpdateModifier(), confErrored.getDuplicateStatement(), confErrored.getDependencyProblem(), confErrored.getUnimplementedMethod(), 
+				confErrored.getGitProblem(), confErrored.getRemoteError(), confErrored.getCompilerError(), confErrored.getOtherError())
 
 			writeCSVs.writeTestConflicts(projectName, confFailed.getTotal(), confFailed.getFailed(), confFailed.getGitProblem(), confFailed.getRemoteError(), confFailed.getPermission(), 
 				confFailed.getOtherError())
