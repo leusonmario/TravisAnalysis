@@ -1,7 +1,6 @@
 #!/usr/bin/env ruby
 #file: conflictCategory.rb
 
-require './Repository/MergeCommit.rb'
 require './GumTree/GTAnalysis.rb'
 require_relative 'ConflictCategories'
 
@@ -106,60 +105,82 @@ class ConflictCategoryErrored
 		
 		indexJob = 0
 		result = []
-		gtAnalysis = GTAnalysis.new(pathGumTree)
+		
 		while (indexJob < build.job_ids.size)
 			if (build.jobs[indexJob].state == "errored")
 				if (build.jobs[indexJob].log != nil)
-					body = build.jobs[indexJob].log.body
-					if (body[/\[#{stringErro}\][\s\S]*#{stringNoApplied}[\s\S]*\[#{stringErro}\]/] || body[/\[#{stringErro}\][\s\S]*#{stringUpdate}[\s\S]*\[#{stringInfo}\](.*)?[0-9]/] || body[/\[#{stringErro}\]#{stringCompError}[\s\S]*[.java][\s\S]*#{stringNoConvert}/])
-						result.push("updateModifier")
-						@updateModifier += 1
-					end
-					if (body[/\[#{stringErro}\][\s\S]*#{stringDefined}[\s\S]*\[#{stringInfo}\](.*)?[0-9]/])
-						result.push("duplicationStatement")
-						@duplicateStatement += 1
-					end
-					if (body[/\[#{stringErro}\][\s\S]*#{stringNoOverride}[\s\S]*\[#{stringErro}\]/])
-						result.push("unimplementedMethod")
-						@unimplementedMethod += 1
-					end
-					if (body[/#{stringBuildFail}[\s\S]*#{stringUndefinedExt}/] || body[/\[#{stringErro}\][\s\S]*#{stringDependency}/] || body[/\[#{stringErro}\][\s\S]*#{stringNonParseable}[\s\S]*#{stringUnexpected}[\s\S]*\[#{stringErro}\]/])
-						if (type=="Config" || type=="All-Config")
-							result.push("dependencyProblem")
-							@dependencyProblem += 1
-						else
+					build.jobs[indexJob].log.body do |body|
+						otherCase = true
+						if (body[/\[#{stringErro}\][\s\S]*#{stringNoApplied}[\s\S]*\[#{stringErro}\]/] || body[/\[#{stringErro}\][\s\S]*#{stringUpdate}[\s\S]*\[#{stringInfo}\](.*)?[0-9]/] || body[/\[#{stringErro}\]#{stringCompError}[\s\S]*[.java][\s\S]*#{stringNoConvert}/])
+							result.push("updateModifier")
+							@updateModifier += 1
+							otherCase = false
+						end
+						if (body[/\[#{stringErro}\][\s\S]*#{stringDefined}[\s\S]*\[#{stringInfo}\](.*)?[0-9]/])
+							result.push("duplicationStatement")
+							@duplicateStatement += 1
+							otherCase = false
+						end
+						if (body[/\[#{stringErro}\][\s\S]*#{stringNoOverride}[\s\S]*\[#{stringErro}\]/])
+							result.push("unimplementedMethod")
+							@unimplementedMethod += 1
+							otherCase = false
+						end
+						if (body[/#{stringBuildFail}[\s\S]*#{stringUndefinedExt}/] || body[/\[#{stringErro}\][\s\S]*#{stringDependency}/] || body[/\[#{stringErro}\][\s\S]*#{stringNonParseable}[\s\S]*#{stringUnexpected}[\s\S]*\[#{stringErro}\]/])
+							if (type=="Config" || type=="All-Config")
+								result.push("dependencyProblem")
+								@dependencyProblem += 1
+							else
+								result.push("compilerError")
+								@compilerError += 1
+							end
+							otherCase = false
+						end
+						if (body[/\[#{stringErro}\]#{stringCompError}[\s\S]*\[#{stringInfo}\][\s\S]*\[#{stringErro}\][\s\S]*#{stringNotFind}/])
+							text = body[/\[ERROR\] COMPILATION ERROR :[\s\S]*\[ERROR\](.*?)\[INFO\] [0-9]+/m, 1]
+							fileConflict = text.match(/[A-Za-z]+\.java/)[0].to_s
+							#gtAnalysis.getGumTreeAnalysis(pathProject, build, fileConflict)
+							result.push("unvailableSymbol")
+							@unvailableSymbol += 1
+							otherCase = false
+						end
+						if (body[/\[#{stringErro}\](.*)?#{stringError}\: #{stringMalformed}/] or body[/\[ERROR\](.*)?#{stringError}\:\'(.*)?\'#{stringExpected}/])
+							result.push("malformedExpression")
+							@malformedExp += 1
+							otherCase = false
+						end
+						if (body[/#{stringUnsupported}[\s\S]*#{stringStopped}/] || body[/#{stringErrorProcessing}[\s\S]*/] || body[/\[#{stringErro}\][\s\S]*#{stringNonResolvable}[\s\S]*/] || body[/\[#{stringErro}\][\s\S]*(\:jar)#{stringMissing}[\s\S]*/] || body[/\[#{stringErro}\]#{stringValidVersion}[\s\S]*(\:jar)[\s\S]*/] || body[/#{stringElement}[(\n\s)(a-zA-Z0-9)(\'\-\/\.\:\,\[\])]*#{stringNoExist}/])
 							result.push("compilerError")
 							@compilerError += 1
+							otherCase = false
 						end
-					end
-					if (body[/\[#{stringErro}\]#{stringCompError}[\s\S]*\[#{stringInfo}\][\s\S]*\[#{stringErro}\][\s\S]*#{stringNotFind}/])
-						text = body[/\[ERROR\] COMPILATION ERROR :[\s\S]*\[ERROR\](.*?)\[INFO\] [0-9]+/m, 1]
-						fileConflict = text.match(/[A-Za-z]+\.java/)[0].to_s
-						#gtAnalysis.getGumTreeAnalysis(pathProject, build, fileConflict)
-						result.push("unvailableSymbol")
-						@unvailableSymbol += 1
-					end
-					if (body[/\[#{stringErro}\](.*)?#{stringError}\: #{stringMalformed}/] or body[/\[ERROR\](.*)?#{stringError}\:\'(.*)?\'#{stringExpected}/])
-						#gtAnalysis.getGumTreeAnalysis(pathProject, build, fileConflict)
-						result.push("malformedExpression")
-						@malformedExp += 1
-					end
-					if (body[/#{stringUnsupported}[\s\S]*#{stringStopped}/] || body[/#{stringErrorProcessing}[\s\S]*/] || body[/\[#{stringErro}\][\s\S]*#{stringNonResolvable}[\s\S]*/] || body[/\[#{stringErro}\][\s\S]*(\:jar)#{stringMissing}[\s\S]*/] || body[/\[#{stringErro}\]#{stringValidVersion}[\s\S]*(\:jar)[\s\S]*/] || body[/#{stringElement}[(\n\s)(a-zA-Z0-9)(\'\-\/\.\:\,\[\])]*#{stringNoExist}/])
-						result.push("compilerError")
-						@compilerError += 1
-					end
-					if (body[/#{stringTheCommand}(#{stringGitClone}|#{stringGitCheckout})(.*?)#{stringFailed}(.*)[\n]*/])
-						result.push("gitProblem")
-						@gitProblem += 1
-					end
-					if (body[/#{stringNoOutput}[(\n\s)(a-zA-Z0-9)(\-\/\.\:\,\[\]\=\")]*#{stringTerminated}/] || body[/[\s\S]*#{stringOverflowData}[\s\S]*/])
-						result.push("remoteError")
-						@remoteError += 1
+						if (body[/#{stringTheCommand}(#{stringGitClone}|#{stringGitCheckout})(.*?)#{stringFailed}(.*)[\n]*/])
+							result.push("gitProblem")
+							@gitProblem += 1
+							otherCase = false
+						end
+						if (body[/#{stringNoOutput}[(\n\s)(a-zA-Z0-9)(\-\/\.\:\,\[\]\=\")]*#{stringTerminated}/] || body[/[\s\S]*#{stringOverflowData}[\s\S]*/])
+							result.push("remoteError")
+							@remoteError += 1
+							otherCase = false
+						end
+						if (otherCase)
+							@otherError += 1
+						end
 					end
 				end
 			end
+			#chamar o GumTree quando o ciclo de uma build for finalizado, e portanto, todos os eventuais problemas foram identificados.
 			indexJob += 1
 		end
+		getFinalStatus(pathGumTree, pathProject, build, result)
 		return result
+	end
+
+	def getFinalStatus(pathGumTree, pathProject, build, fileConflict)
+		gtAnalysis = GTAnalysis.new(pathGumTree)
+		if(getUpdateModifier() > 0 || getUnvailableSymbol() > 0 || getDuplicateStatement() > 0 || getUnimplementedMethod() > 0)
+			gtAnalysis.getGumTreeAnalysis(pathProject, build, fileConflict)
+		end
 	end
 end
