@@ -17,51 +17,106 @@ class GTAnalysis
 		parents = @mergeCommit.getParentsMergeIfTrue(pathProject, build.commit.sha)
 		actualPath = Dir.pwd
 		
-		pathCopies = createCopyProject(parents, pathProject)
+		pathCopies = createCopyProject(build.commit.sha, parents, pathProject)
 
 		Dir.chdir getGumTreePath()
-		diffGT(pathCopies[1], pathCopies[2], pathCopies[3], pathCopies[4], parents[0], parents[1])
+		#  		   result 			left 		right 		MergeCommit 	parent1 	parent2 	problemas
+		diffGT(pathCopies[1], pathCopies[2], pathCopies[3], pathCopies[4], parents[0], parents[1], fileConflict)
 		deleteProjectCopies(pathCopies)
 		Dir.chdir actualPath
 	end
 
-	def diffGT(baseBranch, leftBranch, rightBranch, baseCommit, leftCommit, rightCommit)
+#  			     result 	left 		right 		MergeCommit   parent1 	 parent2 	  problemas
+	def diffGT(baseBranch, leftBranch, rightBranch, baseCommit, leftCommit, rightCommit, fileConflict)
 		baseFiles = getAllFiles(baseBranch)
 		leftFiles = getFilesConflicts(baseBranch, leftBranch, baseCommit, leftCommit)
 		rightFiles = getFilesConflicts(baseBranch, rightBranch, baseCommit, rightCommit)
 		
-		leftDiff = ""
-		rigthDiff = ""
+		baseDiff = ""
+		rightDiff = ""
+		leftDiffGT = nil
+		rightDiffGT = nil
 
-		baseFiles.each do |baseFile|
-			leftFiles.each do |leftFile|
+		leftFiles.each do |leftFile|
+			fileName = leftFile.match(/[A-Za-z]+\.java/)[0].to_s
+			baseFiles.each do |baseFile|
 				if (baseFile[/\/+[a-zA-Z]*\.java/] == leftFile[/\/+[a-zA-Z]*\.java/])
-					leftDiff = leftFile
+					baseDiff = baseFile
 					break
 				end
 			end
-			rightFiles.each do |rigthFile|
-				if (baseFile[/\/+[a-zA-Z]*\.java/] == rigthFile[/\/+[a-zA-Z]*\.java/])
-					rigthDiff = rigthFile
+			rightFiles.each do |rightFile|
+				if (rightFile[/\/+[a-zA-Z]*\.java/] == leftFile[/\/+[a-zA-Z]*\.java/])
+					rightDiff = rightFile
+					rightFiles.delete(rightFile)
 					break
 				end
 			end
 
-			if (leftDiff != "")
-				leftDiffGT = runGTDiff(baseFile, leftDiff)
+			if (baseDiff != "")
+				leftDiffGT = runGTDiff(baseDiff, leftFile)
 			end
-			if (rigthDiff != "")
-				rigthDiffGT = runGTDiff(baseFile, rigthDiff)
+			if (rightDiff != "")
+				rightDiffGT = runGTDiff(baseDiff, rightDiff)
 			end
-			#Aqui fazer chamada para verificacao do erro
+			
+			if(leftDiffGT != nil and rightDiffGT != nil)
+				diffAnalysisGT(leftDiffGT, rightDiffGT, fileConflict)
+			end
+				
 			leftDiff = ""
-			rigthDiff = ""
+			rightDiff = ""
+			leftDiffGT = nil
+			rightDiffGT = nil
+		end
+		if(rightFiles.size > 0)
+			baseDiff = ""
+			leftDiff = ""
+			leftDiffGT = nil
+			rightDiffGT = nil
+
+			rightFiles.each do |rightFile|
+				fileName = rightFile.match(/[A-Za-z]+\.java/)[0].to_s
+				baseFiles.each do |baseFile|
+					if (baseFile[/\/+[a-zA-Z]*\.java/] == rightFile[/\/+[a-zA-Z]*\.java/])
+						baseDiff = baseFile
+						break
+					end
+				end
+				leftFiles.each do |leftFile|
+					if (rightFile[/\/+[a-zA-Z]*\.java/] == leftFile[/\/+[a-zA-Z]*\.java/])
+						leftDiff = leftFile
+						break
+					end
+				end
+
+				if (baseDiff != "")
+					rightDiffGT = runGTDiff(baseDiff, rightFile)
+				end
+				if (leftDiff != "")
+					leftDiffGT = runGTDiff(baseDiff, leftDiff)
+				end
+				
+				if(leftDiffGT != nil and rightDiffGT != nil)
+					diffAnalysisGT(leftDiffGT, rightDiffGT, fileConflict)
+				end
+					
+				leftDiff = ""
+				rightDiff = ""
+				leftDiffGT = nil
+				rightDiffGT = nil
+			end
 		end
 	end
 
 	def runGTDiff(baseFile, branchFile)
 		Dir.chdir @gumTreePath
-		diff = %x(./gumtree diff #{baseFile} #{branchFile})
+		diff = nil
+		begin
+			diff = %x(./gumtree diff #{branchFile.gsub("\n","")} #{baseFile.gsub("\n","")})
+		rescue Exception => e
+			puts "NOT FOUND PROJECT"
+		end
 		return diff
 	end
 
@@ -69,12 +124,13 @@ class GTAnalysis
 		pathAllFiles = []
 		Find.find(pathFiles) do |path|
 	  		pathAllFiles << path if path =~ /.*\.java$/
-		end
+	  	end
 		pathAllFiles.sort_by!{ |e| e.downcase }
 		
 		return pathAllFiles
 	end
 
+#  						     result 	left 	MergeCommit   parent
 	def getFilesConflicts(baseFiles, pathFiles, baseCommit, branchCommit)
 		Dir.chdir pathFiles
 		Dir.chdir "localProject"
@@ -92,12 +148,12 @@ class GTAnalysis
 		copyBranch = []
 		Dir.chdir pathProject
 		Dir.chdir ".."
-		FileUtils::mkdir_p 'Copies/Base'
+		FileUtils::mkdir_p 'Copies/Result'
 		FileUtils::mkdir_p 'Copies/Left'
 		FileUtils::mkdir_p 'Copies/Right'		
 		Dir.chdir "Copies"
 		copyBranch.push(Dir.pwd)
-		Dir.chdir "Base"
+		Dir.chdir "Result"
 		copyBranch.push(Dir.pwd)
 		Dir.chdir copyBranch[0]
 		Dir.chdir "Left"
@@ -108,12 +164,12 @@ class GTAnalysis
 		return copyBranch
 	end
 	
-	def createCopyProject(parents, pathProject)
+	def createCopyProject(mergeCommit, parents, pathProject)
 		copyBranch = createDirectories(pathProject)
 		Dir.chdir pathProject
 		checkout = %x(git checkout master)
-		base = %x(git merge-base --all #{parents[0]} #{parents[1]})
-		checkout = %x(git checkout #{base})
+		#base = %x(git merge-base --all #{parents[0]} #{parents[1]})
+		checkout = %x(git checkout #{mergeCommit})
 		clone = %x(cp -R #{pathProject} #{copyBranch[1]})
 
 		index = 0
@@ -124,7 +180,8 @@ class GTAnalysis
 			index += 1
 		end
 
-		return copyBranch[0], copyBranch[1], copyBranch[2], copyBranch[3], base
+		return copyBranch[0], copyBranch[1], copyBranch[2], copyBranch[3], mergeCommit
+		#      copies         result 			left 		right 			mergeCommit
 	end
 
 	def deleteProjectCopies(pathCopies)
@@ -135,12 +192,31 @@ class GTAnalysis
 		end
 	end
 
-	def diffAnalysisGT(gumLeft, gumRigth)
-		if(gumLeft[/(Delete)\s([a-zA-Z]*)[\:]?[\s]?#{nome}/])
-			puts "Variable deleted on LOG1"
-		elsif (gumRigth[/(Delete)\s([a-zA-Z]*)[\:]?[\s]?#{nome}/])
-			puts "Variable deleted on LOG2"
+	def diffAnalysisGT(gumLeft, gumRight, allProblems)
+		allProblems.each do |problem|
+			if (problem == "unavailableSymbol")
+				if(gumLeft[/(Update SimpleName:)\s([a-zA-Z0-9]*)/])
+					puts "LeftBranch updated symbol name"
+				elsif (gumRight[/(Update SimpleName:)\s([a-zA-Z0-9]*)/])
+					puts "RightBranch updated symbol name"
+				end
+				if(gumLeft[/(Delete)\s([a-zA-Z]*)[\:]?[\s]?/])
+					puts "Variable deleted on LOG1"
+				elsif (gumRight[/(Delete)\s([a-zA-Z]*)[\:]?[\s]?/])
+					puts "Variable deleted on LOG2"
+				end
+			end
 		end
+	end
+
+	def getAllProblemsByFile(fileName, resultProblems)
+		allProblems = []
+		resultProblems.each do |problem|
+			if (!(allProblems.include? problem[1]) and problem[0]==fileName)
+				allProblems.push(problem[1])
+			end
+		end
+		return allProblems
 	end
 
 end

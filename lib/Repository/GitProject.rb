@@ -139,26 +139,34 @@ class GitProject
 	end
 
 	def conflictScenario(parentsMerge, projectBuilds, build)		
-		parentOne = false
+		parentOne = ""
 		buildOne = ""
-		parentTwo = false
+		parentTwo = ""
 		buildTwo = ""
 		
 		projectBuilds.each_build do |mergeBuild|
-			if(parentsMerge[0].include?(mergeBuild.commit.sha) and mergeBuild.state=='passed')
-				parentOne = true
-				buildOne = mergeBuild
-			elsif (parentsMerge[1].include?(mergeBuild.commit.sha) and mergeBuild.state=='passed')
-				parentTwo = true
-				buildTwo = mergeBuild
+			if(parentsMerge[0].include?(mergeBuild.commit.sha))
+				if (mergeBuild.state=='passed')
+					parentOne = true
+					buildOne = mergeBuild
+				else
+					return false, nil, nil
+				end
+			elsif (parentsMerge[1].include?(mergeBuild.commit.sha))
+				if (mergeBuild.state=='passed')
+					parentTwo = true
+					buildTwo = mergeBuild
+				else
+					return false, nil, nil
+				end
 			end
 
-			if (parentOne and parentTwo)
+			if (parentOne==true and parentTwo==true)
 				return true, buildOne, buildTwo
 			end
-		end	
+		end
 		
-		return false, nil, nil
+		return nil, nil, nil
 	end
 
 end

@@ -13,7 +13,7 @@ class ConflictCategoryErrored
 		@remoteError = 0
 		@compilerError = 0
 		@updateModifier = 0
-		@unvailableSymbol = 0
+		@unavailableSymbol = 0
 		@duplicateStatement = 0
 		@dependencyProblem = 0
 		@unimplementedMethod = 0
@@ -52,8 +52,8 @@ class ConflictCategoryErrored
 		@compilerError
 	end
 
-	def getUnvailableSymbol()
-		@unvailableSymbol
+	def getunavailableSymbol()
+		@unavailableSymbol
 	end
 
 	def getOtherError()
@@ -61,7 +61,7 @@ class ConflictCategoryErrored
 	end
 
 	def getTotal()
-		return getGitProblem() + getRemoteError() + getCompilerError() + getUnvailableSymbol() + getOtherError() + getUpdateModifier() + getMalformedExp() + getDuplicateStatement() + getDependencyProblem() + getUnimplementedMethod()
+		return getGitProblem() + getRemoteError() + getCompilerError() + getunavailableSymbol() + getOtherError() + getUpdateModifier() + getMalformedExp() + getDuplicateStatement() + getDependencyProblem() + getUnimplementedMethod()
 	end
 
 	def findConflictCause(build, pathProject, pathGumTree, type)
@@ -140,8 +140,8 @@ class ConflictCategoryErrored
 							text = body[/\[ERROR\] COMPILATION ERROR :[\s\S]*\[ERROR\](.*?)\[INFO\] [0-9]+/m, 1]
 							fileConflict = text.match(/[A-Za-z]+\.java/)[0].to_s
 							#gtAnalysis.getGumTreeAnalysis(pathProject, build, fileConflict)
-							result.push("unvailableSymbol")
-							@unvailableSymbol += 1
+							result.push("unavailableSymbol")
+							@unavailableSymbol += 1
 							otherCase = false
 						end
 						if (body[/\[#{stringErro}\](.*)?#{stringError}\: #{stringMalformed}/] or body[/\[ERROR\](.*)?#{stringError}\:\'(.*)?\'#{stringExpected}/])
@@ -173,13 +173,13 @@ class ConflictCategoryErrored
 			#chamar o GumTree quando o ciclo de uma build for finalizado, e portanto, todos os eventuais problemas foram identificados.
 			indexJob += 1
 		end
-		getFinalStatus(pathGumTree, pathProject, build, result)
+		#getFinalStatus(pathGumTree, pathProject, build, result)
 		return result
 	end
 
 	def getFinalStatus(pathGumTree, pathProject, build, fileConflict)
 		gtAnalysis = GTAnalysis.new(pathGumTree)
-		if(getUpdateModifier() > 0 || getUnvailableSymbol() > 0 || getDuplicateStatement() > 0 || getUnimplementedMethod() > 0)
+		if(getUpdateModifier() > 0 || getunavailableSymbol() > 0 || getDuplicateStatement() > 0 || getUnimplementedMethod() > 0)
 			gtAnalysis.getGumTreeAnalysis(pathProject, build, fileConflict)
 		end
 	end

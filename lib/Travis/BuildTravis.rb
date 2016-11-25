@@ -50,6 +50,7 @@ class BuildTravis
 		
 		builtMergeScenarios = Array.new
 		totalPushesNoBuilt = 0
+		totalParentsNoPassed = 0
 		totalPushes = 0
 		totalPushesNormalScenarios = 0
 		totalPushesMergeScenarios = 0
@@ -123,32 +124,36 @@ class BuildTravis
 								
 								mergeCommit = mergeScenariosAnalysis(build)
 								result = @gitProject.conflictScenario(mergeCommit, projectBuild, build)
-								if (result[0])
-									totalPushes += 1
-								else
-									totalPushesNoBuilt+=1		
-								end
-								#Independente dos parents de um merge tenham uma build associada no travis, 
-								#o codigo abaixo classifica a distribuiçao de cenarios de merge em passed, errored, failed e canceled status
-								type = confBuild.typeConflict(build)
-								if (status == "passed")
-									totalMSPassed += 1
-									confBuild.conflictAnalysisCategories(passedConflicts, type, result[0])
-								elsif (status == "errored")
-									totalMSErrored += 1
-									isConflict = confBuild.conflictAnalysisCategories(erroredConflicts, type, result[0])
-									if (isConflict and result[0]) 
-										writeCSVs.printConflictBuild(build, result[1], result[2], confErrored.findConflictCause(build, getPathProject(), pathGumTree, type), projectNameFile)
+								if (result[0] != nil)
+									if (result[0])
+										totalPushes += 1
+									elsif (!result[0])
+										totalParentsNoPassed += 1				
 									end
-								elsif (status == "failed")
-									totalMSFailed += 1
-									isConflict = confBuild.conflictAnalysisCategories(failedConflicts, type, result[0])
-									if (isConflict and result[0]) 
-										writeCSVs.printConflictTest(build, result[1], result[2], confFailed.findConflictCause(build), projectNameFile)
+									#Independente dos parents de um merge tenham uma build associada no travis, 
+									#o codigo abaixo classifica a distribuiçao de cenarios de merge em passed, errored, failed e canceled status
+									type = confBuild.typeConflict(build)
+									if (status == "passed")
+										totalMSPassed += 1
+										confBuild.conflictAnalysisCategories(passedConflicts, type, result[0])
+									elsif (status == "errored")
+										totalMSErrored += 1
+										isConflict = confBuild.conflictAnalysisCategories(erroredConflicts, type, result[0])
+										if (isConflict and result[0] == true) 
+											writeCSVs.printConflictBuild(build, result[1], result[2], confErrored.findConflictCause(build, getPathProject(), pathGumTree, type), projectNameFile)
+										end
+									elsif (status == "failed")
+										totalMSFailed += 1
+										isConflict = confBuild.conflictAnalysisCategories(failedConflicts, type, result[0])
+										if (isConflict and result[0] == true) 
+											writeCSVs.printConflictTest(build, result[1], result[2], confFailed.findConflictCause(build), projectNameFile)
+										end
+									else
+										totalMSCanceled += 1
+										confBuild.conflictAnalysisCategories(canceledConflicts, type, result[0])
 									end
 								else
-									totalMSCanceled += 1
-									confBuild.conflictAnalysisCategories(canceledConflicts, type, result[0])
+									totalPushesNoBuilt+=1
 								end
 							end
 						end
@@ -159,10 +164,10 @@ class BuildTravis
 	 			
 			end
 			
-			writeCSVs.writeMergeScenariosFinal(projectName, @projectMergeScenarios.size, builtMergeScenarios.size, totalBuilds, totalRepeatedBuilds, totalMSPassed, totalMSErrored, 
+		 	writeCSVs.writeMergeScenariosFinal(projectName, @projectMergeScenarios.size, @projectMergeScenarios.size-builtMergeScenarios.size, totalPushes, totalParentsNoPassed, totalPushesNoBuilt, totalRepeatedBuilds, totalBuilds, totalPushes+totalParentsNoPassed, totalMSPassed, totalMSErrored, 
 					totalMSFailed, totalMSCanceled)
 			
-			writeCSVs.writeBuildConflicts(projectName, confErrored.getTotal(), confErrored.getUnvailableSymbol(), confErrored.getMalformedExp(), 
+			writeCSVs.writeBuildConflicts(projectName, confErrored.getTotal(), confErrored.getunavailableSymbol(), confErrored.getMalformedExp(), 
 				confErrored.getUpdateModifier(), confErrored.getDuplicateStatement(), confErrored.getDependencyProblem(), confErrored.getUnimplementedMethod(), 
 				confErrored.getGitProblem(), confErrored.getRemoteError(), confErrored.getCompilerError(), confErrored.getOtherError())
 
