@@ -67,6 +67,7 @@ class ConflictCategoryErrored
 	def findConflictCause(build, pathProject, pathGumTree, type)
 		stringCompError = " COMPILATION ERROR :"
 		stringNotFind = "cannot find symbol"
+		stringNotFindType = "not find: type"
 		stringNoConvert = "cannot be converted to"
 		stringNoApplied = "cannot be applied to"
 		stringMalformed = "illegal start of type"
@@ -77,15 +78,38 @@ class ConflictCategoryErrored
 		stringValidVersion = " must be a valid version"
 		stringMissing = " failed: A required class was missing while executing"
 		stringOverflowData = "The log length has exceeded the limit of 4 Megabytes"
-		stringNonResolvable = "Non-resolvable parent POM: Could not transfer artifact"
+		stringNonResolvable = "Non-resolvable parent POM:"
+		stringTransferArt = "Could not transfer artifact"
+		stringFindArt = "Could not find artifact"
 		stringNonParseable = "Non-parseable POM "
 		stringUnexpected = " unexpected character in markup"
+		stringUnexpectedToken = "unexpected token: <<"
 		stringErrorProcessing = "dpkg: error processing "
 		stringUnsupported = "Unsupported major.minor version"
 		stringBuildFail = "BUILD FAILED"
 		stringUndefinedExt = "uses an undefined extension point"
 		stringNoOverride = "does not override abstract method"
 		stringInfo = "INFO"
+		stringScript = "Script"
+		stringGradle = ".gradle"
+		stringProblemScript = "A problem occurred evaluating script"
+		stringAddTask = "Cannot add task"
+		stringTaskExists = "as a task with that name already exists"
+		stringFailedGoal = "Failed to execute goal"
+		stringNotResolvedDep = "or one of its dependencies could not be resolved:"
+		stringFailedCollect = "Failed to collect dependencies"
+		stringConnectionReset = "Connection reset"
+		stringNotDefinedProp = "Your user name and password are not defined. Ask your database administrator to set up"
+		stringBuildsFailed = "builds failed"
+		stringDifferArgument = "actual and formal argument lists differ in length"
+		stringConstructorFound = "no suitable constructor found"
+		stringAccess = "Make sure your network and proxy settings are correct"
+		stringWrongReturn = "cannot return a value from method whose result type is void"
+		stringIncompatibleType = "incompatible types"
+		stringServiceUnavailable = "ERROR 503: Service Unavailable"
+		stringNoMaintained = "no longer maintained"
+		stringNotMember = "is not a member of"
+		stringErroInput = "error reading input file:"
 		
 		stringTheCommand = "The command "
 		stringMoveCMD = "mvn"
@@ -126,7 +150,7 @@ class ConflictCategoryErrored
 							@unimplementedMethod += 1
 							otherCase = false
 						end
-						if (body[/#{stringBuildFail}[\s\S]*#{stringUndefinedExt}/] || body[/\[#{stringErro}\][\s\S]*#{stringDependency}/] || body[/\[#{stringErro}\][\s\S]*#{stringNonParseable}[\s\S]*#{stringUnexpected}[\s\S]*\[#{stringErro}\]/])
+						if (body[/#{stringBuildFail}[\s\S]*#{stringUndefinedExt}/] || body[/\[#{stringErro}\][\s\S]*#{stringDependency}/] || body[/\[#{stringErro}\][\s\S]*#{stringNonParseable}[\s\S]*#{stringUnexpected}[\s\S]*\[#{stringErro}\]/] || body[/#{stringScript}[\s\S]*#{stringGradle}[\s\S]*#{stringProblemScript}[\s\S]*#{stringAddTask}[\s\S]*#{stringTaskExists}[\s\S]*#{stringBuildFail}/])
 							if (type=="Config" || type=="All-Config")
 								result.push("dependencyProblem")
 								@dependencyProblem += 1
@@ -136,7 +160,7 @@ class ConflictCategoryErrored
 							end
 							otherCase = false
 						end
-						if (body[/\[#{stringErro}\]#{stringCompError}[\s\S]*\[#{stringInfo}\][\s\S]*\[#{stringErro}\][\s\S]*#{stringNotFind}/])
+						if (body[/\[#{stringErro}\]#{stringCompError}[\s\S]*\[#{stringInfo}\][\s\S]*\[#{stringErro}\][\s\S]*#{stringNotFind}/] || body[/[\[#{stringErro}\]]?[\s\S]*#{stringNotFind}/] || body[/\[#{stringErro}\][\s\S]*#{stringNotFindType}/] || body[/\[#{stringErro}\][\s\S]*#{stringNotMember}/])
 							text = body[/\[ERROR\] COMPILATION ERROR :[\s\S]*\[ERROR\](.*?)\[INFO\] [0-9]+/m, 1]
 							fileConflict = text.match(/[A-Za-z]+\.java/)[0].to_s
 							#gtAnalysis.getGumTreeAnalysis(pathProject, build, fileConflict)
@@ -144,12 +168,12 @@ class ConflictCategoryErrored
 							@unavailableSymbol += 1
 							otherCase = false
 						end
-						if (body[/\[#{stringErro}\](.*)?#{stringError}\: #{stringMalformed}/] or body[/\[ERROR\](.*)?#{stringError}\:\'(.*)?\'#{stringExpected}/])
+						if (body[/#{stringUnexpectedToken}/] || body[/#{stringWrongReturn}/] || body[/#{stringIncompatibleType}/] || body[/\[#{stringErro}\][\s\S]*[#{stringConstructorFound}]?[\s\S]*#{stringDifferArgument}/] || body[/\[#{stringErro}\](.*)?#{stringError}\: #{stringMalformed}/] or body[/\[ERROR\](.*)?#{stringError}\:\'(.*)?\'#{stringExpected}/])
 							result.push("malformedExpression")
 							@malformedExp += 1
 							otherCase = false
 						end
-						if (body[/#{stringUnsupported}[\s\S]*#{stringStopped}/] || body[/#{stringErrorProcessing}[\s\S]*/] || body[/\[#{stringErro}\][\s\S]*#{stringNonResolvable}[\s\S]*/] || body[/\[#{stringErro}\][\s\S]*(\:jar)#{stringMissing}[\s\S]*/] || body[/\[#{stringErro}\]#{stringValidVersion}[\s\S]*(\:jar)[\s\S]*/] || body[/#{stringElement}[(\n\s)(a-zA-Z0-9)(\'\-\/\.\:\,\[\])]*#{stringNoExist}/])
+						if (body[/#{stringErroInput}/] || body[/\[#{stringErro}\][\s\S]*deprecated[\s\S]*#{stringNoMaintained}/] || body[/#{stringAccess}/] || body[/#{stringFailedGoal}[\s\S]*#{stringBuildsFailed}/] || body[/#{stringNotDefinedProp}/] || body[/#{stringFailedGoal}[\s\S]*#{stringNotResolvedDep}[#{stringFailedCollect}]?[\s\S]*[#{stringConnectionReset}]?/] || body[/#{stringUnsupported}[\s\S]*#{stringStopped}/] || body[/#{stringErrorProcessing}[\s\S]*/] || body[/\[#{stringErro}\][\s\S]*#{stringNonResolvable}[#{stringTransferArt}|#{stringFindArt}]?[\s\S]*/] || body[/\[#{stringErro}\][\s\S]*(\:jar)#{stringMissing}[\s\S]*/] || body[/\[#{stringErro}\][\s\S]*(\:jar)#{stringValidVersion}[\s\S]*/] || body[/#{stringElement}[(\n\s)(a-zA-Z0-9)(\'\-\/\.\:\,\[\])]*#{stringNoExist}/])
 							result.push("compilerError")
 							@compilerError += 1
 							otherCase = false
@@ -159,7 +183,7 @@ class ConflictCategoryErrored
 							@gitProblem += 1
 							otherCase = false
 						end
-						if (body[/#{stringNoOutput}[(\n\s)(a-zA-Z0-9)(\-\/\.\:\,\[\]\=\")]*#{stringTerminated}/] || body[/[\s\S]*#{stringOverflowData}[\s\S]*/])
+						if (body[/#{stringServiceUnavailable}/] || body[/#{stringNoOutput}[(\n\s)(a-zA-Z0-9)(\-\/\.\:\,\[\]\=\")]*#{stringTerminated}/] || body[/[\s\S]*#{stringOverflowData}[\s\S]*/])
 							result.push("remoteError")
 							@remoteError += 1
 							otherCase = false

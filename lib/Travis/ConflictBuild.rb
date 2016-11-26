@@ -19,7 +19,7 @@ class ConflictBuild
 			return "Travis"
 		else
 			filesConflict.each_line do |newLine|
-				if (!newLine[/.*pom.xml\n*$/] and !newLine[/.*build.gradle\n*$/])
+				if (!newLine[/.*pom.xml\n*$/] and !newLine[/.*.gradle\n*$/])
 					#linha nao apresentou mudanças nos arquivos de configuraçao do projeto - MUDANÇA NAO FOI APENAS NOS ARQUIVOS DE CONFIGURAÇAO
 					statusConfig = false
 					break
@@ -30,8 +30,8 @@ class ConflictBuild
 				return "Config"
 			else
 				# depois dividir em apenas arquivos de codigo fonte, e a juncao dos outros
-				if (filesConflict.include?('pom.xml') || filesConflict.include?('build.gradle') || filesConflict.include?('.travis.yml'))
-					if (filesConflict.include?('pom.xml'))
+				if (filesConflict.include?('pom.xml') || filesConflict.include?('.gradle') || filesConflict.include?('.travis.yml'))
+					if (filesConflict.include?('pom.xml') || filesConflict.include?('.gradle'))
 						return "All-Config"
 					else
 						return "All"
