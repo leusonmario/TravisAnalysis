@@ -76,11 +76,12 @@ class MainAnalysisProjects
 				projectAnalysis = buildTravis.getStatusBuildsProject(projectName, getWriteCSVs(), getPathGumTree())
 				if (projectAnalysis != nil)
 					getWriteCSVs().writeResultsAll(projectAnalysis)
+				else
+					gitProject.deleteProject()
 				end
 			end
 			index += 1
 		end
-
 		printFinishAnalysis()
 	end
 

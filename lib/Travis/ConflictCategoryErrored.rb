@@ -135,7 +135,7 @@ class ConflictCategoryErrored
 				if (build.jobs[indexJob].log != nil)
 					build.jobs[indexJob].log.body do |body|
 						otherCase = true
-						if (body[/\[#{stringErro}\][\s\S]*#{stringNoApplied}[\s\S]*\[#{stringErro}\]/] || body[/\[#{stringErro}\][\s\S]*#{stringUpdate}[\s\S]*\[#{stringInfo}\](.*)?[0-9]/] || body[/\[#{stringErro}\]#{stringCompError}[\s\S]*[.java][\s\S]*#{stringNoConvert}/])
+						if (body[/\[#{stringErro}\][\s\S]*#{stringNoApplied}[\s\S]*\[#{stringErro}\]/] || body[/\[#{stringErro}\][\s\S]*#{stringUpdate}[\s\S]*\[#{stringInfo}\](.*)?[0-9]/] || body[/\[#{stringErro}\]#{stringCompError}[\s\S]*[.java][\s\S]*#{stringNoConvert}/] || body[/#{stringWrongReturn}/] || body[/#{stringIncompatibleType}/] || body[/\[#{stringErro}\][\s\S]*[#{stringConstructorFound}]?[\s\S]*#{stringDifferArgument}/])
 							result.push("updateModifier")
 							@updateModifier += 1
 							otherCase = false
@@ -162,13 +162,13 @@ class ConflictCategoryErrored
 						end
 						if (body[/\[#{stringErro}\]#{stringCompError}[\s\S]*\[#{stringInfo}\][\s\S]*\[#{stringErro}\][\s\S]*#{stringNotFind}/] || body[/[\[#{stringErro}\]]?[\s\S]*#{stringNotFind}/] || body[/\[#{stringErro}\][\s\S]*#{stringNotFindType}/] || body[/\[#{stringErro}\][\s\S]*#{stringNotMember}/])
 							text = body[/\[ERROR\] COMPILATION ERROR :[\s\S]*\[ERROR\](.*?)\[INFO\] [0-9]+/m, 1]
-							fileConflict = text.match(/[A-Za-z]+\.java/)[0].to_s
+							#fileConflict = text.match(/[A-Za-z]+\.java/)[0].to_s
 							#gtAnalysis.getGumTreeAnalysis(pathProject, build, fileConflict)
 							result.push("unavailableSymbol")
 							@unavailableSymbol += 1
 							otherCase = false
 						end
-						if (body[/#{stringUnexpectedToken}/] || body[/#{stringWrongReturn}/] || body[/#{stringIncompatibleType}/] || body[/\[#{stringErro}\][\s\S]*[#{stringConstructorFound}]?[\s\S]*#{stringDifferArgument}/] || body[/\[#{stringErro}\](.*)?#{stringError}\: #{stringMalformed}/] or body[/\[ERROR\](.*)?#{stringError}\:\'(.*)?\'#{stringExpected}/])
+						if (body[/#{stringUnexpectedToken}/]  || body[/\[#{stringErro}\](.*)?#{stringError}\: #{stringMalformed}/] or body[/\[ERROR\](.*)?#{stringError}\:\'(.*)?\'#{stringExpected}/])
 							result.push("malformedExpression")
 							@malformedExp += 1
 							otherCase = false
@@ -197,7 +197,7 @@ class ConflictCategoryErrored
 			#chamar o GumTree quando o ciclo de uma build for finalizado, e portanto, todos os eventuais problemas foram identificados.
 			indexJob += 1
 		end
-		#getFinalStatus(pathGumTree, pathProject, build, result)
+		getFinalStatus(pathGumTree, pathProject, build, result)
 		return result
 	end
 

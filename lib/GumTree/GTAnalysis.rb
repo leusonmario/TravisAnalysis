@@ -1,6 +1,9 @@
 #!/usr/bin/env ruby
 #file: GTAnalysis.rb
 
+require 'nokogiri'
+require 'open-uri'
+require 'rest-client'
 require './Repository/MergeCommit.rb'
 
 class GTAnalysis
@@ -21,127 +24,9 @@ class GTAnalysis
 
 		Dir.chdir getGumTreePath()
 		#  		   result 			left 		right 		MergeCommit 	parent1 	parent2 	problemas
-		diffGT(pathCopies[1], pathCopies[2], pathCopies[3], pathCopies[4], parents[0], parents[1], fileConflict)
+		gumTreeDiffByBranch(pathCopies[1], pathCopies[2], pathCopies[3], pathCopies[4])
 		deleteProjectCopies(pathCopies)
 		Dir.chdir actualPath
-	end
-
-#  			     result 	left 		right 		MergeCommit   parent1 	 parent2 	  problemas
-	def diffGT(baseBranch, leftBranch, rightBranch, baseCommit, leftCommit, rightCommit, fileConflict)
-		baseFiles = getAllFiles(baseBranch)
-		leftFiles = getFilesConflicts(baseBranch, leftBranch, baseCommit, leftCommit)
-		rightFiles = getFilesConflicts(baseBranch, rightBranch, baseCommit, rightCommit)
-		
-		baseDiff = ""
-		rightDiff = ""
-		leftDiffGT = nil
-		rightDiffGT = nil
-
-		leftFiles.each do |leftFile|
-			fileName = leftFile.match(/[A-Za-z]+\.java/)[0].to_s
-			baseFiles.each do |baseFile|
-				if (baseFile[/\/+[a-zA-Z]*\.java/] == leftFile[/\/+[a-zA-Z]*\.java/])
-					baseDiff = baseFile
-					break
-				end
-			end
-			rightFiles.each do |rightFile|
-				if (rightFile[/\/+[a-zA-Z]*\.java/] == leftFile[/\/+[a-zA-Z]*\.java/])
-					rightDiff = rightFile
-					rightFiles.delete(rightFile)
-					break
-				end
-			end
-
-			if (baseDiff != "")
-				leftDiffGT = runGTDiff(baseDiff, leftFile)
-			end
-			if (rightDiff != "")
-				rightDiffGT = runGTDiff(baseDiff, rightDiff)
-			end
-			
-			if(leftDiffGT != nil and rightDiffGT != nil)
-				diffAnalysisGT(leftDiffGT, rightDiffGT, fileConflict)
-			end
-				
-			leftDiff = ""
-			rightDiff = ""
-			leftDiffGT = nil
-			rightDiffGT = nil
-		end
-		if(rightFiles.size > 0)
-			baseDiff = ""
-			leftDiff = ""
-			leftDiffGT = nil
-			rightDiffGT = nil
-
-			rightFiles.each do |rightFile|
-				fileName = rightFile.match(/[A-Za-z]+\.java/)[0].to_s
-				baseFiles.each do |baseFile|
-					if (baseFile[/\/+[a-zA-Z]*\.java/] == rightFile[/\/+[a-zA-Z]*\.java/])
-						baseDiff = baseFile
-						break
-					end
-				end
-				leftFiles.each do |leftFile|
-					if (rightFile[/\/+[a-zA-Z]*\.java/] == leftFile[/\/+[a-zA-Z]*\.java/])
-						leftDiff = leftFile
-						break
-					end
-				end
-
-				if (baseDiff != "")
-					rightDiffGT = runGTDiff(baseDiff, rightFile)
-				end
-				if (leftDiff != "")
-					leftDiffGT = runGTDiff(baseDiff, leftDiff)
-				end
-				
-				if(leftDiffGT != nil and rightDiffGT != nil)
-					diffAnalysisGT(leftDiffGT, rightDiffGT, fileConflict)
-				end
-					
-				leftDiff = ""
-				rightDiff = ""
-				leftDiffGT = nil
-				rightDiffGT = nil
-			end
-		end
-	end
-
-	def runGTDiff(baseFile, branchFile)
-		Dir.chdir @gumTreePath
-		diff = nil
-		begin
-			diff = %x(./gumtree diff #{branchFile.gsub("\n","")} #{baseFile.gsub("\n","")})
-		rescue Exception => e
-			puts "NOT FOUND PROJECT"
-		end
-		return diff
-	end
-
-	def getAllFiles(pathFiles)
-		pathAllFiles = []
-		Find.find(pathFiles) do |path|
-	  		pathAllFiles << path if path =~ /.*\.java$/
-	  	end
-		pathAllFiles.sort_by!{ |e| e.downcase }
-		
-		return pathAllFiles
-	end
-
-#  						     result 	left 	MergeCommit   parent
-	def getFilesConflicts(baseFiles, pathFiles, baseCommit, branchCommit)
-		Dir.chdir pathFiles
-		Dir.chdir "localProject"
-		pathAllFiles = []
-		files = %x(git diff --name-only #{baseCommit.gsub("\n","")} #{branchCommit.gsub("\n","")})
-
-		files.each_line do |file|
-			pathAllFiles.push(Dir.pwd+"/"+file)
-		end
-		
-		return pathAllFiles
 	end
 
 	def createDirectories(pathProject)
@@ -150,7 +35,8 @@ class GTAnalysis
 		Dir.chdir ".."
 		FileUtils::mkdir_p 'Copies/Result'
 		FileUtils::mkdir_p 'Copies/Left'
-		FileUtils::mkdir_p 'Copies/Right'		
+		FileUtils::mkdir_p 'Copies/Right'
+		FileUtils::mkdir_p 'Copies/Base'		
 		Dir.chdir "Copies"
 		copyBranch.push(Dir.pwd)
 		Dir.chdir "Result"
@@ -161,27 +47,32 @@ class GTAnalysis
 		Dir.chdir copyBranch[0]
 		Dir.chdir "Right"
 		copyBranch.push(Dir.pwd)
+		Dir.chdir copyBranch[0]
+		Dir.chdir "Base"
+		copyBranch.push(Dir.pwd)
 		return copyBranch
 	end
 	
 	def createCopyProject(mergeCommit, parents, pathProject)
 		copyBranch = createDirectories(pathProject)
 		Dir.chdir pathProject
-		checkout = %x(git checkout master)
-		#base = %x(git merge-base --all #{parents[0]} #{parents[1]})
-		checkout = %x(git checkout #{mergeCommit})
+		checkout = %x(git checkout master > /dev/null 2>&1)
+		base = %x(git merge-base --all #{parents[0]} #{parents[1]})
+		checkout = %x(git checkout #{base} > /dev/null 2>&1)
+		clone = %x(cp -R #{pathProject} #{copyBranch[4]})
+		checkout = %x(git checkout #{mergeCommit} > /dev/null 2>&1)
 		clone = %x(cp -R #{pathProject} #{copyBranch[1]})
-
+		
 		index = 0
 		while(index < parents.size)
-			checkout = %x(git checkout #{parents[index]})
-			clone = %x(cp -R #{pathProject} #{copyBranch[index+2]})
-			checkout = %x(git checkout master)
+			checkout = %x(git checkout #{parents[index]} > /dev/null 2>&1)
+			clone = %x(cp -R #{pathProject} #{copyBranch[index+2]} > /dev/null 2>&1)
+			checkout = %x(git checkout master > /dev/null 2>&1)
 			index += 1
 		end
 
-		return copyBranch[0], copyBranch[1], copyBranch[2], copyBranch[3], mergeCommit
-		#      copies         result 			left 		right 			mergeCommit
+		return copyBranch[0], copyBranch[1], copyBranch[2], copyBranch[3], copyBranch[4], mergeCommit
+		#      copies         result 			left 		right 			base			mergeCommit
 	end
 
 	def deleteProjectCopies(pathCopies)
@@ -217,6 +108,75 @@ class GTAnalysis
 			end
 		end
 		return allProblems
+	end
+
+	def runAllDiff(firstBranch, secondBranch)
+		Dir.chdir @gumTreePath
+		mainDiff = nil
+		modifiedFilesDiff = []
+		addedFiles = []
+		deletedFiles = []
+		begin
+			thr = Thread.new { diff = system "bash", "-c", "exec -a gumtree ./gumtree webdiff #{firstBranch.gsub("\n","")} #{secondBranch.gsub("\n","")}" }
+			sleep(1)
+			mainDiff = %x(wget http://127.0.0.1:4754/ -q -O -)
+
+			modifiedFilesDiff = getDiffByModification(mainDiff[/Modified files \((.*?)\)/m, 1])
+			addedFiles = getDiffByAddedFile(mainDiff[/Added files \((.*?)\)/m, 1])
+			deletedFiles = getDiffByDeletedFile(mainDiff[/Deleted files \((.*?)\)/m, 1])
+			
+			kill = %x(pkill -f gumtree)
+			sleep(1)
+		rescue Exception => e
+			puts "GumTree Failed"
+		end
+		return modifiedFilesDiff, addedFiles, deletedFiles
+	end
+
+	def gumTreeDiffByBranch(result, left, right, base)
+		baseLeft = runAllDiff(base, left)
+		baseRight = runAllDiff(base, right)
+		leftResult = runAllDiff(left, result)
+		rightResult = runAllDiff(right, result)
+	end
+
+	def getDiffByModification(numberOcorrences)
+		index = 0
+		result = Hash.new()
+		while(index < numberOcorrences.to_i)
+			gumTreePage = Nokogiri::HTML(RestClient.get("http://127.0.0.1:4754/script?id=#{index}"))
+			file = gumTreePage.css('div.col-lg-12 h3 small').text[/(.*?) \-\>/m, 1]
+			script = gumTreePage.css('div.col-lg-12 pre').text
+			result[file] = script
+			index += 1
+		end
+		return result
+	end
+
+	def getDiffByDeletedFile(numberOcorrences)
+		index = 0
+		result = []
+		while(index < numberOcorrences.to_i)
+			gumTreePage = Nokogiri::HTML(RestClient.get("http://127.0.0.1:4754/"))
+			gumTreePage.css('div#collapse-deleted-files table tr td').each do |element|
+				puts element.text
+			end
+			index += 1
+		end
+		return result
+	end
+
+	def getDiffByAddedFile(numberOcorrences)
+		index = 0
+		result = []
+		while(index < numberOcorrences.to_i)
+			gumTreePage = Nokogiri::HTML(RestClient.get("http://127.0.0.1:4754/"))
+			gumTreePage.css('div#collapse-added-files table tr td').each do |element|
+				result.push(element.text)
+			end
+			index += 1
+		end
+		return result
 	end
 
 end
