@@ -29,6 +29,10 @@ class BuildTravis
 		@projectMergeScenarios
 	end
 
+	def getGitProject()
+		@gitProject
+	end
+
 	def mergeScenariosAnalysis(build)
 		mergeCommit = MergeCommit.new()
 		resultMergeCommit = mergeCommit.getParentsMergeIfTrue(@pathProject, build.commit.sha)
@@ -84,6 +88,7 @@ class BuildTravis
 			puts "PROJECT NOT FOUND"
 		end
 		if (projectBuild != nil)
+			allBuilds = loadAllBuilds(projectBuild, confBuild)
 			projectBuild.each_build do |build|
 
 				if (build != nil)
@@ -123,7 +128,7 @@ class BuildTravis
 								builtMergeScenarios.push(build.commit.sha.gsub('\\n',''))
 								
 								mergeCommit = mergeScenariosAnalysis(build)
-								result = @gitProject.conflictScenario(mergeCommit, projectBuild, build)
+								result = @gitProject.conflictScenario(mergeCommit, allBuilds, build)
 								if (result[0] != nil)
 									if (result[0])
 										totalPushes += 1
@@ -215,5 +220,39 @@ class BuildTravis
 		CSV.open("Failed"+projectName+".csv", "w") do |csv|
 			csv << ["BuildID"]
 		end		
+	end
+
+	def loadAllBuilds(projectBuild, confBuild)
+		allBuilds = Hash.new()
+		loadAllBuildsProject(projectBuild, confBuild, allBuilds)
+		
+		getGitProject().getForksList().each do |newFork|
+			loadAllBuildsProject(newFork, confBuild, allBuilds)
+		end
+		return allBuilds
+	end
+	
+	def loadAllBuildsProject(projectBuild, confBuild, allBuilds)
+		projectBuild.each_build do |build|
+			if (!build.pull_request)
+				if(allBuilds[build.commit.sha] == nil)
+					allBuilds[build.commit.sha] = [[confBuild.getBuildStatus(build)], [build.id]]
+				elsif (allBuilds[build.commit.sha][0] != [confBuild.getBuildStatus(build)])
+					if (allBuilds[build.commit.sha][0] == ["canceled"] or confBuild.getBuildStatus(build) == "canceled")
+						allBuilds.delete(build.commit.sha)
+						allBuilds[build.commit.sha] = [["canceled"], [build.id]]
+					elsif (allBuilds[build.commit.sha][0] == ["passed"])
+						allBuilds.delete(build.commit.sha)
+						allBuilds[build.commit.sha] = [[confBuild.getBuildStatus(build)], [build.id]]
+					elsif (allBuilds[build.commit.sha][0] == ["errored"] or confBuild.getBuildStatus(build) == "errored")
+						allBuilds.delete(build.commit.sha)
+						allBuilds[build.commit.sha] = [["errored"], [build.id]]
+					else 
+						allBuilds.delete(build.commit.sha)
+						allBuilds[build.commit.sha] == [["failed"], [build.id]]
+					end
+				end
+			end
+		end
 	end
 end

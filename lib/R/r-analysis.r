@@ -40,16 +40,16 @@ averagePushNotBrokenBuilds = mean(averagePushesCanceled+averagePushesPassed, na=
 #Average - Broken Builds (errored and failed builds)
 averagePushBrokenBuilds = mean(averagePushesErrored+averagePushesFailed, na=TRUE)
 
-#Agregated
+#Aggregated
 totalPushes = sum(resultsAll$TotalBuildPush)
-agregatedPushesPassed = sum(resultsAll$TotalPushPassed)
-agregatedPushesErrored = sum(resultsAll$TotalPushErrored)
-agregatedPushesFailed = sum(resultsAll$TotalPushFailed)
-agregatedPushesCanceled = sum(resultsAll$TotalPushCanceled)
-#Agregated - Not Broken Builds (passed and canceled builds)
-agregatedPushNotBrokenBuilds = (agregatedPushesPassed+agregatedPushesCanceled)*100/totalPushes
+AggregatedPushesPassed = sum(resultsAll$TotalPushPassed)
+AggregatedPushesErrored = sum(resultsAll$TotalPushErrored)
+AggregatedPushesFailed = sum(resultsAll$TotalPushFailed)
+AggregatedPushesCanceled = sum(resultsAll$TotalPushCanceled)
+#Aggregated - Not Broken Builds (passed and canceled builds)
+AggregatedPushNotBrokenBuilds = (AggregatedPushesPassed+AggregatedPushesCanceled)*100/totalPushes
 #Average - Broken Builds (errored and failed builds)
-agregatedPushBrokenBuilds = (agregatedPushesErrored+agregatedPushesFailed)*100/totalPushes
+AggregatedPushBrokenBuilds = (AggregatedPushesErrored+AggregatedPushesFailed)*100/totalPushes
 
 #Pull Requests
 #Average
@@ -62,16 +62,16 @@ averagePRNotBrokenBuilds = mean(averagePRCanceled+averagePRPassed, na=TRUE)
 #Average - Broken Builds (errored and failed builds)
 averagePRBrokenBuilds = mean(averagePRErrored+averagePRFailed, na=TRUE)
 
-#Agregated
+#Aggregated
 totalPR = sum(resultsAll$TotalBuildPull)
-agregatedPRPassed = sum(resultsAll$TotalPullPassed)
-agregatedPRErrored = sum(resultsAll$TotalPullErrored)
-agregatedPRFailed = sum(resultsAll$TotalPullFailed)
-agregatedPRCanceled = sum(resultsAll$TotalPullCanceled)
-#Agregated - Not Broken Builds (passed and canceled builds)
-agregatedPRNotBrokenBuilds = (agregatedPRPassed+agregatedPRCanceled)*100/totalPR
+AggregatedPRPassed = sum(resultsAll$TotalPullPassed)
+AggregatedPRErrored = sum(resultsAll$TotalPullErrored)
+AggregatedPRFailed = sum(resultsAll$TotalPullFailed)
+AggregatedPRCanceled = sum(resultsAll$TotalPullCanceled)
+#Aggregated - Not Broken Builds (passed and canceled builds)
+AggregatedPRNotBrokenBuilds = (AggregatedPRPassed+AggregatedPRCanceled)*100/totalPR
 #Average - Broken Builds (errored and failed builds)
-agregatedPRBrokenBuilds = (agregatedPRErrored+agregatedPRFailed)*100/totalPR
+AggregatedPRBrokenBuilds = (AggregatedPRErrored+AggregatedPRFailed)*100/totalPR
 
 #Txt File with the informations about the RQ1
 sink("rq1.txt")
@@ -79,15 +79,15 @@ cat("How frequently do Broken Builds happen?")
 cat("\n")
 cat("Pushes")
 cat("\n")
-print("Agregated Value - Broken Builds")
-print(agregatedPushBrokenBuilds)
+print("Aggregated Value - Broken Builds")
+print(AggregatedPushBrokenBuilds)
 print("Average Value - Broken Builds")
 print(averagePushBrokenBuilds)
 cat("\n")
 cat("Pull Requests")
 cat("\n")
-print("Agregated Value - Pull Requests")
-print(agregatedPRBrokenBuilds)
+print("Aggregated Value - Pull Requests")
+print(AggregatedPRBrokenBuilds)
 print("Average Value - Pull Requests")
 print(averagePRBrokenBuilds)
 sink()
@@ -101,14 +101,14 @@ beanplot(averagePRErrored+averagePRFailed, col="gray")
 dev.off()
 
 png(paste("broken-build.png", sep=""), width=425, height=350)
-mydata <- data.frame(row.names =c("Agregated", "Average"), NotBrokenBuilds =c(agregatedPushNotBrokenBuilds, averagePushNotBrokenBuilds), BrokenBuilds =c(agregatedPushBrokenBuilds, averagePushBrokenBuilds))
+mydata <- data.frame(row.names =c("Aggregated", "Average"), NotBrokenBuilds =c(AggregatedPushNotBrokenBuilds, averagePushNotBrokenBuilds), BrokenBuilds =c(AggregatedPushBrokenBuilds, averagePushBrokenBuilds))
 x <- barplot(t(as.matrix(mydata)), col=c("darkgreen", "gray"), legend=TRUE, border=NA, xlim=c(0,4), args.legend=list(bty="n", border=NA), ylab="% Percentage")
 text(x, mydata$NotBrokenBuild-10, labels=round(mydata$NotBrokenBuild), col="black")
 text(x, mydata$NotBrokenBuild+10, labels=round(mydata$BrokenBuild))
 dev.off()
 
 png(paste("broken-pull-request.png", sep=""), width=425, height=350)
-mydataPR <- data.frame(row.names =c("Agregated", "Average"), NotBrokenBuilds =c(agregatedPRNotBrokenBuilds, averagePRNotBrokenBuilds), BrokenBuilds =c(agregatedPRBrokenBuilds, averagePRBrokenBuilds))
+mydataPR <- data.frame(row.names =c("Aggregated", "Average"), NotBrokenBuilds =c(AggregatedPRNotBrokenBuilds, averagePRNotBrokenBuilds), BrokenBuilds =c(AggregatedPRBrokenBuilds, averagePRBrokenBuilds))
 x <- barplot(t(as.matrix(mydataPR)), col=c("darkgreen", "gray"), legend=TRUE, border=NA, xlim=c(0,4), args.legend=list(bty="n", border=NA), ylab="% Percentage")
 text(x, mydataPR$NotBrokenBuild-10, labels=round(mydataPR$NotBrokenBuild), col="black")
 text(x, mydataPR$NotBrokenBuild+10, labels=round(mydataPR$BrokenBuild))
@@ -128,11 +128,11 @@ averagePushNotErroredBuilds = mean(averagePushesCanceled+averagePushesPassed+ave
 #Average - Errored Broken Builds (errored builds)
 averagePushErroredBuilds = mean(averagePushesErrored, na=TRUE)
 
-#Agregated
-#Agregated - Not Errored Broken Builds (passed, failed and canceled builds)
-agregatedPushNotErroredBuilds = (agregatedPushesCanceled+agregatedPushesPassed+agregatedPushesFailed)*100/totalPushes
-#Agregated - Errored Broken Builds (errored builds)
-agregatedPushErroredBuilds = (agregatedPushesErrored)*100/totalPushes
+#Aggregated
+#Aggregated - Not Errored Broken Builds (passed, failed and canceled builds)
+AggregatedPushNotErroredBuilds = (AggregatedPushesCanceled+AggregatedPushesPassed+AggregatedPushesFailed)*100/totalPushes
+#Aggregated - Errored Broken Builds (errored builds)
+AggregatedPushErroredBuilds = (AggregatedPushesErrored)*100/totalPushes
 
 #Pull Requests
 #Average
@@ -141,11 +141,11 @@ averagePRNotErroredBuilds = mean(averagePRCanceled+averagePRPassed+averagePRFail
 #Average - Errored Pulls (passed, errored and canceled pulls)
 averagePRErroredBuilds = mean(averagePRErrored, na=TRUE)
 
-#Agregated
-#Agregated - Not Errored Pulls (passed and canceled builds)
-agregatedPRNotErroredBuilds = (agregatedPRCanceled+agregatedPRPassed+agregatedPRFailed)*100/totalPR
+#Aggregated
+#Aggregated - Not Errored Pulls (passed and canceled builds)
+AggregatedPRNotErroredBuilds = (AggregatedPRCanceled+AggregatedPRPassed+AggregatedPRFailed)*100/totalPR
 #Average - Errored Pulls (errored builds)
-agregatedPRErroredBuilds = (agregatedPRErrored)*100/totalPR
+AggregatedPRErroredBuilds = (AggregatedPRErrored)*100/totalPR
 
 #Txt File with the informations about the RQ2
 sink("rq2.txt")
@@ -153,15 +153,15 @@ cat("How frequently do Errored Builds happen?")
 cat("\n")
 cat("Pushes")
 cat("\n")
-print("Agregated Value - Errored Builds")
-print(agregatedPushErroredBuilds)
+print("Aggregated Value - Errored Builds")
+print(AggregatedPushErroredBuilds)
 print("Average Value - Broken Builds")
 print(averagePushErroredBuilds)
 cat("\n")
 cat("Pull Requests")
 cat("\n")
-print("Agregated Value - Pull Requests")
-print(agregatedPRErroredBuilds)
+print("Aggregated Value - Pull Requests")
+print(AggregatedPRErroredBuilds)
 print("Average Value - Pull Requests")
 print(averagePRErroredBuilds)
 sink()
@@ -175,14 +175,14 @@ beanplot(averagePRErrored, col="gray")
 dev.off()
 
 png(paste("errored-build.png", sep=""), width=425, height=350)
-mydataErrored <- data.frame(row.names =c("Agregated", "Average"), NotErroredBuilds =c(agregatedPushNotErroredBuilds, averagePushNotErroredBuilds), ErroredBuilds =c(agregatedPushErroredBuilds, averagePushErroredBuilds))
+mydataErrored <- data.frame(row.names =c("Aggregated", "Average"), NotErroredBuilds =c(AggregatedPushNotErroredBuilds, averagePushNotErroredBuilds), ErroredBuilds =c(AggregatedPushErroredBuilds, averagePushErroredBuilds))
 x <- barplot(t(as.matrix(mydataErrored)), col=c("darkgreen", "gray"), legend=TRUE, border=NA, xlim=c(0,4), args.legend=list(bty="n", border=NA), ylab="% Percentage")
 text(x, mydataErrored$NotErroredBuilds-8, labels=round(mydataErrored$NotErroredBuilds), col="black")
 text(x, mydataErrored$NotErroredBuilds+5, labels=round(mydataErrored$ErroredBuilds))
 dev.off()
 
 png(paste("errored-pull-request.png", sep=""), width=425, height=350)
-mydataErroredPR <- data.frame(row.names =c("Agregated", "Average"), NotErroredPR =c(agregatedPRNotErroredBuilds, averagePRNotErroredBuilds), ErroredPR =c(agregatedPRErroredBuilds, averagePRErroredBuilds))
+mydataErroredPR <- data.frame(row.names =c("Aggregated", "Average"), NotErroredPR =c(AggregatedPRNotErroredBuilds, averagePRNotErroredBuilds), ErroredPR =c(AggregatedPRErroredBuilds, averagePRErroredBuilds))
 x <- barplot(t(as.matrix(mydataErroredPR)), col=c("darkgreen", "gray"), legend=TRUE, border=NA, xlim=c(0,4), args.legend=list(bty="n", border=NA), ylab="% Percentage")
 text(x, mydataErroredPR$NotErroredPR-10, labels=round(mydataErroredPR$NotErroredPR), col="black")
 text(x, mydataErroredPR$NotErroredPR+10, labels=round(mydataErroredPR$ErroredPR))
@@ -202,11 +202,11 @@ averagePushNotFailedBuilds = mean(averagePushesCanceled+averagePushesPassed+aver
 #Average - Failed Broken Builds (Failed builds)
 averagePushFailedBuilds = mean(averagePushesFailed, na=TRUE)
 
-#Agregated
-#Agregated - Not Failed Broken Builds (passed, errored and canceled builds)
-agregatedPushNotFailedBuilds = (agregatedPushesCanceled+agregatedPushesPassed+agregatedPushesErrored)*100/totalPushes
-#Agregated - Failed Broken Builds (Failed builds)
-agregatedPushFailedBuilds = (agregatedPushesFailed)*100/totalPushes
+#Aggregated
+#Aggregated - Not Failed Broken Builds (passed, errored and canceled builds)
+AggregatedPushNotFailedBuilds = (AggregatedPushesCanceled+AggregatedPushesPassed+AggregatedPushesErrored)*100/totalPushes
+#Aggregated - Failed Broken Builds (Failed builds)
+AggregatedPushFailedBuilds = (AggregatedPushesFailed)*100/totalPushes
 
 #Pull Requests
 #Average
@@ -215,11 +215,11 @@ averagePRNotFailedBuilds = mean(averagePRCanceled+averagePRPassed+averagePRError
 #Average - Failed Pulls (Failed pulls)
 averagePRFailedBuilds = mean(averagePRFailed, na=TRUE)
 
-#Agregated
-#Agregated - Not Failed Pulls (passed, errored and canceled builds)
-agregatedPRNotFailedBuilds = (agregatedPRCanceled+agregatedPRPassed+agregatedPRErrored)*100/totalPR
+#Aggregated
+#Aggregated - Not Failed Pulls (passed, errored and canceled builds)
+AggregatedPRNotFailedBuilds = (AggregatedPRCanceled+AggregatedPRPassed+AggregatedPRErrored)*100/totalPR
 #Average - Failed Pulls (failed builds)
-agregatedPRFailedBuilds = (agregatedPRFailed)*100/totalPR
+AggregatedPRFailedBuilds = (AggregatedPRFailed)*100/totalPR
 
 #Txt File with the informations about the RQ3
 sink("rq3.txt")
@@ -227,15 +227,15 @@ cat("How frequently do Failed Builds happen?")
 cat("\n")
 cat("Pushes")
 cat("\n")
-print("Agregated Value - Errored Builds")
-print(agregatedPushFailedBuilds)
+print("Aggregated Value - Errored Builds")
+print(AggregatedPushFailedBuilds)
 print("Average Value - Broken Builds")
 print(averagePushFailedBuilds)
 cat("\n")
 cat("Pull Requests")
 cat("\n")
-print("Agregated Value - Pull Requests")
-print(agregatedPRFailedBuilds)
+print("Aggregated Value - Pull Requests")
+print(AggregatedPRFailedBuilds)
 print("Average Value - Pull Requests")
 print(averagePRFailedBuilds)
 sink()
@@ -249,14 +249,14 @@ beanplot(averagePRFailed, col="gray")
 dev.off()
 
 png(paste("failed-build.png", sep=""), width=425, height=350)
-mydataFailed <- data.frame(row.names =c("Agregated", "Average"), NotFailedBuilds =c(agregatedPushNotFailedBuilds, averagePushNotFailedBuilds), FailedBuilds =c(agregatedPushFailedBuilds, averagePushFailedBuilds))
+mydataFailed <- data.frame(row.names =c("Aggregated", "Average"), NotFailedBuilds =c(AggregatedPushNotFailedBuilds, averagePushNotFailedBuilds), FailedBuilds =c(AggregatedPushFailedBuilds, averagePushFailedBuilds))
 x <- barplot(t(as.matrix(mydataFailed)), col=c("darkgreen", "gray"), legend=TRUE, border=NA, xlim=c(0,4), args.legend=list(bty="n", border=NA), ylab="% Percentage")
 text(x, mydataFailed$NotFailedBuilds-8, labels=round(mydataFailed$NotFailedBuilds), col="black")
 text(x, mydataFailed$NotFailedBuilds+5, labels=round(mydataFailed$FailedBuilds))
 dev.off()
 
 png(paste("failed-pull-request.png", sep=""), width=425, height=350)
-mydataFailedPR <- data.frame(row.names =c("Agregated", "Average"), NotFailedPR =c(agregatedPRNotFailedBuilds, averagePRNotFailedBuilds), FailedPR =c(agregatedPRFailedBuilds, averagePRFailedBuilds))
+mydataFailedPR <- data.frame(row.names =c("Aggregated", "Average"), NotFailedPR =c(AggregatedPRNotFailedBuilds, averagePRNotFailedBuilds), FailedPR =c(AggregatedPRFailedBuilds, averagePRFailedBuilds))
 x <- barplot(t(as.matrix(mydataFailedPR)), col=c("darkgreen", "gray"), legend=TRUE, border=NA, xlim=c(0,4), args.legend=list(bty="n", border=NA), ylab="% Percentage")
 text(x, mydataFailedPR$NotFailedPR-10, labels=round(mydataFailedPR$NotFailedPR), col="black")
 text(x, mydataFailedPR$NotFailedPR+10, labels=round(mydataFailedPR$FailedPR))
@@ -276,9 +276,17 @@ averageMergeScenrioPerc = mean(averageMergeScenarios, na=TRUE)
 averageNotBuiltMS = (totalMergeScenarios$TotalMSNoBuilt)*100/totalMergeScenarios$TotalMS
 averageNotMergeScenrioPerc = mean(averageNotBuiltMS, na=TRUE)
 
-#Agregated
-agregatedMergeScenarios = sum(totalMergeScenarios$TotalMS-totalMergeScenarios$TotalMSNoBuilt)*100/sum(totalMergeScenarios$TotalMS)
-agregatedNotMergeScenarios = sum(totalMergeScenarios$TotalMSNoBuilt)*100/sum(totalMergeScenarios$TotalMS)
+averageMergeScenariosValid = (totalMergeScenarios$TotalMSParentPassed+totalMergeScenarios$TotalMSParentsNoPassed)*100/(totalMergeScenarios$TotalMSParentPassed+totalMergeScenarios$TotalMSParentsNoPassed+totalMergeScenarios$TotalParentNoBuilt)
+averageMergeScenrioPercValid = mean(averageMergeScenariosValid, na=TRUE)
+averageNotBuiltMSValid = (totalMergeScenarios$TotalParentNoBuilt)*100/(totalMergeScenarios$TotalMSParentPassed+totalMergeScenarios$TotalMSParentsNoPassed+totalMergeScenarios$TotalParentNoBuilt)
+averageNotMergeScenrioPercValid = mean(averageNotBuiltMSValid, na.rm=TRUE)
+
+#Aggregated
+AggregatedMergeScenarios = sum(totalMergeScenarios$TotalMS-totalMergeScenarios$TotalMSNoBuilt)*100/sum(totalMergeScenarios$TotalMS)
+AggregatedNotMergeScenarios = sum(totalMergeScenarios$TotalMSNoBuilt)*100/sum(totalMergeScenarios$TotalMS)
+
+AggregatedMergeScenariosValid = sum(totalMergeScenarios$TotalMSParentPassed+totalMergeScenarios$TotalMSParentsNoPassed)*100/sum(totalMergeScenarios$TotalMSParentPassed+totalMergeScenarios$TotalMSParentsNoPassed+totalMergeScenarios$TotalParentNoBuilt)
+AggregatedNotMergeScenariosValid = sum(totalMergeScenarios$TotalParentNoBuilt)*100/sum(totalMergeScenarios$TotalMSParentPassed+totalMergeScenarios$TotalMSParentsNoPassed+totalMergeScenarios$TotalParentNoBuilt)
 
 #Txt File with the informations about the RQ4
 sink("rq4.txt")
@@ -286,8 +294,8 @@ cat("How frequently are Merge Scenarios from Master Built on Travis?")
 cat("\n")
 cat("Merge Scenarios")
 cat("\n")
-print("Agregated Value - Merge Scenarios")
-print(agregatedMergeScenarios)
+print("Aggregated Value - Merge Scenarios")
+print(AggregatedMergeScenarios)
 print("Average Value - Merge Scenarios")
 print(averageMergeScenrioPerc)
 cat("\n")
@@ -298,10 +306,21 @@ beanplot(averageMergeScenarios, col="gray")
 dev.off()
 
 png(paste("merge-scenario.png", sep=""), width=425, height=350)
-mydataMergeScenario <- data.frame(row.names =c("Agregated", "Average"), NotBuilt =c(agregatedNotMergeScenarios, averageNotMergeScenrioPerc), Built =c(agregatedMergeScenarios, averageMergeScenrioPerc))
+mydataMergeScenario <- data.frame(row.names =c("Aggregated", "Average"), NotBuilt =c(AggregatedNotMergeScenarios, averageNotMergeScenrioPerc), Built =c(AggregatedMergeScenarios, averageMergeScenrioPerc))
 x <- barplot(t(as.matrix(mydataMergeScenario)), col=c("gray", "cornflowerblue"), legend=TRUE, border=NA, xlim=c(0,4), args.legend=list(bty="n", border=NA), ylab="% Percentage")
 text(x, mydataMergeScenario$NotBuilt-8, labels=round(mydataMergeScenario$NotBuilt), col="black")
 text(x, mydataMergeScenario$NotBuilt+10, labels=round(mydataMergeScenario$Built))
+dev.off()
+
+png(paste("beanplot-merge-scenario-valid.png", sep=""), width=300, height=350)
+beanplot(averageMergeScenariosValid, col="gray")
+dev.off()
+
+png(paste("merge-scenario-valid.png", sep=""), width=425, height=350)
+mydataMergeScenario <- data.frame(row.names =c("Aggregated", "Average"), NoParentBuilt =c(AggregatedNotMergeScenariosValid, averageNotMergeScenrioPercValid), ParentBuilt =c(AggregatedMergeScenariosValid, averageMergeScenrioPercValid))
+x <- barplot(t(as.matrix(mydataMergeScenario)), col=c("gray", "cornflowerblue"), legend=TRUE, border=NA, xlim=c(0,4), args.legend=list(bty="n", border=NA), ylab="% Percentage")
+text(x, mydataMergeScenario$NoParentBuilt-8, labels=round(mydataMergeScenario$NoParentBuilt), col="black")
+text(x, mydataMergeScenario$NoParentBuilt+10, labels=round(mydataMergeScenario$ParentBuilt))
 dev.off()
 
 setwd(file.path(mainDir))
@@ -315,8 +334,8 @@ setwd(file.path(mainDir, rq5))
 #Average
 averageMergeScenariosErrored = mergeScenarios$PushesErrored*100/(totalMergeScenarios$TotalMS-totalMergeScenarios$TotalMSNoBuilt)
 averageMergeScenariosErroredPerc = mean(averageMergeScenariosErrored, na=TRUE)
-#Agregated
-agregatedMergeScenariosErrored = sum(mergeScenarios$PushesErrored)*100/sum(totalMergeScenarios$TotalMS-totalMergeScenarios$TotalMSNoBuilt)
+#Aggregated
+AggregatedMergeScenariosErrored = sum(mergeScenarios$PushesErrored)*100/sum(totalMergeScenarios$TotalMS-totalMergeScenarios$TotalMSNoBuilt)
 
 #Changes Distributions on modified Files
 
@@ -336,8 +355,8 @@ cat("How frequently are Errored Builds resulting from Built Merge Scenarios?")
 cat("\n")
 cat("Errored Builds from Merge Scenarios")
 cat("\n")
-print("Agregated Value - Errored Builds")
-print(agregatedMergeScenariosErrored)
+print("Aggregated Value - Errored Builds")
+print(AggregatedMergeScenariosErrored)
 print("Average Value - Errored Builds")
 print(averageMergeScenariosErroredPerc)
 cat("\n")
@@ -376,8 +395,8 @@ setwd(file.path(mainDir, rq6))
 #Average
 averageMergeScenariosFailed = mergeScenarios$PushesFailed*100/(totalMergeScenarios$TotalMS-totalMergeScenarios$TotalMSNoBuilt)
 averageMergeScenariosFailedPerc = mean(averageMergeScenariosFailed, na=TRUE)
-#Agregated
-agregatedMergeScenariosFailed = sum(mergeScenarios$PushesFailed)*100/sum(totalMergeScenarios$TotalMS-totalMergeScenarios$TotalMSNoBuilt)
+#Aggregated
+AggregatedMergeScenariosFailed = sum(mergeScenarios$PushesFailed)*100/sum(totalMergeScenarios$TotalMS-totalMergeScenarios$TotalMSNoBuilt)
 
 failedPushTravisAll = mergeScenarios$FailedTravis*100/mergeScenarios$PushesFailed
 failedPushConfigAll = mergeScenarios$FailedConfig*100/mergeScenarios$PushesFailed
@@ -397,8 +416,8 @@ cat("What files are modified in Built Merge Scenarios of Failed Builds?")
 cat("\n")
 cat("Failed Builds from Merge Scenarios")
 cat("\n")
-print("Agregated Value - Failed Builds")
-print(agregatedMergeScenariosFailed)
+print("Aggregated Value - Failed Builds")
+print(AggregatedMergeScenariosFailed)
 print("Average Value - Failed Builds")
 print(averageMergeScenariosFailedPerc)
 cat("\n")
@@ -447,8 +466,8 @@ averageErroredPushSourceConfPerc = mean(averageErroredPushSourceConf, na=TRUE)
 averageErroredPushAllTogetherConfPerc = mean(averageErroredPushAllTogetherConf, na=TRUE)
 averageErroredBuildConflict = averageErroredPushTravisConfPerc + averagevErroredPushConfigConfPerc + averageErroredPushSourceConfPerc + averageErroredPushAllTogetherConfPerc
 
-#Agregated
-agregatedErroredConf = (sum(mergeScenarios$ErroredTravisConf, na.rm=TRUE) + sum(mergeScenarios$ErroredConfigConf, na.rm=TRUE) + sum(mergeScenarios$ErroredSourceConf, na.rm=TRUE) + sum(mergeScenarios$ErroredAllConf, na.rm=TRUE))*100/sum(mergeScenarios$PushesErrored, na.rm=TRUE)
+#Aggregated
+AggregatedErroredConf = (sum(mergeScenarios$ErroredTravisConf, na.rm=TRUE) + sum(mergeScenarios$ErroredConfigConf, na.rm=TRUE) + sum(mergeScenarios$ErroredSourceConf, na.rm=TRUE) + sum(mergeScenarios$ErroredAllConf, na.rm=TRUE))*100/sum(mergeScenarios$PushesErrored, na.rm=TRUE)
 
 #Build Conflicts - All Merge Scenarios
 #Average
@@ -463,8 +482,8 @@ averageErroredPushSourceConfAllPerc = mean(averageErroredPushSourceConfAll, na=T
 averageErroredPushAllTogetherConfAllPerc = mean(averageErroredPushAllTogetherConfAll, na=TRUE)
 averageErroredBuildConflictAll = averageErroredPushTravisConfAllPerc + averageErroredPushConfigConfAllPerc + averageErroredPushSourceConfAllPerc + averageErroredPushAllTogetherConfAllPerc
 
-#Agregated
-agregatedErroredConfAll = (sum(mergeScenarios$ErroredTravisConf, na.rm=TRUE) + sum(mergeScenarios$ErroredConfigConf, na.rm=TRUE) + sum(mergeScenarios$ErroredSourceConf, na.rm=TRUE) + sum(mergeScenarios$ErroredAllConf, na.rm=TRUE))*100/sum(totalMergeScenarios$ValidBuilds, na.rm=TRUE)
+#Aggregated
+AggregatedErroredConfAll = (sum(mergeScenarios$ErroredTravisConf, na.rm=TRUE) + sum(mergeScenarios$ErroredConfigConf, na.rm=TRUE) + sum(mergeScenarios$ErroredSourceConf, na.rm=TRUE) + sum(mergeScenarios$ErroredAllConf, na.rm=TRUE))*100/sum(totalMergeScenarios$ValidBuilds, na.rm=TRUE)
 
 #Txt File with the informations about the RQ7
 sink("rq7.txt")
@@ -472,16 +491,16 @@ cat("How frequently do Build Conflicts happen on built Merge Scenarios of Errore
 cat("\n")
 cat("Build Conflicts only from Errored Scenarios")
 cat("\n")
-print("Agregated Value - Errored Builds")
-print(agregatedErroredConf)
+print("Aggregated Value - Errored Builds")
+print(AggregatedErroredConf)
 print("Average Value - Errored Builds")
 print(averageErroredBuildConflict)
 cat("\n")
 cat("\n")
 cat("Build Conflicts from Merge Scenarios")
 cat("\n")
-print("Agregated Value - Errored Builds")
-print(agregatedErroredConfAll)
+print("Aggregated Value - Errored Builds")
+print(AggregatedErroredConfAll)
 print("Average Value - Errored Builds")
 print(averageErroredBuildConflictAll)
 cat("\n")
@@ -508,8 +527,8 @@ averageFailedPushSourceConfPerc = mean(averageFailedPushSourceConf, na=TRUE)
 averageFailedPushAllTogetherConfPerc = mean(averageFailedPushAllTogetherConf, na=TRUE)
 averageFailedBuildConflict = averageFailedPushTravisConfPerc + averageFailedPushConfigConfPerc + averageFailedPushSourceConfPerc + averageFailedPushAllTogetherConfPerc
 
-#Agregated
-agregatedFailedConf = (sum(mergeScenarios$FailedTravisConf, na.rm=TRUE) + sum(mergeScenarios$FailedConfigConf, na.rm=TRUE) + sum(mergeScenarios$FailedSourceConf, na.rm=TRUE) + sum(mergeScenarios$FailedAllConf, na.rm=TRUE))*100/sum(mergeScenarios$PushesFailed, na.rm=TRUE)
+#Aggregated
+AggregatedFailedConf = (sum(mergeScenarios$FailedTravisConf, na.rm=TRUE) + sum(mergeScenarios$FailedConfigConf, na.rm=TRUE) + sum(mergeScenarios$FailedSourceConf, na.rm=TRUE) + sum(mergeScenarios$FailedAllConf, na.rm=TRUE))*100/sum(mergeScenarios$PushesFailed, na.rm=TRUE)
 
 #Build Conflicts - All Merge Scenarios
 #Average
@@ -524,8 +543,8 @@ averageFailedPushSourceConfAllPerc = mean(averageFailedPushSourceConfAll, na=TRU
 averageFailedPushAllTogetherConfAllPerc = mean(averageFailedPushAllTogetherConfAll, na=TRUE)
 averageFailedBuildConflictAll = averageFailedPushTravisConfAllPerc + averageFailedPushConfigConfAllPerc + averageFailedPushSourceConfAllPerc + averageFailedPushAllTogetherConfAllPerc
 
-#Agregated
-agregatedFailedConfAll = (sum(mergeScenarios$FailedTravisConf, na.rm=TRUE) + sum(mergeScenarios$FailedConfigConf, na.rm=TRUE) + sum(mergeScenarios$FailedSourceConf, na.rm=TRUE) + sum(mergeScenarios$FailedAllConf, na.rm=TRUE))*100/sum(totalMergeScenarios$ValidBuilds, na.rm=TRUE)
+#Aggregated
+AggregatedFailedConfAll = (sum(mergeScenarios$FailedTravisConf, na.rm=TRUE) + sum(mergeScenarios$FailedConfigConf, na.rm=TRUE) + sum(mergeScenarios$FailedSourceConf, na.rm=TRUE) + sum(mergeScenarios$FailedAllConf, na.rm=TRUE))*100/sum(totalMergeScenarios$ValidBuilds, na.rm=TRUE)
 
 #Txt File with the informations about the RQ8
 sink("rq8.txt")
@@ -533,16 +552,16 @@ cat("How frequently do Test Conflicts happen on built Merge Scenarios of Errored
 cat("\n")
 cat("Build Conflicts only from Failed Scenarios")
 cat("\n")
-print("Agregated Value - Failed Builds")
-print(agregatedFailedConf)
+print("Aggregated Value - Failed Builds")
+print(AggregatedFailedConf)
 print("Average Value - Failed Builds")
 print(averageFailedBuildConflict)
 cat("\n")
 cat("\n")
 cat("Build Conflicts from Merge Scenarios")
 cat("\n")
-print("Agregated Value - Failed Builds")
-print(agregatedFailedConfAll)
+print("Aggregated Value - Failed Builds")
+print(AggregatedFailedConfAll)
 print("Average Value - Failed Builds")
 print(averageFailedBuildConflictAll)
 cat("\n")

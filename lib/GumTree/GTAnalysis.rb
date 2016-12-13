@@ -118,15 +118,14 @@ class GTAnalysis
 		deletedFiles = []
 		begin
 			thr = Thread.new { diff = system "bash", "-c", "exec -a gumtree ./gumtree webdiff #{firstBranch.gsub("\n","")} #{secondBranch.gsub("\n","")}" }
-			sleep(1)
+			sleep(10)
 			mainDiff = %x(wget http://127.0.0.1:4754/ -q -O -)
-
 			modifiedFilesDiff = getDiffByModification(mainDiff[/Modified files \((.*?)\)/m, 1])
 			addedFiles = getDiffByAddedFile(mainDiff[/Added files \((.*?)\)/m, 1])
 			deletedFiles = getDiffByDeletedFile(mainDiff[/Deleted files \((.*?)\)/m, 1])
 			
 			kill = %x(pkill -f gumtree)
-			sleep(1)
+			sleep(5)
 		rescue Exception => e
 			puts "GumTree Failed"
 		end
@@ -138,6 +137,63 @@ class GTAnalysis
 		baseRight = runAllDiff(base, right)
 		leftResult = runAllDiff(left, result)
 		rightResult = runAllDiff(right, result)
+		verifyModificationStatus(baseLeft, leftResult, baseRight, rightResult)
+	end
+
+	def verifyModificationStatus(baseLeft, leftResult, baseRight, rightResult)
+		statusModified = true
+		statusModified = verifyModifiedFile(baseLeft[0], leftResult[0], baseRight[0], rightResult[0])
+		statusAdded = verifyAddedDeletedFile(baseLeft[1], leftResult[1], baseRight[1], rightResult[1])
+		statusDeleted = verifyAddedDeletedFile(baseLeft[2], leftResult[2], baseRight[2], rightResult[2])
+		if (statusModified and statusAdded and statusDeleted)
+			puts "IT WAS LOVE (MERGE WITHOUT CONFLICTS), IT WAS NOT A PERFECT ILLUSION"
+		else 
+			puts "IT WAS NOT LOVE (MERGE WITH CONFLICTS), IT WAS A PERFECT ILLUSION"
+		end
+	end
+
+	def verifyAddedDeletedFile(baseLeftInitial, leftResultFinal, baseRightInitial, rightResultFinal)
+		status = true
+		if(baseLeftInitial.size > 0) 
+			baseLeftInitial.each do |fileLeft|
+				if (!rightResultFinal.include?(fileLeft))
+					status = false
+					break
+				end
+			end
+		end
+		if (baseRightInitial.size > 0)
+			baseRightInitial.each do |fileLeft|
+				if (!leftResultFinal.include?(fileLeft))
+					status = false
+					break
+				end
+			end
+		end
+		return status
+	end
+
+	def verifyModifiedFile(baseLeftInitial, leftResultFinal, baseRightInitial, rightResultFinal)
+		status = true
+		if(baseLeftInitial.size > 0)
+			baseLeftInitial.each do |keyFile, fileLeft|
+				fileRight = rightResultFinal[keyFile]
+				if (fileRight == nil or fileLeft != fileRight)
+					status = false
+					break
+				end
+			end
+		end
+		if(baseRightInitial.size > 0) 
+			baseRightInitial.each do |keyFile, fileRight|
+				fileLeft = leftResultFinal[keyFile]
+				if (fileLeft == nil or fileRight != fileLeft)
+					status = false
+					break
+				end
+			end
+		end
+		return status
 	end
 
 	def getDiffByModification(numberOcorrences)
@@ -159,7 +215,7 @@ class GTAnalysis
 		while(index < numberOcorrences.to_i)
 			gumTreePage = Nokogiri::HTML(RestClient.get("http://127.0.0.1:4754/"))
 			gumTreePage.css('div#collapse-deleted-files table tr td').each do |element|
-				puts element.text
+				result.push(element.text)
 			end
 			index += 1
 		end
@@ -178,5 +234,4 @@ class GTAnalysis
 		end
 		return result
 	end
-
 end

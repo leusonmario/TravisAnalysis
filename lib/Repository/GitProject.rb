@@ -14,7 +14,17 @@ class GitProject
 			@mergeScenarios = Array.new
 			getMergesScenariosByProject()
 			@forksList = []
+			@login = login
+			@password = password
 		end
+	end
+
+	def getLogin()
+		@login
+	end
+
+	def getPassword()
+		@password
 	end
 
 	def getPath()
@@ -93,25 +103,27 @@ class GitProject
 	end
 
 	def getForksList()
+		result = []
 		Dir.chdir @path
 		Octokit.auto_paginate = true
 
 		client = Octokit::Client.new \
-	  		:login    => 'leusonmario',
-	  		:password => '<password>'
+	  		:login    => getLogin(),
+	  		:password => getPassword()
 		
-		forksProject = client.forks(project)
+		forksProject = client.forks(getProjectName())
 		forksProject.each do |fork|
 			begin  
-				puts fork.html_url
+				#puts fork.html_url
 				buildProjeto = Travis::Repository.find(fork.html_url.gsub('https://github.com/','')) 
 				newName = fork.html_url.partition('github.com/').last.gsub('/','-')
-				clone = %x(git clone #{fork.html_url} #{newName})
-				puts clone
+				#clone = %x(git clone #{fork.html_url} #{newName})
+				result.push(buildProjeto)
 				rescue Exception => e  
 				 	puts "NO TRAVIS PROJECT"
 			end
 		end
+		return result
 	end
 
 	def isProjectAvailable(projectName, login, password)
@@ -144,29 +156,25 @@ class GitProject
 		parentTwo = ""
 		buildTwo = ""
 		
-		projectBuilds.each_build do |mergeBuild|
-			if(parentsMerge[0].include?(mergeBuild.commit.sha))
-				if (mergeBuild.state=='passed')
+		if (projectBuilds[parentsMerge[0]] != nil and projectBuilds[parentsMerge[1]] != nil)
+			if (projectBuilds[parentsMerge[0]][0]==["passed"])
 					parentOne = true
-					buildOne = mergeBuild
-				else
-					return false, nil, nil
-				end
-			elsif (parentsMerge[1].include?(mergeBuild.commit.sha))
-				if (mergeBuild.state=='passed')
-					parentTwo = true
-					buildTwo = mergeBuild
-				else
-					return false, nil, nil
-				end
+					buildOne = projectBuilds[parentsMerge[0]][1]
+			else
+				return false, nil, nil
 			end
-
+			
+			if (projectBuilds[parentsMerge[1]][0]==["passed"])
+					parentTwo = true
+					buildTwo = projectBuilds[parentsMerge[1]][1]
+			else
+				return false, nil, nil
+			end
+			
 			if (parentOne==true and parentTwo==true)
 				return true, buildOne, buildTwo
 			end
 		end
-		
 		return nil, nil, nil
 	end
-
 end
