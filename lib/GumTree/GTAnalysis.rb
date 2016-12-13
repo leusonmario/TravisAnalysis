@@ -25,7 +25,7 @@ class GTAnalysis
 		Dir.chdir getGumTreePath()
 		#  		   result 			left 		right 		MergeCommit 	parent1 	parent2 	problemas
 		gumTreeDiffByBranch(pathCopies[1], pathCopies[2], pathCopies[3], pathCopies[4])
-		#deleteProjectCopies(pathCopies)
+		deleteProjectCopies(pathCopies)
 		Dir.chdir actualPath
 	end
 
@@ -60,18 +60,18 @@ class GTAnalysis
 		base = %x(git merge-base --all #{parents[0]} #{parents[1]})
 		checkout = %x(git checkout #{base} > /dev/null 2>&1)
 		clone = %x(cp -R #{pathProject} #{copyBranch[4]})
-		invalidFiles = %x(find #{copyBranch[4]} -type f -regextype posix-extended -iregex '.*\.(sh|md)$' -delete)
+		invalidFiles = %x(find #{copyBranch[4]} -type f -regextype posix-extended -iregex '.*\.(sh|md|yaml)$' -delete)
 		invalidFiles = %x(find #{copyBranch[4]} -type f  ! -name "*.?*" -delete)
 		checkout = %x(git checkout #{mergeCommit} > /dev/null 2>&1)
 		clone = %x(cp -R #{pathProject} #{copyBranch[1]})
-		invalidFiles = %x(find #{copyBranch[1]} -type f -regextype posix-extended -iregex '.*\.(sh|md)$' -delete)
+		invalidFiles = %x(find #{copyBranch[1]} -type f -regextype posix-extended -iregex '.*\.(sh|md|yaml)$' -delete)
 		invalidFiles = %x(find #{copyBranch[4]} -type f  ! -name "*.?*" -delete)
 		
 		index = 0
 		while(index < parents.size)
 			checkout = %x(git checkout #{parents[index]} > /dev/null 2>&1)
 			clone = %x(cp -R #{pathProject} #{copyBranch[index+2]} > /dev/null 2>&1)
-			invalidFiles = %x(find #{copyBranch[index+2]} -type f -regextype posix-extended -iregex '.*\.(sh|md)$' -delete)
+			invalidFiles = %x(find #{copyBranch[index+2]} -type f -regextype posix-extended -iregex '.*\.(sh|md|yaml)$' -delete)
 			invalidFiles = %x(find #{copyBranch[index+2]} -type f  ! -name "*.?*" -delete)
 			checkout = %x(git checkout master > /dev/null 2>&1)
 			index += 1

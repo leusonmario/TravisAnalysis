@@ -138,7 +138,7 @@ class ConflictCategoryErrored
 						body = bodyJob[/Retrying, 3 of 3[\s\S]*/]
 						if (body[/\[#{stringErro}\][\s\S]*#{stringNoApplied}[\s\S]*\[#{stringErro}\]/] || body[/\[#{stringErro}\][\s\S]*#{stringUpdate}[\s\S]*\[#{stringInfo}\](.*)?[0-9]/] || body[/\[#{stringErro}\]#{stringCompError}[\s\S]*[.java][\s\S]*#{stringNoConvert}/] || body[/#{stringWrongReturn}/] || body[/#{stringIncompatibleType}/] || body[/\[#{stringErro}\][\s\S]*[#{stringConstructorFound}]?[\s\S]*#{stringDifferArgument}/])
 							result.push("updateModifier")
-							@updateModifier += 1
+							@updateModifier += body.scan(/\[#{stringErro}\][\s\S]*#{stringNoApplied}[\s\S]*\[#{stringErro}\] | \[#{stringErro}\][\s\S]*#{stringUpdate}[\s\S]*\[#{stringInfo}\](.*)?[0-9] | \[#{stringErro}\]#{stringCompError}[\s\S]*[.java][\s\S]*#{stringNoConvert} | #{stringWrongReturn} | #{stringIncompatibleType} | \[#{stringErro}\][\s\S]*[#{stringConstructorFound}]?[\s\S]*#{stringDifferArgument}/).size
 							otherCase = false
 						end
 						if (body[/\[#{stringErro}\][\s\S]*#{stringDefined}[\s\S]*\[#{stringInfo}\](.*)?[0-9]/])
@@ -152,12 +152,13 @@ class ConflictCategoryErrored
 							otherCase = false
 						end
 						if (body[/#{stringBuildFail}[\s\S]*#{stringUndefinedExt}/] || body[/\[#{stringErro}\][\s\S]*#{stringDependency}/] || body[/\[#{stringErro}\][\s\S]*#{stringNonParseable}[\s\S]*#{stringUnexpected}[\s\S]*\[#{stringErro}\]/] || body[/#{stringScript}[\s\S]*#{stringGradle}[\s\S]*#{stringProblemScript}[\s\S]*#{stringAddTask}[\s\S]*#{stringTaskExists}[\s\S]*#{stringBuildFail}/])
+							aux = body.scan(/#{stringBuildFail}[\s\S]*#{stringUndefinedExt} | \[#{stringErro}\][\s\S]*#{stringDependency} | \[#{stringErro}\][\s\S]*#{stringNonParseable}[\s\S]*#{stringUnexpected}[\s\S]*\[#{stringErro}\] | #{stringScript}[\s\S]*#{stringGradle}[\s\S]*#{stringProblemScript}[\s\S]*#{stringAddTask}[\s\S]*#{stringTaskExists}[\s\S]*#{stringBuildFail}/).size
 							if (type=="Config" || type=="All-Config")
 								result.push("dependencyProblem")
-								@dependencyProblem += 1
+								@dependencyProblem += aux
 							else
 								result.push("compilerError")
-								@compilerError += 1
+								@compilerError += aux
 							end
 							otherCase = false
 						end
@@ -166,27 +167,27 @@ class ConflictCategoryErrored
 							#fileConflict = text.match(/[A-Za-z]+\.java/)[0].to_s
 							#gtAnalysis.getGumTreeAnalysis(pathProject, build, fileConflict)
 							result.push("unavailableSymbol")
-							@unavailableSymbol += 1
+							@unavailableSymbol += body.scan(/\[#{stringErro}\]#{stringCompError}[\s\S]*\[#{stringInfo}\][\s\S]*\[#{stringErro}\][\s\S]*#{stringNotFind} | \[#{stringErro}\]]?[\s\S]*#{stringNotFind} | \[#{stringErro}\][\s\S]*#{stringNotFindType} | \[#{stringErro}\][\s\S]*#{stringNotMember}/).size
 							otherCase = false
 						end
 						if (body[/#{stringUnexpectedToken}/]  || body[/\[#{stringErro}\](.*)?#{stringError}\: #{stringMalformed}/] or body[/\[ERROR\](.*)?#{stringError}\:\'(.*)?\'#{stringExpected}/])
 							result.push("malformedExpression")
-							@malformedExp += 1
+							@malformedExp += body.scan(/#{stringUnexpectedToken} | \[#{stringErro}\](.*)?#{stringError}\: #{stringMalformed} | \[ERROR\](.*)?#{stringError}\:\'(.*)?\'#{stringExpected}/).size
 							otherCase = false
 						end
 						if (body[/#{stringErroInput}/] || body[/\[#{stringErro}\][\s\S]*deprecated[\s\S]*#{stringNoMaintained}/] || body[/#{stringAccess}/] || body[/#{stringFailedGoal}[\s\S]*#{stringBuildsFailed}/] || body[/#{stringNotDefinedProp}/] || body[/#{stringFailedGoal}[\s\S]*#{stringNotResolvedDep}[#{stringFailedCollect}]?[\s\S]*[#{stringConnectionReset}]?/] || body[/#{stringUnsupported}[\s\S]*#{stringStopped}/] || body[/#{stringErrorProcessing}[\s\S]*/] || body[/\[#{stringErro}\][\s\S]*#{stringNonResolvable}[#{stringTransferArt}|#{stringFindArt}]?[\s\S]*/] || body[/\[#{stringErro}\][\s\S]*(\:jar)#{stringMissing}[\s\S]*/] || body[/\[#{stringErro}\][\s\S]*(\:jar)#{stringValidVersion}[\s\S]*/] || body[/#{stringElement}[(\n\s)(a-zA-Z0-9)(\'\-\/\.\:\,\[\])]*#{stringNoExist}/])
 							result.push("compilerError")
-							@compilerError += 1
+							@compilerError += body.scan(/#{stringErroInput} | \[#{stringErro}\][\s\S]*deprecated[\s\S]*#{stringNoMaintained} | #{stringAccess} | #{stringFailedGoal}[\s\S]*#{stringBuildsFailed} | #{stringNotDefinedProp} | #{stringFailedGoal}[\s\S]*#{stringNotResolvedDep}[#{stringFailedCollect}]?[\s\S]*[#{stringConnectionReset}]? | #{stringUnsupported}[\s\S]*#{stringStopped} | #{stringErrorProcessing}[\s\S]* | \[#{stringErro}\][\s\S]*#{stringNonResolvable}[#{stringTransferArt}|#{stringFindArt}]?[\s\S]* | \[#{stringErro}\][\s\S]*(\:jar)#{stringMissing}[\s\S]* | \[#{stringErro}\][\s\S]*(\:jar)#{stringValidVersion}[\s\S]* | #{stringElement}[(\n\s)(a-zA-Z0-9)(\'\-\/\.\:\,\[\])]*#{stringNoExist}/).size
 							otherCase = false
 						end
 						if (body[/#{stringTheCommand}(#{stringGitClone}|#{stringGitCheckout})(.*?)#{stringFailed}(.*)[\n]*/])
 							result.push("gitProblem")
-							@gitProblem += body.scan(/#{stringTheCommand}(#{stringGitClone}|#{stringGitCheckout})(.*?)#{stringFailed}(.*)[\n]*/)
+							@gitProblem += body.scan(/#{stringTheCommand}(#{stringGitClone}|#{stringGitCheckout})(.*?)#{stringFailed}(.*)[\n]*/).size
 							otherCase = false
 						end
 						if (body[/#{stringServiceUnavailable}/] || body[/#{stringNoOutput}[(\n\s)(a-zA-Z0-9)(\-\/\.\:\,\[\]\=\")]*#{stringTerminated}/] || body[/[\s\S]*#{stringOverflowData}[\s\S]*/])
 							result.push("remoteError")
-							@remoteError += 1
+							@remoteError += body.scan(/#{stringServiceUnavailable} | #{stringNoOutput}[(\n\s)(a-zA-Z0-9)(\-\/\.\:\,\[\]\=\")]*#{stringTerminated} | [\s\S]*#{stringOverflowData}[\s\S]*/).size
 							otherCase = false
 						end
 						if (otherCase)
@@ -195,7 +196,6 @@ class ConflictCategoryErrored
 					end
 				end
 			end
-			#chamar o GumTree quando o ciclo de uma build for finalizado, e portanto, todos os eventuais problemas foram identificados.
 			indexJob += 1
 		end
 		getFinalStatus(pathGumTree, pathProject, build, result)
