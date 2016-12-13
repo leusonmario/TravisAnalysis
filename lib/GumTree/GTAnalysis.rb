@@ -25,7 +25,7 @@ class GTAnalysis
 		Dir.chdir getGumTreePath()
 		#  		   result 			left 		right 		MergeCommit 	parent1 	parent2 	problemas
 		gumTreeDiffByBranch(pathCopies[1], pathCopies[2], pathCopies[3], pathCopies[4])
-		deleteProjectCopies(pathCopies)
+		#deleteProjectCopies(pathCopies)
 		Dir.chdir actualPath
 	end
 
@@ -60,13 +60,19 @@ class GTAnalysis
 		base = %x(git merge-base --all #{parents[0]} #{parents[1]})
 		checkout = %x(git checkout #{base} > /dev/null 2>&1)
 		clone = %x(cp -R #{pathProject} #{copyBranch[4]})
+		invalidFiles = %x(find #{copyBranch[4]} -type f -regextype posix-extended -iregex '.*\.(sh|md)$' -delete)
+		invalidFiles = %x(find #{copyBranch[4]} -type f  ! -name "*.?*" -delete)
 		checkout = %x(git checkout #{mergeCommit} > /dev/null 2>&1)
 		clone = %x(cp -R #{pathProject} #{copyBranch[1]})
+		invalidFiles = %x(find #{copyBranch[1]} -type f -regextype posix-extended -iregex '.*\.(sh|md)$' -delete)
+		invalidFiles = %x(find #{copyBranch[4]} -type f  ! -name "*.?*" -delete)
 		
 		index = 0
 		while(index < parents.size)
 			checkout = %x(git checkout #{parents[index]} > /dev/null 2>&1)
 			clone = %x(cp -R #{pathProject} #{copyBranch[index+2]} > /dev/null 2>&1)
+			invalidFiles = %x(find #{copyBranch[index+2]} -type f -regextype posix-extended -iregex '.*\.(sh|md)$' -delete)
+			invalidFiles = %x(find #{copyBranch[index+2]} -type f  ! -name "*.?*" -delete)
 			checkout = %x(git checkout master > /dev/null 2>&1)
 			index += 1
 		end
@@ -118,7 +124,7 @@ class GTAnalysis
 		deletedFiles = []
 		begin
 			thr = Thread.new { diff = system "bash", "-c", "exec -a gumtree ./gumtree webdiff #{firstBranch.gsub("\n","")} #{secondBranch.gsub("\n","")}" }
-			sleep(10)
+			sleep(15)
 			mainDiff = %x(wget http://127.0.0.1:4754/ -q -O -)
 			modifiedFilesDiff = getDiffByModification(mainDiff[/Modified files \((.*?)\)/m, 1])
 			addedFiles = getDiffByAddedFile(mainDiff[/Added files \((.*?)\)/m, 1])
