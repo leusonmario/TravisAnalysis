@@ -3,6 +3,7 @@
 
 require './GumTree/GTAnalysis.rb'
 require_relative 'ConflictCategories'
+require_relative 'CausesFilesConflicting'
 
 class ConflictCategoryErrored
 	include ConflictCategories
@@ -65,6 +66,12 @@ class ConflictCategoryErrored
 	end
 
 	def findConflictCause(build, pathProject, pathGumTree, type)
+		localUnavailableSymbol = 0 
+		localUpdateModifier = 0 
+		localMalformedExp = 0 
+		localDuplicateStatement = 0 
+		localDependencyProblem = 0 
+		localUnimplementedMethod = 0
 		stringCompError = " COMPILATION ERROR :"
 		stringNotFind = "cannot find symbol"
 		stringNotFindType = "not find: type"
@@ -128,8 +135,7 @@ class ConflictCategoryErrored
 		stringStopped = "Your build has been stopped"
 		
 		indexJob = 0
-		result = []
-		
+		causesFilesConflicts = CausesFilesConflicting.new()
 		while (indexJob < build.job_ids.size)
 			if (build.jobs[indexJob].state == "errored")
 				if (build.jobs[indexJob].log != nil)
@@ -137,57 +143,74 @@ class ConflictCategoryErrored
 						otherCase = true
 						body = bodyJob[/Retrying, 3 of 3[\s\S]*/]
 						if (body[/\[#{stringErro}\][\s\S]*#{stringNoApplied}[\s\S]*\[#{stringErro}\]/] || body[/\[#{stringErro}\][\s\S]*#{stringUpdate}[\s\S]*\[#{stringInfo}\](.*)?[0-9]/] || body[/\[#{stringErro}\]#{stringCompError}[\s\S]*[.java][\s\S]*#{stringNoConvert}/] || body[/#{stringWrongReturn}/] || body[/#{stringIncompatibleType}/] || body[/\[#{stringErro}\][\s\S]*[#{stringConstructorFound}]?[\s\S]*#{stringDifferArgument}/])
-							result.push("updateModifier")
-							@updateModifier += body.scan(/\[#{stringErro}\][\s\S]*#{stringNoApplied}[\s\S]*\[#{stringErro}\] | \[#{stringErro}\][\s\S]*#{stringUpdate}[\s\S]*\[#{stringInfo}\](.*)?[0-9] | \[#{stringErro}\]#{stringCompError}[\s\S]*[.java][\s\S]*#{stringNoConvert} | #{stringWrongReturn} | #{stringIncompatibleType} | \[#{stringErro}\][\s\S]*[#{stringConstructorFound}]?[\s\S]*#{stringDifferArgument}/).size
+							causesFilesConflicts.insertNewCause("updateModifier", [""])
+							localUpdateModifier = body.scan(/\[#{stringErro}\][\s\S]*#{stringNoApplied}[\s\S]*\[#{stringErro}\]|\[#{stringErro}\][\s\S]*#{stringUpdate}[\s\S]*\[#{stringInfo}\](.*)?[0-9]|\[#{stringErro}\]#{stringCompError}[\s\S]*[.java][\s\S]*#{stringNoConvert}|#{stringWrongReturn}|#{stringIncompatibleType}|\[#{stringErro}\][\s\S]*[#{stringConstructorFound}]?[\s\S]*#{stringDifferArgument}/).size
+							@updateModifier += localUpdateModifier
 							otherCase = false
 						end
 						if (body[/\[#{stringErro}\][\s\S]*#{stringDefined}[\s\S]*\[#{stringInfo}\](.*)?[0-9]/])
-							result.push("duplicationStatement")
-							@duplicateStatement += body.scan(/\[#{stringErro}\][\s\S]*#{stringDefined}[\s\S]*\[#{stringInfo}\](.*)?[0-9]/).size
+							causesFilesConflicts.insertNewCause("duplicationStatement", [""])
+							localDuplicateStatement = body.scan(/\[#{stringErro}\][\s\S]*#{stringDefined}[\s\S]*\[#{stringInfo}\](.*)?[0-9]/).size
+							@duplicateStatement += localDuplicateStatement
 							otherCase = false
 						end
 						if (body[/\[#{stringErro}\][\s\S]*#{stringNoOverride}[\s\S]*\[#{stringErro}\]/])
-							result.push("unimplementedMethod")
-							@unimplementedMethod += body.scan(/\[#{stringErro}\][\s\S]*#{stringNoOverride}[\s\S]*\[#{stringErro}\]/).size
+							localUnimplementedMethod = body.scan(/\[#{stringErro}\][\s\S]*#{stringNoOverride}[\s\S]*\[#{stringErro}\]/).size
+							@unimplementedMethod += localUnimplementedMethod
+							begin
+								if (body.match(/\[ERROR\] [a-zA-Z\/\-]*\.java/).to_s.match(/[a-zA-Z]+\.java/)[0].to_s)
+									classFile = body.match(/\[ERROR\] [a-zA-Z\/\-]*\.java/).to_s.match(/[a-zA-Z]+\.java/)[0].to_s
+								elsif (body.match(/error: [a-zA-Z\/\-]* is not abstract/))
+									classFile = body.match(/error: [a-zA-Z\/\-]* is not abstract/).match(/error: [a-zA-Z\/\-]*/).gsub("error: ","")
+								end
+								interfaceFile = body.match(/#{stringNoOverride} [a-zA-Z\(\)]* in [a-zA-Z\.]*[^\n]+/)[0].split(".").last.gsub("\r", "").to_s
+								methodInterface = body.match(/#{stringNoOverride} [a-zA-Z\(\)]* in/)[0].to_s.match(/[a-zA-Z\(\)]* in/).to_s.gsub(" in","").to_s
+								causesFilesConflicts.insertNewCause("unimplementedMethod",[classFile, interfaceFile, methodInterface])
+							rescue
+								puts "NAO PEGOU"
+								causesFilesConflicts.insertNewCause("unimplementedMethod",[""])
+							end
 							otherCase = false
 						end
 						if (body[/#{stringBuildFail}[\s\S]*#{stringUndefinedExt}/] || body[/\[#{stringErro}\][\s\S]*#{stringDependency}/] || body[/\[#{stringErro}\][\s\S]*#{stringNonParseable}[\s\S]*#{stringUnexpected}[\s\S]*\[#{stringErro}\]/] || body[/#{stringScript}[\s\S]*#{stringGradle}[\s\S]*#{stringProblemScript}[\s\S]*#{stringAddTask}[\s\S]*#{stringTaskExists}[\s\S]*#{stringBuildFail}/])
-							aux = body.scan(/#{stringBuildFail}[\s\S]*#{stringUndefinedExt} | \[#{stringErro}\][\s\S]*#{stringDependency} | \[#{stringErro}\][\s\S]*#{stringNonParseable}[\s\S]*#{stringUnexpected}[\s\S]*\[#{stringErro}\] | #{stringScript}[\s\S]*#{stringGradle}[\s\S]*#{stringProblemScript}[\s\S]*#{stringAddTask}[\s\S]*#{stringTaskExists}[\s\S]*#{stringBuildFail}/).size
+							aux = body.scan(/#{stringBuildFail}[\s\S]*#{stringUndefinedExt}|\[#{stringErro}\][\s\S]*#{stringDependency}|\[#{stringErro}\][\s\S]*#{stringNonParseable}[\s\S]*#{stringUnexpected}[\s\S]*\[#{stringErro}\]|#{stringScript}[\s\S]*#{stringGradle}[\s\S]*#{stringProblemScript}[\s\S]*#{stringAddTask}[\s\S]*#{stringTaskExists}[\s\S]*#{stringBuildFail}/).size
 							if (type=="Config" || type=="All-Config")
-								result.push("dependencyProblem")
+								causesFilesConflicts.insertNewCause("dependencyProblem",[""])
+								localDependencyProblem = aux
 								@dependencyProblem += aux
 							else
-								result.push("compilerError")
+								causesFilesConflicts.insertNewCause("compilerError",[""])
 								@compilerError += aux
 							end
 							otherCase = false
 						end
 						if (body[/\[#{stringErro}\]#{stringCompError}[\s\S]*\[#{stringInfo}\][\s\S]*\[#{stringErro}\][\s\S]*#{stringNotFind}/] || body[/[\[#{stringErro}\]]?[\s\S]*#{stringNotFind}/] || body[/\[#{stringErro}\][\s\S]*#{stringNotFindType}/] || body[/\[#{stringErro}\][\s\S]*#{stringNotMember}/])
 							text = body[/\[ERROR\] COMPILATION ERROR :[\s\S]*\[ERROR\](.*?)\[INFO\] [0-9]+/m, 1]
-							#fileConflict = text.match(/[A-Za-z]+\.java/)[0].to_s
-							#gtAnalysis.getGumTreeAnalysis(pathProject, build, fileConflict)
-							result.push("unavailableSymbol")
-							@unavailableSymbol += body.scan(/\[#{stringErro}\]#{stringCompError}[\s\S]*\[#{stringInfo}\][\s\S]*\[#{stringErro}\][\s\S]*#{stringNotFind} | \[#{stringErro}\]]?[\s\S]*#{stringNotFind} | \[#{stringErro}\][\s\S]*#{stringNotFindType} | \[#{stringErro}\][\s\S]*#{stringNotMember}/).size
+							fileConflict = text.match(/[A-Za-z]+\.java/)[0].to_s
+							causesFilesConflicts.insertNewCause("unavailableSymbol",[""])
+							localUnavailableSymbol = body.scan(/\[#{stringErro}\]#{stringCompError}[\s\S]*\[#{stringInfo}\][\s\S]*\[#{stringErro}\][\s\S]*#{stringNotFind}|\[#{stringErro}\][\s\S]*#{stringNotFindType}|\[#{stringErro}\][\s\S]*#{stringNotMember}/).size
+							@unavailableSymbol += localUnavailableSymbol
 							otherCase = false
 						end
 						if (body[/#{stringUnexpectedToken}/]  || body[/\[#{stringErro}\](.*)?#{stringError}\: #{stringMalformed}/] or body[/\[ERROR\](.*)?#{stringError}\:\'(.*)?\'#{stringExpected}/])
-							result.push("malformedExpression")
-							@malformedExp += body.scan(/#{stringUnexpectedToken} | \[#{stringErro}\](.*)?#{stringError}\: #{stringMalformed} | \[ERROR\](.*)?#{stringError}\:\'(.*)?\'#{stringExpected}/).size
+							causesFilesConflicts.insertNewCause("malformedExpression",[""])
+							localMalformedExp = body.scan(/#{stringUnexpectedToken}|\[#{stringErro}\](.*)?#{stringError}\: #{stringMalformed}|\[ERROR\](.*)?#{stringError}\:\'(.*)?\'#{stringExpected}/).size
+							@malformedExp += localMalformedExp
 							otherCase = false
 						end
 						if (body[/#{stringErroInput}/] || body[/\[#{stringErro}\][\s\S]*deprecated[\s\S]*#{stringNoMaintained}/] || body[/#{stringAccess}/] || body[/#{stringFailedGoal}[\s\S]*#{stringBuildsFailed}/] || body[/#{stringNotDefinedProp}/] || body[/#{stringFailedGoal}[\s\S]*#{stringNotResolvedDep}[#{stringFailedCollect}]?[\s\S]*[#{stringConnectionReset}]?/] || body[/#{stringUnsupported}[\s\S]*#{stringStopped}/] || body[/#{stringErrorProcessing}[\s\S]*/] || body[/\[#{stringErro}\][\s\S]*#{stringNonResolvable}[#{stringTransferArt}|#{stringFindArt}]?[\s\S]*/] || body[/\[#{stringErro}\][\s\S]*(\:jar)#{stringMissing}[\s\S]*/] || body[/\[#{stringErro}\][\s\S]*(\:jar)#{stringValidVersion}[\s\S]*/] || body[/#{stringElement}[(\n\s)(a-zA-Z0-9)(\'\-\/\.\:\,\[\])]*#{stringNoExist}/])
-							result.push("compilerError")
-							@compilerError += body.scan(/#{stringErroInput} | \[#{stringErro}\][\s\S]*deprecated[\s\S]*#{stringNoMaintained} | #{stringAccess} | #{stringFailedGoal}[\s\S]*#{stringBuildsFailed} | #{stringNotDefinedProp} | #{stringFailedGoal}[\s\S]*#{stringNotResolvedDep}[#{stringFailedCollect}]?[\s\S]*[#{stringConnectionReset}]? | #{stringUnsupported}[\s\S]*#{stringStopped} | #{stringErrorProcessing}[\s\S]* | \[#{stringErro}\][\s\S]*#{stringNonResolvable}[#{stringTransferArt}|#{stringFindArt}]?[\s\S]* | \[#{stringErro}\][\s\S]*(\:jar)#{stringMissing}[\s\S]* | \[#{stringErro}\][\s\S]*(\:jar)#{stringValidVersion}[\s\S]* | #{stringElement}[(\n\s)(a-zA-Z0-9)(\'\-\/\.\:\,\[\])]*#{stringNoExist}/).size
+							causesFilesConflicts.insertNewCause("compilerError",[""])
+							@compilerError += body.scan(/#{stringErroInput}|\[#{stringErro}\][\s\S]*deprecated[\s\S]*#{stringNoMaintained}|#{stringAccess}|#{stringFailedGoal}[\s\S]*#{stringBuildsFailed}|#{stringNotDefinedProp}|#{stringFailedGoal}[\s\S]*#{stringNotResolvedDep}[#{stringFailedCollect}]?[\s\S]*[#{stringConnectionReset}]?|#{stringUnsupported}[\s\S]*#{stringStopped}|#{stringErrorProcessing}[\s\S]*|\[#{stringErro}\][\s\S]*#{stringNonResolvable}[#{stringTransferArt}|#{stringFindArt}]?[\s\S]*|\[#{stringErro}\][\s\S]*(\:jar)#{stringMissing}[\s\S]*|\[#{stringErro}\][\s\S]*(\:jar)#{stringValidVersion}[\s\S]*|#{stringElement}[(\n\s)(a-zA-Z0-9)(\'\-\/\.\:\,\[\])]*#{stringNoExist}/).size
 							otherCase = false
 						end
 						if (body[/#{stringTheCommand}(#{stringGitClone}|#{stringGitCheckout})(.*?)#{stringFailed}(.*)[\n]*/])
-							result.push("gitProblem")
+							causesFilesConflicts.insertNewCause("gitProblem",[""])
 							@gitProblem += body.scan(/#{stringTheCommand}(#{stringGitClone}|#{stringGitCheckout})(.*?)#{stringFailed}(.*)[\n]*/).size
 							otherCase = false
 						end
 						if (body[/#{stringServiceUnavailable}/] || body[/#{stringNoOutput}[(\n\s)(a-zA-Z0-9)(\-\/\.\:\,\[\]\=\")]*#{stringTerminated}/] || body[/[\s\S]*#{stringOverflowData}[\s\S]*/])
-							result.push("remoteError")
-							@remoteError += body.scan(/#{stringServiceUnavailable} | #{stringNoOutput}[(\n\s)(a-zA-Z0-9)(\-\/\.\:\,\[\]\=\")]*#{stringTerminated} | [\s\S]*#{stringOverflowData}[\s\S]*/).size
+							causesFilesConflicts.insertNewCause("remoteError",[""])
+							@remoteError += body.scan(/#{stringServiceUnavailable}|#{stringNoOutput}[(\n\s)(a-zA-Z0-9)(\-\/\.\:\,\[\]\=\")]*#{stringTerminated}|[\s\S]*#{stringOverflowData}[\s\S]*/).size
 							otherCase = false
 						end
 						if (otherCase)
@@ -198,14 +221,19 @@ class ConflictCategoryErrored
 			end
 			indexJob += 1
 		end
-		getFinalStatus(pathGumTree, pathProject, build, result)
-		return result
+		return causesFilesConflicts.getCausesConflict(), getFinalStatus(pathGumTree, pathProject, build, causesFilesConflicts, localUpdateModifier, localUnavailableSymbol, localDuplicateStatement, localUnimplementedMethod)
 	end
 
-	def getFinalStatus(pathGumTree, pathProject, build, fileConflict)
+	def getFinalStatus(pathGumTree, pathProject, build, conflictCauses, localUpdateModifier, localUnavailableSymbol, localDuplicateStatement, localUnimplementedMethod)
 		gtAnalysis = GTAnalysis.new(pathGumTree)
-		if(getUpdateModifier() > 0 || getunavailableSymbol() > 0 || getDuplicateStatement() > 0 || getUnimplementedMethod() > 0)
-			gtAnalysis.getGumTreeAnalysis(pathProject, build, fileConflict)
+		if(localUpdateModifier > 0 || localUnavailableSymbol > 0 || localDuplicateStatement > 0 || localUnimplementedMethod > 0)
+			#gtAnalysis.getGumTreeAnalysis(pathProject, build, conflictCauses)
+			if(localUnimplementedMethod > 0)
+				return gtAnalysis.getGumTreeAnalysis(pathProject, build, conflictCauses)
+			end
+			return false
+			sleep(10)
 		end
+		return false
 	end
 end

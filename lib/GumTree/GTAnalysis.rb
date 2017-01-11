@@ -16,7 +16,7 @@ class GTAnalysis
 		@gumTreePath
 	end
 
-	def getGumTreeAnalysis(pathProject, build, fileConflict)
+	def getGumTreeAnalysis(pathProject, build, conflictCauses)
 		parents = @mergeCommit.getParentsMergeIfTrue(pathProject, build.commit.sha)
 		actualPath = Dir.pwd
 		
@@ -24,9 +24,10 @@ class GTAnalysis
 
 		Dir.chdir getGumTreePath()
 		#  		   result 			left 		right 		MergeCommit 	parent1 	parent2 	problemas
-		gumTreeDiffByBranch(pathCopies[1], pathCopies[2], pathCopies[3], pathCopies[4])
+		out = gumTreeDiffByBranch(pathCopies[1], pathCopies[2], pathCopies[3], pathCopies[4], conflictCauses)
 		deleteProjectCopies(pathCopies)
 		Dir.chdir actualPath
+		return out
 	end
 
 	def createDirectories(pathProject)
@@ -60,18 +61,18 @@ class GTAnalysis
 		base = %x(git merge-base --all #{parents[0]} #{parents[1]})
 		checkout = %x(git checkout #{base} > /dev/null 2>&1)
 		clone = %x(cp -R #{pathProject} #{copyBranch[4]})
-		invalidFiles = %x(find #{copyBranch[4]} -type f -regextype posix-extended -iregex '.*\.(sh|md|yaml)$' -delete)
+		invalidFiles = %x(find #{copyBranch[4]} -type f -regextype posix-extended -iregex '.*\.(sh|md|yaml|txt)$' -delete)
 		invalidFiles = %x(find #{copyBranch[4]} -type f  ! -name "*.?*" -delete)
 		checkout = %x(git checkout #{mergeCommit} > /dev/null 2>&1)
 		clone = %x(cp -R #{pathProject} #{copyBranch[1]})
-		invalidFiles = %x(find #{copyBranch[1]} -type f -regextype posix-extended -iregex '.*\.(sh|md|yaml)$' -delete)
+		invalidFiles = %x(find #{copyBranch[1]} -type f -regextype posix-extended -iregex '.*\.(sh|md|yaml|txt)$' -delete)
 		invalidFiles = %x(find #{copyBranch[4]} -type f  ! -name "*.?*" -delete)
 		
 		index = 0
 		while(index < parents.size)
 			checkout = %x(git checkout #{parents[index]} > /dev/null 2>&1)
 			clone = %x(cp -R #{pathProject} #{copyBranch[index+2]} > /dev/null 2>&1)
-			invalidFiles = %x(find #{copyBranch[index+2]} -type f -regextype posix-extended -iregex '.*\.(sh|md|yaml)$' -delete)
+			invalidFiles = %x(find #{copyBranch[index+2]} -type f -regextype posix-extended -iregex '.*\.(sh|md|yaml|txt)$' -delete)
 			invalidFiles = %x(find #{copyBranch[index+2]} -type f  ! -name "*.?*" -delete)
 			checkout = %x(git checkout master > /dev/null 2>&1)
 			index += 1
@@ -89,33 +90,6 @@ class GTAnalysis
 		end
 	end
 
-	def diffAnalysisGT(gumLeft, gumRight, allProblems)
-		allProblems.each do |problem|
-			if (problem == "unavailableSymbol")
-				if(gumLeft[/(Update SimpleName:)\s([a-zA-Z0-9]*)/])
-					puts "LeftBranch updated symbol name"
-				elsif (gumRight[/(Update SimpleName:)\s([a-zA-Z0-9]*)/])
-					puts "RightBranch updated symbol name"
-				end
-				if(gumLeft[/(Delete)\s([a-zA-Z]*)[\:]?[\s]?/])
-					puts "Variable deleted on LOG1"
-				elsif (gumRight[/(Delete)\s([a-zA-Z]*)[\:]?[\s]?/])
-					puts "Variable deleted on LOG2"
-				end
-			end
-		end
-	end
-
-	def getAllProblemsByFile(fileName, resultProblems)
-		allProblems = []
-		resultProblems.each do |problem|
-			if (!(allProblems.include? problem[1]) and problem[0]==fileName)
-				allProblems.push(problem[1])
-			end
-		end
-		return allProblems
-	end
-
 	def runAllDiff(firstBranch, secondBranch)
 		Dir.chdir @gumTreePath
 		mainDiff = nil
@@ -124,7 +98,7 @@ class GTAnalysis
 		deletedFiles = []
 		begin
 			thr = Thread.new { diff = system "bash", "-c", "exec -a gumtree ./gumtree webdiff #{firstBranch.gsub("\n","")} #{secondBranch.gsub("\n","")}" }
-			sleep(15)
+			sleep(5)
 			mainDiff = %x(wget http://127.0.0.1:4754/ -q -O -)
 			modifiedFilesDiff = getDiffByModification(mainDiff[/Modified files \((.*?)\)/m, 1])
 			addedFiles = getDiffByAddedFile(mainDiff[/Added files \((.*?)\)/m, 1])
@@ -138,55 +112,87 @@ class GTAnalysis
 		return modifiedFilesDiff, addedFiles, deletedFiles
 	end
 
-	def gumTreeDiffByBranch(result, left, right, base)
+	def gumTreeDiffByBranch(result, left, right, base, conflictCauses)
 		baseLeft = runAllDiff(base, left)
 		baseRight = runAllDiff(base, right)
 		leftResult = runAllDiff(left, result)
 		rightResult = runAllDiff(right, result)
-		verifyModificationStatus(baseLeft, leftResult, baseRight, rightResult)
+		return verifyModificationStatus(baseLeft, leftResult, baseRight, rightResult, conflictCauses)
 	end
 
-	def verifyModificationStatus(baseLeft, leftResult, baseRight, rightResult)
-		statusModified = true
+	def verifyModificationStatus(baseLeft, leftResult, baseRight, rightResult, conflictCauses)
 		statusModified = verifyModifiedFile(baseLeft[0], leftResult[0], baseRight[0], rightResult[0])
 		statusAdded = verifyAddedDeletedFile(baseLeft[1], leftResult[1], baseRight[1], rightResult[1])
 		statusDeleted = verifyAddedDeletedFile(baseLeft[2], leftResult[2], baseRight[2], rightResult[2])
+		
 		if (statusModified and statusAdded and statusDeleted)
-			puts "IT WAS LOVE (MERGE WITHOUT CONFLICTS), IT WAS NOT A PERFECT ILLUSION"
+			#IT WAS LOVE (COMMIT WITHOUT MERGE CONFLICTS), IT WAS NOT A PERFECT ILLUSION
+			indexValue = 0
+			conflictCauses.getCausesConflict().each do |conflictCause|
+				if(conflictCause == "unimplementedMethod")
+					if (verifyBuildConflictByUnimplementedMethod(baseLeft[0], leftResult[0], baseRight[0], rightResult[0], conflictCauses.getFilesConflict()[indexValue]) == false)
+						return false
+					end
+				end
+				indexValue += 1
+			end
+			return true
 		else 
-			puts "IT WAS NOT LOVE (MERGE WITH CONFLICTS), IT WAS A PERFECT ILLUSION"
+			#IT WAS NOT LOVE (COMMIT WITH MERGE CONFLICTS), IT WAS A PERFECT ILLUSION
+			indexValue = 0
+			conflictCauses.getCausesConflict().each do |conflictCause|
+				if(conflictCause == "unimplementedMethod")
+					if (verifyBuildConflictByUnimplementedMethod(baseLeft[0], leftResult[0], baseRight[0], rightResult[0], conflictCauses.getFilesConflict()[indexValue]) == false)
+						return false	
+					end
+				end
+				indexValue += 1
+			end
+			return true
 		end
+		return false
+	end
+
+	def verifyBuildConflictByUnimplementedMethod(baseLeft, leftResult, baseRight, rightResult, filesConflicting)
+		if(baseLeft[filesConflicting[1].to_s] != nil and baseLeft[filesConflicting[1].to_s].to_s.match(/Insert SimpleName: #{filesConflicting[2].gsub(/\(.*/, '').gsub('(', '')}[\(\)0-9]* into MethodDeclaration[\(\)0-9]* at [0-9]*/) or baseLeft[filesConflicting[1].to_s].to_s.match(/Update SimpleName: [\s\S]* to #{filesConflicting[2].gsub(/\(.*/, '').gsub('(', '')}/))
+			if ((rightResult[filesConflicting[1].to_s].to_s.match(/Insert SimpleName: #{filesConflicting[2].gsub(/\(.*/, '').gsub('(', '')}[\(\)0-9]* into MethodDeclaration[\(\)0-9]* at [0-9]*/) or rightResult[filesConflicting[1].to_s].to_s.match(/Update SimpleName: [\s\S]* to #{filesConflicting[2].gsub(/\(.*/, '').gsub('(', '')}/)) and (!rightResult[filesConflicting[0].to_s].to_s.match(/Insert SimpleName: #{filesConflicting[2].gsub(/\(.*/, '').gsub('(', '')}[\(\)0-9]* into MethodDeclaration[\(\)0-9]* at [0-9]*/) or !rightResult[filesConflicting[0].to_s].to_s.match(/Update SimpleName: [\s\S]* to #{filesConflicting[2].gsub(/\(.*/, '').gsub('(', '')}/)))
+				#BUILD CONFLICT DETECTED
+				return true
+			end
+		end
+		if(baseRight[filesConflicting[1].to_s] != nil and baseRight[filesConflicting[1].to_s].to_s.match(/Insert SimpleName: #{filesConflicting[2].gsub(/\(.*/, '').gsub('(', '')}[\(\)0-9]* into MethodDeclaration[\(\)0-9]* at [0-9]*/) or baseRight[filesConflicting[1].to_s].to_s.match(/Update SimpleName: [\s\S]* to #{filesConflicting[2].gsub(/\(.*/, '').gsub('(', '')}/))
+			if ((leftResult[filesConflicting[1].to_s].to_s.match(/Insert SimpleName: #{filesConflicting[2].gsub(/\(.*/, '').gsub('(', '')}[\(\)0-9]* into MethodDeclaration[\(\)0-9]* at [0-9]*/) or leftResult[filesConflicting[1].to_s].to_s.match(/Update SimpleName: [\s\S]* to #{filesConflicting[2].gsub(/\(.*/, '').gsub('(', '')}/)) and (!leftResult[filesConflicting[0].to_s].to_s.match(/Insert SimpleName: #{filesConflicting[2].gsub(/\(.*/, '').gsub('(', '')}[\(\)0-9]* into MethodDeclaration[\(\)0-9]* at [0-9]*/) or !leftResult[filesConflicting[0].to_s].to_s.match(/Update SimpleName: [\s\S]* to #{filesConflicting[2].gsub(/\(.*/, '').gsub('(', '')}/)))
+				#BUILD CONFLICT DETECTED"
+				return true
+			end
+		end
+		return false
 	end
 
 	def verifyAddedDeletedFile(baseLeftInitial, leftResultFinal, baseRightInitial, rightResultFinal)
-		status = true
 		if(baseLeftInitial.size > 0) 
 			baseLeftInitial.each do |fileLeft|
 				if (!rightResultFinal.include?(fileLeft))
-					status = false
-					break
+					return false
 				end
 			end
 		end
 		if (baseRightInitial.size > 0)
 			baseRightInitial.each do |fileLeft|
 				if (!leftResultFinal.include?(fileLeft))
-					status = false
-					break
+					return false
 				end
 			end
 		end
-		return status
+		return true
 	end
 
 	def verifyModifiedFile(baseLeftInitial, leftResultFinal, baseRightInitial, rightResultFinal)
-		status = true
 		if(baseLeftInitial.size > 0)
 			baseLeftInitial.each do |keyFile, fileLeft|
 				fileRight = rightResultFinal[keyFile]
 				if (fileRight == nil or fileLeft != fileRight)
-					status = false
-					break
+					return false
 				end
 			end
 		end
@@ -194,12 +200,11 @@ class GTAnalysis
 			baseRightInitial.each do |keyFile, fileRight|
 				fileLeft = leftResultFinal[keyFile]
 				if (fileLeft == nil or fileRight != fileLeft)
-					status = false
-					break
+					return false
 				end
 			end
 		end
-		return status
+		return true
 	end
 
 	def getDiffByModification(numberOcorrences)
@@ -207,9 +212,9 @@ class GTAnalysis
 		result = Hash.new()
 		while(index < numberOcorrences.to_i)
 			gumTreePage = Nokogiri::HTML(RestClient.get("http://127.0.0.1:4754/script?id=#{index}"))
-			file = gumTreePage.css('div.col-lg-12 h3 small').text[/(.*?) \-\>/m, 1]
+			file = gumTreePage.css('div.col-lg-12 h3 small').text[/(.*?) \-\>/m, 1].gsub(".java", "")
 			script = gumTreePage.css('div.col-lg-12 pre').text
-			result[file] = script
+			result[file.to_s] = script.gsub('"', "\"")
 			index += 1
 		end
 		return result

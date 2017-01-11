@@ -87,14 +87,8 @@ class GitProject
 	end
 
 	def getDateFirstBuild()
-		result = ""
-		firstBuild = %x(travis show 1)
-		firstBuild.each_line do |line|
-			if(line.include? "Started:")
-				result = line.gsub('Started:       ','')
-			end
-		end
-		return result
+		firstBuild = Travis::Repository.find(getProjectName()).build(1)
+		return firstBuild.started_at
 	end
 
 	def getNumberMergeScenarios()

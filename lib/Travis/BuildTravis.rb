@@ -197,38 +197,13 @@ class BuildTravis
 		end
 	end
 
-	def printConflictBuild(build, path, projectName)
-		Dir.chdir path
-		CSV.open("Errored"+projectName+".csv", "a+") do |csv|
-			csv << [build.id]
-		end
-	end
-
-	def printConflictTest(build, path, projectName)
-		Dir.chdir path
-		CSV.open("Failed"+projectName+".csv", "a+") do |csv|
-			csv << [build.id]
-		end
-	end
-
-	def createConfictFiles(pathErrored, pathFailed, projectName)
-		Dir.chdir pathErrored
-		CSV.open("Errored"+projectName+".csv", "w") do |csv|
-			csv << ["BuildID"]
-		end		
-		Dir.chdir pathFailed
-		CSV.open("Failed"+projectName+".csv", "w") do |csv|
-			csv << ["BuildID"]
-		end		
-	end
-
 	def loadAllBuilds(projectBuild, confBuild)
 		allBuilds = Hash.new()
 		loadAllBuildsProject(projectBuild, confBuild, allBuilds)
 		
-		getGitProject().getForksList().each do |newFork|
-			loadAllBuildsProject(newFork, confBuild, allBuilds)
-		end
+		#getGitProject().getForksList().each do |newFork|
+		#	loadAllBuildsProject(newFork, confBuild, allBuilds)
+		#end
 		return allBuilds
 	end
 	
