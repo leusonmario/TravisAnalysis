@@ -184,14 +184,44 @@ class ConflictCategoryErrored
 							end
 							otherCase = false
 						end
-						if (body[/\[#{stringErro}\]#{stringCompError}[\s\S]*\[#{stringInfo}\][\s\S]*\[#{stringErro}\][\s\S]*#{stringNotFind}/] || body[/[\[#{stringErro}\]]?[\s\S]*#{stringNotFind}/] || body[/\[#{stringErro}\][\s\S]*#{stringNotFindType}/] || body[/\[#{stringErro}\][\s\S]*#{stringNotMember}/])
-							text = body[/\[ERROR\] COMPILATION ERROR :[\s\S]*\[ERROR\](.*?)\[INFO\] [0-9]+/m, 1]
-							fileConflict = text.match(/[A-Za-z]+\.java/)[0].to_s
-							causesFilesConflicts.insertNewCause("unavailableSymbol",[""])
-							localUnavailableSymbol = body.scan(/\[#{stringErro}\]#{stringCompError}[\s\S]*\[#{stringInfo}\][\s\S]*\[#{stringErro}\][\s\S]*#{stringNotFind}|\[#{stringErro}\][\s\S]*#{stringNotFindType}|\[#{stringErro}\][\s\S]*#{stringNotMember}/).size
+						
+						if (body[/\[ERROR\]?[\s\S]*cannot find symbol/] || body[/\[ERROR\] [a-zA-Z0-9\/\-\.\:\[\]\,]* cannot find symbol[\n\r]+\[ERROR\]?[ \t\r\n\f]*symbol[ \t\r\n\f]*:[ \t\r\n\f]*method [a-zA-Z0-9\/\-\.\:\[\]\,\(\)]*[\n\r]+\[ERROR\]?[ \t\r\n\f]*location[ \t\r\n\f]*:[ \t\r\n\f]*class[ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,\(\)]*[\n\r]?/] || body[/\[#{stringErro}\][\s\S]*#{stringNotFindType}/] || body[/\[#{stringErro}\][\s\S]*#{stringNotMember}/])
+							localUnavailableSymbol = body.scan(/\[ERROR\] [a-zA-Z0-9\/\-\.\:\[\]\,]* cannot find symbol[\n\r]+\[ERROR\]?[ \t\r\n\f]*symbol[ \t\r\n\f]*:[ \t\r\n\f]*method [a-zA-Z0-9\/\-\.\:\[\]\,\(\)]*[\n\r]+\[ERROR\]?[ \t\r\n\f]*location[ \t\r\n\f]*:[ \t\r\n\f]*class[ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,\(\)]*[\n\r]?|\[#{stringErro}\][\s\S]*#{stringNotFindType}|\[#{stringErro}\][\s\S]*#{stringNotMember}|\[ERROR\]?[\s\S]*cannot find symbol/).size
 							@unavailableSymbol += localUnavailableSymbol
-							otherCase = false
+							filesInformation = []
+							begin
+								if (body[/\[ERROR\]?[\s\S]*cannot find symbol/] || body[/\[ERROR\] [a-zA-Z0-9\/\-\.\:\[\]\,]* cannot find symbol[\n\r]+\[ERROR\]?[ \t\r\n\f]*symbol[ \t\r\n\f]*:[ \t\r\n\f]*method [a-zA-Z0-9\/\-\.\:\[\]\,\(\)]*[\n\r]+\[ERROR\]?[ \t\r\n\f]*location[ \t\r\n\f]*:[ \t\r\n\f]*class[ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,\(\)]*[\n\r]?/])
+									methodNames = body.to_enum(:scan, /\[ERROR\][ \t\r\n\f]*symbol[ \t\r\n\f]*:[ \t\r\n\f]*[method|class|variable]*[ \t\r\n\f]*[a-zA-Z0-9\(\)\.\/\,]*[ \t\r\n\f]*\[ERROR\][ \t\r\n\f]*location/).map { Regexp.last_match }
+									puts "MethodNames"
+									puts methodNames
+									classFiles = body.to_enum(:scan, /\[ERROR\]?[ \t\r\n\f]*location[ \t\r\n\f]*:[ \t\r\n\f]*class[ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,\(\)]*[\n\r]?/).map { Regexp.last_match }
+									puts "classFiles"
+									puts classFiles
+									callClassFiles = body[/BUILD FAILURE[\s\S]*/].to_enum(:scan, /\[ERROR\]?[ \t\r\n\f]*[\/\-\.\:a-zA-Z\[\]0-9\,]* cannot find symbol/).map { Regexp.last_match }
+									puts "callClassFiles"
+									puts callClassFiles
+									count = 0
+									while (count < classFiles.size)
+										methodName = methodNames[count].to_s.match(/symbol[ \t\r\n\f]*:[ \t\r\n\f]*method[ \t\r\n\f]*[a-zA-Z0-9]*/)[0].split(" ").last
+										puts "MethodName"
+										puts methodName
+										classFile = classFiles[count].to_s.match(/location[ \t\r\n\f]*:[ \t\r\n\f]*class[ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,\(\)]*/)[0].split(".").last.gsub("\r", "").to_s
+										puts "classFile"
+										puts classFile
+										callClassFile = callClassFiles[count].to_s.match(/\[ERROR\]?[ \t\r\n\f]*[\/\-\.\:a-zA-Z\,]*/)[0].split("/").last.gsub(".java:", "").gsub("\r", "").to_s
+										puts "callClassFile"
+										puts callClassFile
+										count += 1
+										filesInformation.push([classFile, methodName, callClassFile])
+									end	
+								end
+								causesFilesConflicts.insertNewCause("unavailableSymbol",filesInformation)
+							rescue
+								puts "IT DID NOT WORK"
+								causesFilesConflicts.insertNewCause("unavailableSymbol",[""])
+							end
 						end
+
 						if (body[/#{stringUnexpectedToken}/]  || body[/\[#{stringErro}\](.*)?#{stringError}\: #{stringMalformed}/] or body[/\[ERROR\](.*)?#{stringError}\:\'(.*)?\'#{stringExpected}/])
 							causesFilesConflicts.insertNewCause("malformedExpression",[""])
 							localMalformedExp = body.scan(/#{stringUnexpectedToken}|\[#{stringErro}\](.*)?#{stringError}\: #{stringMalformed}|\[ERROR\](.*)?#{stringError}\:\'(.*)?\'#{stringExpected}/).size
@@ -228,7 +258,7 @@ class ConflictCategoryErrored
 		gtAnalysis = GTAnalysis.new(pathGumTree)
 		if(localUpdateModifier > 0 || localUnavailableSymbol > 0 || localDuplicateStatement > 0 || localUnimplementedMethod > 0)
 			#gtAnalysis.getGumTreeAnalysis(pathProject, build, conflictCauses)
-			if(localUnimplementedMethod > 0)
+			if(localUnimplementedMethod > 0 or localUnavailableSymbol > 0)
 				return gtAnalysis.getGumTreeAnalysis(pathProject, build, conflictCauses)
 			end
 			return false
