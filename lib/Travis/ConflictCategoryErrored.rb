@@ -141,7 +141,12 @@ class ConflictCategoryErrored
 				if (build.jobs[indexJob].log != nil)
 					build.jobs[indexJob].log.body do |bodyJob|
 						otherCase = true
-						body = bodyJob[/Retrying, 3 of 3[\s\S]*/]
+						if (bodyJob.include?('Retrying, 3 of 3'))
+							body = bodyJob[/Retrying, 3 of 3[\s\S]*/]
+						else
+							body = bodyJob
+						end
+					
 						if (body[/\[#{stringErro}\][\s\S]*#{stringNoApplied}[\s\S]*\[#{stringErro}\]/] || body[/\[#{stringErro}\][\s\S]*#{stringUpdate}[\s\S]*\[#{stringInfo}\](.*)?[0-9]/] || body[/\[#{stringErro}\]#{stringCompError}[\s\S]*[.java][\s\S]*#{stringNoConvert}/] || body[/#{stringWrongReturn}/] || body[/#{stringIncompatibleType}/] || body[/\[#{stringErro}\][\s\S]*[#{stringConstructorFound}]?[\s\S]*#{stringDifferArgument}/])
 							causesFilesConflicts.insertNewCause("updateModifier", [""])
 							localUpdateModifier = body.scan(/\[#{stringErro}\][\s\S]*#{stringNoApplied}[\s\S]*\[#{stringErro}\]|\[#{stringErro}\][\s\S]*#{stringUpdate}[\s\S]*\[#{stringInfo}\](.*)?[0-9]|\[#{stringErro}\]#{stringCompError}[\s\S]*[.java][\s\S]*#{stringNoConvert}|#{stringWrongReturn}|#{stringIncompatibleType}|\[#{stringErro}\][\s\S]*[#{stringConstructorFound}]?[\s\S]*#{stringDifferArgument}/).size
@@ -167,7 +172,7 @@ class ConflictCategoryErrored
 								methodInterface = body.match(/#{stringNoOverride} [a-zA-Z\(\)]* in/)[0].to_s.match(/[a-zA-Z\(\)]* in/).to_s.gsub(" in","").to_s
 								causesFilesConflicts.insertNewCause("unimplementedMethod",[classFile, interfaceFile, methodInterface])
 							rescue
-								puts "NAO PEGOU"
+								puts "IT DID NOT WORK"
 								causesFilesConflicts.insertNewCause("unimplementedMethod",[""])
 							end
 							otherCase = false
@@ -191,26 +196,14 @@ class ConflictCategoryErrored
 							filesInformation = []
 							begin
 								if (body[/\[ERROR\]?[\s\S]*cannot find symbol/] || body[/\[ERROR\] [a-zA-Z0-9\/\-\.\:\[\]\,]* cannot find symbol[\n\r]+\[ERROR\]?[ \t\r\n\f]*symbol[ \t\r\n\f]*:[ \t\r\n\f]*method [a-zA-Z0-9\/\-\.\:\[\]\,\(\)]*[\n\r]+\[ERROR\]?[ \t\r\n\f]*location[ \t\r\n\f]*:[ \t\r\n\f]*class[ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,\(\)]*[\n\r]?/])
-									methodNames = body.to_enum(:scan, /\[ERROR\][ \t\r\n\f]*symbol[ \t\r\n\f]*:[ \t\r\n\f]*[method|class|variable]*[ \t\r\n\f]*[a-zA-Z0-9\(\)\.\/\,]*[ \t\r\n\f]*\[ERROR\][ \t\r\n\f]*location/).map { Regexp.last_match }
-									puts "MethodNames"
-									puts methodNames
-									classFiles = body.to_enum(:scan, /\[ERROR\]?[ \t\r\n\f]*location[ \t\r\n\f]*:[ \t\r\n\f]*class[ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,\(\)]*[\n\r]?/).map { Regexp.last_match }
-									puts "classFiles"
-									puts classFiles
+									methodNames = body.to_enum(:scan, /\[ERROR\][ \t\r\n\f]*symbol[ \t\r\n\f]*:[ \t\r\n\f]*[method|class|variable]*[ \t\r\n\f]*[a-zA-Z0-9\(\)\.\/\,\_]*[ \t\r\n\f]*\[ERROR\][ \t\r\n\f]*location/).map { Regexp.last_match }
+									classFiles = body.to_enum(:scan, /\[ERROR\]?[ \t\r\n\f]*location[ \t\r\n\f]*:[ \t\r\n\f]*[class|interface]+[ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,\(\)]*[\n\r]?/).map { Regexp.last_match }
 									callClassFiles = body[/BUILD FAILURE[\s\S]*/].to_enum(:scan, /\[ERROR\]?[ \t\r\n\f]*[\/\-\.\:a-zA-Z\[\]0-9\,]* cannot find symbol/).map { Regexp.last_match }
-									puts "callClassFiles"
-									puts callClassFiles
 									count = 0
 									while (count < classFiles.size)
-										methodName = methodNames[count].to_s.match(/symbol[ \t\r\n\f]*:[ \t\r\n\f]*method[ \t\r\n\f]*[a-zA-Z0-9]*/)[0].split(" ").last
-										puts "MethodName"
-										puts methodName
+										methodName = methodNames[count].to_s.match(/symbol[ \t\r\n\f]*:[ \t\r\n\f]*(method|variable|class)[ \t\r\n\f]*[a-zA-Z0-9\_]*/)[0].split(" ").last
 										classFile = classFiles[count].to_s.match(/location[ \t\r\n\f]*:[ \t\r\n\f]*class[ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,\(\)]*/)[0].split(".").last.gsub("\r", "").to_s
-										puts "classFile"
-										puts classFile
-										callClassFile = callClassFiles[count].to_s.match(/\[ERROR\]?[ \t\r\n\f]*[\/\-\.\:a-zA-Z\,]*/)[0].split("/").last.gsub(".java:", "").gsub("\r", "").to_s
-										puts "callClassFile"
-										puts callClassFile
+										callClassFile = callClassFiles[count].to_s.match(/\[ERROR\]?[ \t\r\n\f]*[\/\-\.\:a-zA-Z0-9\,]*/)[0].split("/").last.gsub(".java:", "").gsub("\r", "").to_s
 										count += 1
 										filesInformation.push([classFile, methodName, callClassFile])
 									end	
