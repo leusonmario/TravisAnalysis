@@ -154,10 +154,25 @@ class ConflictCategoryErrored
 							otherCase = false
 						end
 						if (body[/\[#{stringErro}\][\s\S]*#{stringDefined}[\s\S]*\[#{stringInfo}\](.*)?[0-9]/])
-							causesFilesConflicts.insertNewCause("duplicationStatement", [""])
 							localDuplicateStatement = body.scan(/\[#{stringErro}\][\s\S]*#{stringDefined}[\s\S]*\[#{stringInfo}\](.*)?[0-9]/).size
 							@duplicateStatement += localDuplicateStatement
+							filesInformation = []
 							otherCase = false
+							begin
+								information = body.to_enum(:scan, /\[ERROR\] [a-zA-Z0-9\/\-\.\:\[\]\,\s]* is already defined in [a-zA-Z0-9\/\-\.\:\[\]\,\_]*/).map { Regexp.last_match }
+								count = 0
+								while(count < information.size)
+									classFile = information[count].to_s.match(/\[ERROR\] [a-zA-Z0-9\/\-\.\:\[\]\,\s]*.java/)[0].split("/").last.gsub('.java','')
+									variableName = information[count].to_s.match(/\[ERROR\] [a-zA-Z0-9\/\-\.\:\[\,]*\]\s[a-zA-Z0-9\/\-\_]*/)[0].split(" ").last
+									methodName = information[count].to_s.match(/\[ERROR\] [a-zA-Z0-9\/\-\.\:\[\,\]\s\_]*/)[0].split(" ").last
+									count += 1
+									filesInformation.push([classFile, variableName, methodName])
+								end
+								causesFilesConflicts.insertNewCause("statementDuplication", filesInformation)
+							rescue
+								puts "IT DID NOT WORK"
+								causesFilesConflicts.insertNewCause("statementDuplication", [""])
+							end
 						end
 						if (body[/\[#{stringErro}\][\s\S]*#{stringNoOverride}[\s\S]*\[#{stringErro}\]/])
 							localUnimplementedMethod = body.scan(/\[#{stringErro}\][\s\S]*#{stringNoOverride}[\s\S]*\[#{stringErro}\]/).size
@@ -172,7 +187,7 @@ class ConflictCategoryErrored
 								methodInterface = body.match(/#{stringNoOverride} [a-zA-Z\(\)]* in/)[0].to_s.match(/[a-zA-Z\(\)]* in/).to_s.gsub(" in","").to_s
 								causesFilesConflicts.insertNewCause("unimplementedMethod",[classFile, interfaceFile, methodInterface])
 							rescue
-								puts "IT DID NOT WORK"
+								puts "IT DID NOT"
 								causesFilesConflicts.insertNewCause("unimplementedMethod",[""])
 							end
 							otherCase = false
@@ -198,7 +213,12 @@ class ConflictCategoryErrored
 								if (body[/\[ERROR\]?[\s\S]*cannot find symbol/] || body[/\[ERROR\] [a-zA-Z0-9\/\-\.\:\[\]\,]* cannot find symbol[\n\r]+\[ERROR\]?[ \t\r\n\f]*symbol[ \t\r\n\f]*:[ \t\r\n\f]*method [a-zA-Z0-9\/\-\.\:\[\]\,\(\)]*[\n\r]+\[ERROR\]?[ \t\r\n\f]*location[ \t\r\n\f]*:[ \t\r\n\f]*class[ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,\(\)]*[\n\r]?/])
 									methodNames = body.to_enum(:scan, /\[ERROR\][ \t\r\n\f]*symbol[ \t\r\n\f]*:[ \t\r\n\f]*[method|class|variable]*[ \t\r\n\f]*[a-zA-Z0-9\(\)\.\/\,\_]*[ \t\r\n\f]*\[ERROR\][ \t\r\n\f]*location/).map { Regexp.last_match }
 									classFiles = body.to_enum(:scan, /\[ERROR\]?[ \t\r\n\f]*location[ \t\r\n\f]*:[ \t\r\n\f]*[class|interface]+[ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,\(\)]*[\n\r]?/).map { Regexp.last_match }
-									callClassFiles = body[/BUILD FAILURE[\s\S]*/].to_enum(:scan, /\[ERROR\]?[ \t\r\n\f]*[\/\-\.\:a-zA-Z\[\]0-9\,]* cannot find symbol/).map { Regexp.last_match }
+									callClassFiles = ""
+									if (bodyJob.include?('Retrying, 3 of 3'))
+										callClassFiles = body[/BUILD FAILURE[\s\S]*/].to_enum(:scan, /\[ERROR\]?[ \t\r\n\f]*[\/\-\.\:a-zA-Z\[\]0-9\,]* cannot find symbol/).map { Regexp.last_match }
+									else
+										callClassFiles = body.to_enum(:scan, /\[ERROR\]?[ \t\r\n\f]*[\/\-\.\:a-zA-Z\[\]0-9\,]* cannot find symbol/).map { Regexp.last_match }
+									end
 									count = 0
 									while (count < classFiles.size)
 										methodName = methodNames[count].to_s.match(/symbol[ \t\r\n\f]*:[ \t\r\n\f]*(method|variable|class)[ \t\r\n\f]*[a-zA-Z0-9\_]*/)[0].split(" ").last
@@ -251,7 +271,7 @@ class ConflictCategoryErrored
 		gtAnalysis = GTAnalysis.new(pathGumTree)
 		if(localUpdateModifier > 0 || localUnavailableSymbol > 0 || localDuplicateStatement > 0 || localUnimplementedMethod > 0)
 			#gtAnalysis.getGumTreeAnalysis(pathProject, build, conflictCauses)
-			if(localUnimplementedMethod > 0 or localUnavailableSymbol > 0)
+			if(localUnimplementedMethod > 0 or localUnavailableSymbol > 0 or localDuplicateStatement)
 				return gtAnalysis.getGumTreeAnalysis(pathProject, build, conflictCauses)
 			end
 			return false
