@@ -177,20 +177,36 @@ class ConflictCategoryErrored
 						if (body[/\[#{stringErro}\][\s\S]*#{stringNoOverride}[\s\S]*\[#{stringErro}\]/])
 							localUnimplementedMethod = body.scan(/\[#{stringErro}\][\s\S]*#{stringNoOverride}[\s\S]*\[#{stringErro}\]/).size
 							@unimplementedMethod += localUnimplementedMethod
+							filesInformation = []
+							bodyAux = bodyJob[/BUILD FAILURE[\s\S]*/]
+							otherCase = false
 							begin
+								count = 0
+								classFiles = ""
 								if (body.match(/\[ERROR\] [a-zA-Z\/\-]*\.java/).to_s.match(/[a-zA-Z]+\.java/)[0].to_s)
-									classFile = body.match(/\[ERROR\] [a-zA-Z\/\-]*\.java/).to_s.match(/[a-zA-Z]+\.java/)[0].to_s
+									classFiles = body.to_enum(:scan, /\[ERROR\] [a-zA-Z\/\-]*\.java/).map { Regexp.last_match }
 								elsif (body.match(/error: [a-zA-Z\/\-]* is not abstract/))
-									classFile = body.match(/error: [a-zA-Z\/\-]* is not abstract/).match(/error: [a-zA-Z\/\-]*/).gsub("error: ","")
+									classFiles = body.to_enum(:scan, /error: [a-zA-Z\/\-]* is not abstract/).map { Regexp.last_match }
 								end
-								interfaceFile = body.match(/#{stringNoOverride} [a-zA-Z\(\)]* in [a-zA-Z\.]*[^\n]+/)[0].split(".").last.gsub("\r", "").to_s
-								methodInterface = body.match(/#{stringNoOverride} [a-zA-Z\(\)]* in/)[0].to_s.match(/[a-zA-Z\(\)]* in/).to_s.gsub(" in","").to_s
-								causesFilesConflicts.insertNewCause("unimplementedMethod",[classFile, interfaceFile, methodInterface])
+								interfaceFiles = body.to_enum(:scan, /#{stringNoOverride} [a-zA-Z\(\)]* in [a-zA-Z\.]*[^\n]+/).map { Regexp.last_match }
+								methodInterfaces = body.to_enum(:scan, /#{stringNoOverride} [a-zA-Z\(\)]* in/).map { Regexp.last_match }
+								while(count < interfaceFiles.size)
+									classFile = ""
+									if (body.match(/\[ERROR\] [a-zA-Z\/\-]*\.java/).to_s.match(/[a-zA-Z]+\.java/)[0].to_s)
+										classFile = classFiles[count].to_s.match(/[a-zA-Z]+\.java/)[0].to_s
+									elsif (body.match(/error: [a-zA-Z\/\-]* is not abstract/))
+										classFile = classFiles[count].to_s.match(/error: [a-zA-Z\/\-]*/).gsub("error: ","")
+									end
+									interfaceFile = interfaceFiles[count].to_s.split(".").last.gsub("\r", "").to_s
+									methodInterface = methodInterfaces[count].to_s.match(/[a-zA-Z\(\)]* in/).to_s.gsub(" in","").to_s
+									filesInformation.push([classFile, interfaceFile, methodInterface])
+									count += 1
+								end
+								causesFilesConflicts.insertNewCause("unimplementedMethod",filesInformation)
 							rescue
-								puts "IT DID NOT"
+								puts "IT DID NOT WORK"
 								causesFilesConflicts.insertNewCause("unimplementedMethod",[""])
 							end
-							otherCase = false
 						end
 						if (body[/#{stringBuildFail}[\s\S]*#{stringUndefinedExt}/] || body[/\[#{stringErro}\][\s\S]*#{stringDependency}/] || body[/\[#{stringErro}\][\s\S]*#{stringNonParseable}[\s\S]*#{stringUnexpected}[\s\S]*\[#{stringErro}\]/] || body[/#{stringScript}[\s\S]*#{stringGradle}[\s\S]*#{stringProblemScript}[\s\S]*#{stringAddTask}[\s\S]*#{stringTaskExists}[\s\S]*#{stringBuildFail}/])
 							aux = body.scan(/#{stringBuildFail}[\s\S]*#{stringUndefinedExt}|\[#{stringErro}\][\s\S]*#{stringDependency}|\[#{stringErro}\][\s\S]*#{stringNonParseable}[\s\S]*#{stringUnexpected}[\s\S]*\[#{stringErro}\]|#{stringScript}[\s\S]*#{stringGradle}[\s\S]*#{stringProblemScript}[\s\S]*#{stringAddTask}[\s\S]*#{stringTaskExists}[\s\S]*#{stringBuildFail}/).size
@@ -271,7 +287,7 @@ class ConflictCategoryErrored
 		gtAnalysis = GTAnalysis.new(pathGumTree)
 		if(localUpdateModifier > 0 || localUnavailableSymbol > 0 || localDuplicateStatement > 0 || localUnimplementedMethod > 0)
 			#gtAnalysis.getGumTreeAnalysis(pathProject, build, conflictCauses)
-			if(localUnimplementedMethod > 0 or localUnavailableSymbol > 0 or localDuplicateStatement)
+			if(localUnimplementedMethod > 0 or localUnavailableSymbol > 0 or localDuplicateStatement > 0)
 				return gtAnalysis.getGumTreeAnalysis(pathProject, build, conflictCauses)
 			end
 			return false

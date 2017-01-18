@@ -243,17 +243,21 @@ class GTAnalysis
 	end
 
 	def verifyBuildConflictByUnimplementedMethod(baseLeft, leftResult, baseRight, rightResult, filesConflicting)
-		if(baseLeft[filesConflicting[1].to_s] != nil and baseLeft[filesConflicting[1].to_s].to_s.match(/Insert SimpleName: #{filesConflicting[2].gsub(/\(.*/, '').gsub('(', '')}[\(\)0-9]* into MethodDeclaration[\(\)0-9]* at [0-9]*/) or baseLeft[filesConflicting[1].to_s].to_s.match(/Update SimpleName: [\s\S]* to #{filesConflicting[2].gsub(/\(.*/, '').gsub('(', '')}/))
-			if ((rightResult[filesConflicting[1].to_s].to_s.match(/Insert SimpleName: #{filesConflicting[2].gsub(/\(.*/, '').gsub('(', '')}[\(\)0-9]* into MethodDeclaration[\(\)0-9]* at [0-9]*/) or rightResult[filesConflicting[1].to_s].to_s.match(/Update SimpleName: [\s\S]* to #{filesConflicting[2].gsub(/\(.*/, '').gsub('(', '')}/)) and (!rightResult[filesConflicting[0].to_s].to_s.match(/Insert SimpleName: #{filesConflicting[2].gsub(/\(.*/, '').gsub('(', '')}[\(\)0-9]* into MethodDeclaration[\(\)0-9]* at [0-9]*/) or !rightResult[filesConflicting[0].to_s].to_s.match(/Update SimpleName: [\s\S]* to #{filesConflicting[2].gsub(/\(.*/, '').gsub('(', '')}/)))
-				#BUILD CONFLICT DETECTED
-				return true
+		count = 0
+		while (count < filesConflicting.size)
+			if(baseLeft[filesConflicting[count][1]] != nil and baseLeft[filesConflicting[count][1].to_s].to_s.match(/Insert SimpleName: #{filesConflicting[count][2].gsub(/\(.*/, '').gsub('(', '')}[\(\)0-9]* into MethodDeclaration[\(\)0-9]* at [0-9]*/) or baseLeft[filesConflicting[count][1].to_s].to_s.match(/Update SimpleName: [\s\S]* to #{filesConflicting[count][2].gsub(/\(.*/, '').gsub('(', '')}/))
+				if ((rightResult[filesConflicting[count][1]].to_s.match(/Insert SimpleName: #{filesConflicting[count][2].gsub(/\(.*/, '').gsub('(', '')}[\(\)0-9]* into MethodDeclaration[\(\)0-9]* at [0-9]*/) or rightResult[filesConflicting[count][1].to_s].to_s.match(/Update SimpleName: [\s\S]* to #{filesConflicting[count][2].gsub(/\(.*/, '').gsub('(', '')}/)) and (!rightResult[filesConflicting[count][0].to_s].to_s.match(/Insert SimpleName: #{filesConflicting[count][2].gsub(/\(.*/, '').gsub('(', '')}[\(\)0-9]* into MethodDeclaration[\(\)0-9]* at [0-9]*/) or !rightResult[filesConflicting[count][0].to_s].to_s.match(/Update SimpleName: [\s\S]* to #{filesConflicting[count][2].gsub(/\(.*/, '').gsub('(', '')}/)))
+					#BUILD CONFLICT DETECTED
+					return true
+				end
 			end
-		end
-		if(baseRight[filesConflicting[1].to_s] != nil and baseRight[filesConflicting[1].to_s].to_s.match(/Insert SimpleName: #{filesConflicting[2].gsub(/\(.*/, '').gsub('(', '')}[\(\)0-9]* into MethodDeclaration[\(\)0-9]* at [0-9]*/) or baseRight[filesConflicting[1].to_s].to_s.match(/Update SimpleName: [\s\S]* to #{filesConflicting[2].gsub(/\(.*/, '').gsub('(', '')}/))
-			if ((leftResult[filesConflicting[1].to_s].to_s.match(/Insert SimpleName: #{filesConflicting[2].gsub(/\(.*/, '').gsub('(', '')}[\(\)0-9]* into MethodDeclaration[\(\)0-9]* at [0-9]*/) or leftResult[filesConflicting[1].to_s].to_s.match(/Update SimpleName: [\s\S]* to #{filesConflicting[2].gsub(/\(.*/, '').gsub('(', '')}/)) and (!leftResult[filesConflicting[0].to_s].to_s.match(/Insert SimpleName: #{filesConflicting[2].gsub(/\(.*/, '').gsub('(', '')}[\(\)0-9]* into MethodDeclaration[\(\)0-9]* at [0-9]*/) or !leftResult[filesConflicting[0].to_s].to_s.match(/Update SimpleName: [\s\S]* to #{filesConflicting[2].gsub(/\(.*/, '').gsub('(', '')}/)))
-				#BUILD CONFLICT DETECTED"
-				return true
+			if(baseRight[filesConflicting[count][1]] != nil and baseRight[filesConflicting[count][1]].to_s.match(/Insert SimpleName: #{filesConflicting[count][2].gsub(/\(.*/, '').gsub('(', '')}[\(\)0-9]* into MethodDeclaration[\(\)0-9]* at [0-9]*/) or baseRight[filesConflicting[count][1].to_s].to_s.match(/Update SimpleName: [\s\S]* to #{filesConflicting[count][2].gsub(/\(.*/, '').gsub('(', '')}/))
+				if ((leftResult[filesConflicting[count][1]].to_s.match(/Insert SimpleName: #{filesConflicting[count][2].gsub(/\(.*/, '').gsub('(', '')}[\(\)0-9]* into MethodDeclaration[\(\)0-9]* at [0-9]*/) or leftResult[filesConflicting[count][1].to_s].to_s.match(/Update SimpleName: [\s\S]* to #{filesConflicting[count][2].gsub(/\(.*/, '').gsub('(', '')}/)) and (!leftResult[filesConflicting[count][0].to_s].to_s.match(/Insert SimpleName: #{filesConflicting[count][2].gsub(/\(.*/, '').gsub('(', '')}[\(\)0-9]* into MethodDeclaration[\(\)0-9]* at [0-9]*/) or !leftResult[filesConflicting[count][0].to_s].to_s.match(/Update SimpleName: [\s\S]* to #{filesConflicting[count][2].gsub(/\(.*/, '').gsub('(', '')}/)))
+					#BUILD CONFLICT DETECTED"
+					return true
+				end
 			end
+			count += 1
 		end
 		return false
 	end
