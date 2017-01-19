@@ -148,10 +148,26 @@ class ConflictCategoryErrored
 						end
 					
 						if (body[/\[#{stringErro}\][\s\S]*#{stringNoApplied}[\s\S]*\[#{stringErro}\]/] || body[/\[#{stringErro}\][\s\S]*#{stringUpdate}[\s\S]*\[#{stringInfo}\](.*)?[0-9]/] || body[/\[#{stringErro}\]#{stringCompError}[\s\S]*[.java][\s\S]*#{stringNoConvert}/] || body[/#{stringWrongReturn}/] || body[/#{stringIncompatibleType}/] || body[/\[#{stringErro}\][\s\S]*[#{stringConstructorFound}]?[\s\S]*#{stringDifferArgument}/])
-							causesFilesConflicts.insertNewCause("updateModifier", [""])
 							localUpdateModifier = body.scan(/\[#{stringErro}\][\s\S]*#{stringNoApplied}[\s\S]*\[#{stringErro}\]|\[#{stringErro}\][\s\S]*#{stringUpdate}[\s\S]*\[#{stringInfo}\](.*)?[0-9]|\[#{stringErro}\]#{stringCompError}[\s\S]*[.java][\s\S]*#{stringNoConvert}|#{stringWrongReturn}|#{stringIncompatibleType}|\[#{stringErro}\][\s\S]*[#{stringConstructorFound}]?[\s\S]*#{stringDifferArgument}/).size
 							@updateModifier += localUpdateModifier
+							filesInformation = []
 							otherCase = false
+							begin
+								changedClasses = body[/BUILD FAILURE[\s\S]*/].to_s.to_enum(:scan, /\[ERROR\][ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,]* no suitable constructor found for [a-zA-Z0-9\/\-\.\:\[\]\,]*/).map { Regexp.last_match }
+								callClassFiles = body.to_enum(:scan, /\[ERROR\][ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,]*[ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,\(\)]* is not applicable/).map { Regexp.last_match }
+								count = 0
+								while (count < changedClasses.size)
+									changedClass = changedClasses[count].to_s.match(/\[ERROR\][ \t\r\n\f]*[a-zA-Z0-9\/\-\.\,]*/)[0].split("/").last.gsub('.java','')
+									callClassFile = callClassFiles[count].to_s.match(/\[ERROR\][ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,]*[ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,]*/)[0].split(".").last
+									filesInformation.push([changedClass, callClassFile])
+									count += 1
+								end
+								puts filesInformation.size
+								causesFilesConflicts.insertNewCause("updateModifier", filesInformation)
+							rescue
+								puts "IT DID NOT WORK"
+								causesFilesConflicts.insertNewCause("updateModifier", [])
+							end
 						end
 						if (body[/\[#{stringErro}\][\s\S]*#{stringDefined}[\s\S]*\[#{stringInfo}\](.*)?[0-9]/])
 							localDuplicateStatement = body.scan(/\[#{stringErro}\][\s\S]*#{stringDefined}[\s\S]*\[#{stringInfo}\](.*)?[0-9]/).size
@@ -287,7 +303,7 @@ class ConflictCategoryErrored
 		gtAnalysis = GTAnalysis.new(pathGumTree)
 		if(localUpdateModifier > 0 || localUnavailableSymbol > 0 || localDuplicateStatement > 0 || localUnimplementedMethod > 0)
 			#gtAnalysis.getGumTreeAnalysis(pathProject, build, conflictCauses)
-			if(localUnimplementedMethod > 0 or localUnavailableSymbol > 0 or localDuplicateStatement > 0)
+			if(localUnimplementedMethod > 0 or localUnavailableSymbol > 0 or localDuplicateStatement > 0 or localUpdateModifier > 0)
 				return gtAnalysis.getGumTreeAnalysis(pathProject, build, conflictCauses)
 			end
 			return false

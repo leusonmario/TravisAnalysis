@@ -61,18 +61,18 @@ class GTAnalysis
 		base = %x(git merge-base --all #{parents[0]} #{parents[1]})
 		checkout = %x(git checkout #{base} > /dev/null 2>&1)
 		clone = %x(cp -R #{pathProject} #{copyBranch[4]})
-		invalidFiles = %x(find #{copyBranch[4]} -type f -regextype posix-extended -iregex '.*\.(sh|md|yaml|yml|conf|txt)$' -delete)
+		invalidFiles = %x(find #{copyBranch[4]} -type f -regextype posix-extended -iregex '.*\.(sh|md|yaml|yml|conf|scala|properties|txt)$' -delete)
 		invalidFiles = %x(find #{copyBranch[4]} -type f  ! -name "*.?*" -delete)
 		checkout = %x(git checkout #{mergeCommit} > /dev/null 2>&1)
 		clone = %x(cp -R #{pathProject} #{copyBranch[1]})
-		invalidFiles = %x(find #{copyBranch[1]} -type f -regextype posix-extended -iregex '.*\.(sh|md|yaml|yml|conf|txt)$' -delete)
+		invalidFiles = %x(find #{copyBranch[1]} -type f -regextype posix-extended -iregex '.*\.(sh|md|yaml|yml|conf|scala|properties|txt)$' -delete)
 		invalidFiles = %x(find #{copyBranch[4]} -type f  ! -name "*.?*" -delete)
 		
 		index = 0
 		while(index < parents.size)
 			checkout = %x(git checkout #{parents[index]} > /dev/null 2>&1)
 			clone = %x(cp -R #{pathProject} #{copyBranch[index+2]} > /dev/null 2>&1)
-			invalidFiles = %x(find #{copyBranch[index+2]} -type f -regextype posix-extended -iregex '.*\.(sh|md|yaml|yml|conf|txt)$' -delete)
+			invalidFiles = %x(find #{copyBranch[index+2]} -type f -regextype posix-extended -iregex '.*\.(sh|md|yaml|yml|conf|scala|properties|txt)$' -delete)
 			invalidFiles = %x(find #{copyBranch[index+2]} -type f  ! -name "*.?*" -delete)
 			checkout = %x(git checkout master > /dev/null 2>&1)
 			index += 1
@@ -141,6 +141,10 @@ class GTAnalysis
 					if (verifyBuildConflictByStatementDuplication(baseLeft, leftResult, baseRight, rightResult, conflictCauses.getFilesConflict()[indexValue]) == false)
 						return false
 					end
+				elsif (conflictCause == "updateModifier")
+					if (verifyBuildConflictByUpdateModifier(baseLeft, leftResult, baseRight, rightResult, conflictCauses.getFilesConflict()[indexValue]) == false)
+						return false
+					end
 				end
 				indexValue += 1
 			end
@@ -161,10 +165,29 @@ class GTAnalysis
 					if (verifyBuildConflictByStatementDuplication(baseLeft, leftResult, baseRight, rightResult, conflictCauses.getFilesConflict()[indexValue]) == false)
 						return false
 					end
+				elsif (conflictCause == "updateModifier")
+					if (verifyBuildConflictByUpdateModifier(baseLeft, leftResult, baseRight, rightResult, conflictCauses.getFilesConflict()[indexValue]) == false)
+						return false
+					end
 				end
 				indexValue += 1
 			end
 			return true
+		end
+		return false
+	end
+
+	def verifyBuildConflictByUpdateModifier (baseLeft, leftResult, baseRight, rightResult, filesConflicting)
+		count = 0
+		while(count < filesConflicting.size)
+			if(leftResult[0][filesConflicting[count][0]] != nil and leftResult[0][filesConflicting[count][0]].to_s.match(/(Insert|Update) SimpleName: #{filesConflicting[count][1]}[\(\)0-9]* into SimpleType: #{filesConflicting[count][1]}[\(\)0-9]*|(Insert|Update) SimpleType: #{filesConflicting[count][1]}[\(\)0-9]* into VariableDeclarationStatement[\(\)0-9]*/) and rightResult[0][filesConflicting[count][1]] != nil and rightResult[0][filesConflicting[count][1]].to_s.match(/(Insert|Delete) SingleVariableDeclaration[\(\)0-9]* into MethodDeclaration[\(\)0-9]*/))
+				return true
+			end
+
+			if(rightResult[0][filesConflicting[count][0]] != nil and rightResult[0][filesConflicting[count][0]].to_s.match(/(Insert|Update) SimpleName: #{filesConflicting[count][1]}[\(\)0-9]* into SimpleType: #{filesConflicting[count][1]}[\(\)0-9]*|(Insert|Update) SimpleType: #{filesConflicting[count][1]}[\(\)0-9]* into VariableDeclarationStatement[\(\)0-9]*/) and leftResult[0][filesConflicting[count][1]] != nil and leftResult[0][filesConflicting[count][1]].to_s.match(/(Insert|Delete) SingleVariableDeclaration[\(\)0-9]* into MethodDeclaration[\(\)0-9]*/))
+				return true
+			end
+			count += 1
 		end
 		return false
 	end
