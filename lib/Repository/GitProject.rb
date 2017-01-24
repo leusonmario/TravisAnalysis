@@ -14,9 +14,16 @@ class GitProject
 			@mergeScenarios = Array.new
 			getMergesScenariosByProject()
 			@forksList = []
+			@forksListNames = []
 			@login = login
 			@password = password
+			@firstBuild = nil
+			@numberProjectForks = 0
 		end
+	end
+
+	def getFirstBuild()
+		@firstBuild
 	end
 
 	def getLogin()
@@ -47,8 +54,20 @@ class GitProject
 		@mergeScenarios
 	end
 
-	def getForksList()
-		@forksList
+	def getNumberProjectForks()
+		@numberProjectForks
+	end
+
+	def isRepositoryAvailable()
+		if (@projectAvailable==true and @firstBuild != nil)
+			return true
+		else
+			return false
+		end
+	end
+
+	def getForksListNames()
+		@forksListNames
 	end
 
 	def cloneProjectLocally(project, localClone)
@@ -80,19 +99,25 @@ class GitProject
 		@mergeScenarios = Array.new
 		#commitTravisInput = %x(git log --format=%aD .travis.yml | tail -1)
 		commitTravisInput = getDateFirstBuild()
-		merges = %x(git log --pretty=format:'%H' --merges --since="#{commitTravisInput}")
-		merges.each_line do |mergeScenario|
-			@mergeScenarios.push(mergeScenario.gsub('\\n',''))
+		if (commitTravisInput != nil)
+			merges = %x(git log --pretty=format:'%H' --merges --since="#{commitTravisInput}")
+			merges.each_line do |mergeScenario|
+				@mergeScenarios.push(mergeScenario.gsub('\\n',''))
+			end
 		end
 	end
 
 	def getDateFirstBuild()
-		firstBuild = Travis::Repository.find(getProjectName()).build(1)
-		return firstBuild.started_at
+		begin
+			@firstBuild = Travis::Repository.find(getProjectName()).build(1)
+			return @firstBuild.started_at
+		rescue
+			puts "NO ACTIVE TRAVIS REPOSITORY"
+			return nil
+		end
 	end
 
 	def getNumberMergeScenarios()
-		getMergesScenariosByProject()
 		return @mergeScenarios.length
 	end
 
@@ -109,14 +134,19 @@ class GitProject
 		forksProject.each do |fork|
 			begin  
 				#puts fork.html_url
+				noTravisProject = 0
 				buildProjeto = Travis::Repository.find(fork.html_url.gsub('https://github.com/','')) 
-				newName = fork.html_url.partition('github.com/').last.gsub('/','-')
+				newName = fork.html_url.partition('github.com/').last
+				if (buildProjeto != nil)
+					@forksListNames.push(newName)
+				end
 				#clone = %x(git clone #{fork.html_url} #{newName})
 				result.push(buildProjeto)
 				rescue Exception => e  
-				 	puts "NO TRAVIS PROJECT"
+				 	noTravisProject += 1
 			end
 		end
+		@numberProjectForks = forksProject.size
 		return result
 	end
 
@@ -133,9 +163,18 @@ class GitProject
 		end
 		return false
 	end
+
+	def getRepositoryTravisByProject()
+		projectBuild = nil
+		begin
+			projectBuild = Travis::Repository.find(getProjectName())
+			return projectBuild
+		rescue Exception => e  
+			return nil
+		end
+	end
 	
 	def getNumberForks()
-		getForksList()
 		return @forksList.length
 	end
 

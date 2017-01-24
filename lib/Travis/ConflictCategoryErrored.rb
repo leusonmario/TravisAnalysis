@@ -162,7 +162,6 @@ class ConflictCategoryErrored
 									filesInformation.push([changedClass, callClassFile])
 									count += 1
 								end
-								puts filesInformation.size
 								causesFilesConflicts.insertNewCause("updateModifier", filesInformation)
 							rescue
 								puts "IT DID NOT WORK"
@@ -304,7 +303,11 @@ class ConflictCategoryErrored
 		if(localUpdateModifier > 0 || localUnavailableSymbol > 0 || localDuplicateStatement > 0 || localUnimplementedMethod > 0)
 			#gtAnalysis.getGumTreeAnalysis(pathProject, build, conflictCauses)
 			if(localUnimplementedMethod > 0 or localUnavailableSymbol > 0 or localDuplicateStatement > 0 or localUpdateModifier > 0)
-				return gtAnalysis.getGumTreeAnalysis(pathProject, build, conflictCauses)
+				if (conflictCauses.getFilesConflict().size < 1)
+					return false
+				else
+					return gtAnalysis.getGumTreeAnalysis(pathProject, build, conflictCauses)
+				end
 			end
 			return false
 			sleep(10)

@@ -61,18 +61,18 @@ class GTAnalysis
 		base = %x(git merge-base --all #{parents[0]} #{parents[1]})
 		checkout = %x(git checkout #{base} > /dev/null 2>&1)
 		clone = %x(cp -R #{pathProject} #{copyBranch[4]})
-		invalidFiles = %x(find #{copyBranch[4]} -type f -regextype posix-extended -iregex '.*\.(sh|md|yaml|yml|conf|scala|properties|txt)$' -delete)
+		invalidFiles = %x(find #{copyBranch[4]} -type f -regextype posix-extended -iregex '.*\.(sh|md|yaml|yml|conf|scala|properties|less|txt)$' -delete)
 		invalidFiles = %x(find #{copyBranch[4]} -type f  ! -name "*.?*" -delete)
 		checkout = %x(git checkout #{mergeCommit} > /dev/null 2>&1)
 		clone = %x(cp -R #{pathProject} #{copyBranch[1]})
-		invalidFiles = %x(find #{copyBranch[1]} -type f -regextype posix-extended -iregex '.*\.(sh|md|yaml|yml|conf|scala|properties|txt)$' -delete)
+		invalidFiles = %x(find #{copyBranch[1]} -type f -regextype posix-extended -iregex '.*\.(sh|md|yaml|yml|conf|scala|properties|less|txt)$' -delete)
 		invalidFiles = %x(find #{copyBranch[4]} -type f  ! -name "*.?*" -delete)
 		
 		index = 0
 		while(index < parents.size)
 			checkout = %x(git checkout #{parents[index]} > /dev/null 2>&1)
 			clone = %x(cp -R #{pathProject} #{copyBranch[index+2]} > /dev/null 2>&1)
-			invalidFiles = %x(find #{copyBranch[index+2]} -type f -regextype posix-extended -iregex '.*\.(sh|md|yaml|yml|conf|scala|properties|txt)$' -delete)
+			invalidFiles = %x(find #{copyBranch[index+2]} -type f -regextype posix-extended -iregex '.*\.(sh|md|yaml|yml|conf|scala|properties|less|txt)$' -delete)
 			invalidFiles = %x(find #{copyBranch[index+2]} -type f  ! -name "*.?*" -delete)
 			checkout = %x(git checkout master > /dev/null 2>&1)
 			index += 1
@@ -231,7 +231,7 @@ class GTAnalysis
 		count = 0
 		while(count < filesConflicting.size)
 			if(leftResult[0][filesConflicting[count][0]] != nil and leftResult[0][filesConflicting[count][0]].to_s.match(/Delete SimpleName: #{filesConflicting[count][1]}[\s\S]*[\n\r]?|Update SimpleName: #{filesConflicting[count][1]}[\s\S]*[\n\r]?/))
-				if (rightResult[0][filesConflicting[count][2]] != nil and rightResult[0][filesConflicting[count][2]].to_s.match(/Insert SimpleName: #{filesConflicting[count][1]}[\s\S]*[\n\r]?/))
+				if (rightResult[0][filesConflicting[count][2]] != nil and rightResult[0][filesConflicting[count][2]].to_s.match(/Insert (SimpleName|QualifiedName): [a-zA-Z\.]*?#{filesConflicting[count][1]}[\s\S]*[\n\r]?/))
 					return true
 				else
 					baseLeft[1].each do |item|
@@ -246,7 +246,7 @@ class GTAnalysis
 				end
 			end
 			if(rightResult[0][filesConflicting[count][0]] != nil and rightResult[0][filesConflicting[count][0]].to_s.match(/Delete SimpleName: #{filesConflicting[count][1]}[\s\S]*[\n\r]?|Update SimpleName: #{filesConflicting[count][1]}[\s\S]*[\n\r]?/))
-				if(leftResult[0][filesConflicting[count][2]] != nil and leftResult[0][filesConflicting[count][2]].to_s.match(/Insert SimpleName: #{filesConflicting[count][1]}[\s\S]*[\n\r]?/))
+				if(leftResult[0][filesConflicting[count][2]] != nil and leftResult[0][filesConflicting[count][2]].to_s.match(/Insert (SimpleName|QualifiedName): [a-zA-Z\.]*?#{filesConflicting[count][1]}[\s\S]*[\n\r]?/))
 					return true
 				else
 					rightResult[1].each do |item|

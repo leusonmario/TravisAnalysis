@@ -7,6 +7,7 @@ require './Repository/GitProject.rb'
 require './Repository/ProjectInfo.rb'
 require './Travis/BuildTravis.rb'
 require './Out/WriteCSVs.rb'
+require './Out/WriteCSVWithForks.rb'
 
 class MainAnalysisProjects
 
@@ -15,7 +16,15 @@ class MainAnalysisProjects
 		@passwordUser = passwordUser
 		@pathGumTree = pathGumTree
 		@localClone = Dir.pwd
-		@writeCSVs = WriteCSVs.new(Dir.pwd)
+		delete = %x(rm -rf FinalResults)
+		FileUtils::mkdir_p 'FinalResults/ProjectWithoutForks'
+		FileUtils::mkdir_p 'FinalResults/ProjectWithForks'
+		Dir.chdir "FinalResults/ProjectWithForks"
+		@writeCSVProjectWithForks = WriteCSVWithForks.new(Dir.pwd)
+		Dir.chdir getLocalCLone
+		Dir.chdir "FinalResults/ProjectWithoutForks"
+		@writeCSVProjectWithoutForks = WriteCSVs.new(Dir.pwd)
+		Dir.chdir getLocalCLone
 		@projectsList = projectsList
 	end
 
@@ -36,7 +45,11 @@ class MainAnalysisProjects
 	end
 
 	def getWriteCSVs()
-		@writeCSVs
+		@writeCSVProjectWithForks
+	end
+
+	def getWriteCSVWithoutForks()
+		@writeCSVProjectWithoutForks
 	end
 
 	def getProjectsList()
@@ -69,15 +82,42 @@ class MainAnalysisProjects
 		
 		@projectsList.each do |project|
 			printProjectInformation(index, project)
-			gitProject = GitProject.new(project, getLocalCLone(), getLoginUser(), getPasswordUser())
-			if(gitProject.getProjectAvailable())
-				projectName = gitProject.getProjectName()
-				buildTravis = BuildTravis.new(projectName, gitProject)
-				projectAnalysis = buildTravis.getStatusBuildsProject(projectName, getWriteCSVs(), getPathGumTree())
-				if (projectAnalysis != nil)
-					getWriteCSVs().writeResultsAll(projectAnalysis)
-				else
-					gitProject.deleteProject()
+			mainGitProject = GitProject.new(project, getLocalCLone(), getLoginUser(), getPasswordUser())
+			if(mainGitProject.getProjectAvailable())
+				projectName = mainGitProject.getProjectName()
+				buildTravis = BuildTravis.new(projectName, mainGitProject)
+				mainProjectAnalysis = buildTravis.runAllAnalysis(projectName, getWriteCSVs(), getPathGumTree(), true)
+				mainGitProject.deleteProject()
+
+				projectWithoutForks = []
+				projectWithoutForks.push(project)
+				projectWithoutForks += mainGitProject.getForksListNames()
+				
+				otherIndex = 0
+				numberForksWithTravisActive = -1
+				projectWithoutForks.each do |projectWithoutFork|
+					printProjectInformation(otherIndex, projectWithoutFork)
+					gitProject = GitProject.new(projectWithoutFork, getLocalCLone(), getLoginUser(), getPasswordUser())
+					if(gitProject.getProjectAvailable())
+						projectName = gitProject.getProjectName()
+						buildTravis = BuildTravis.new(projectName, gitProject)
+						projectAnalysis = buildTravis.runAllAnalysis(projectName, getWriteCSVWithoutForks(), getPathGumTree(), false)
+						if (projectAnalysis != nil)
+							getWriteCSVWithoutForks().writeResultsAll(projectAnalysis)
+						end
+						gitProject.getDateFirstBuild()
+						if (gitProject.isRepositoryAvailable())
+							numberForksWithTravisActive += 1
+						end
+						gitProject.deleteProject()
+					end
+					otherIndex += 1
+				end
+
+				#passar o projectAnalysis do primeiro for
+				if (mainProjectAnalysis != nil)
+					getWriteCSVs().writeResultsAll(mainProjectAnalysis)
+					getWriteCSVs().writeTravisAnalysis(mainGitProject.getProjectName(), mainGitProject.getNumberProjectForks(), mainGitProject.getForksListNames().size, numberForksWithTravisActive)
 				end
 			end
 			index += 1

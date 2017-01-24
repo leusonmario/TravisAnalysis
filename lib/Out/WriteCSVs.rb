@@ -85,28 +85,50 @@ class WriteCSVs
 	end
 
 	def createCSV()
+		createAllResultsFile()
+		createMergeScenariosAnalysisFile()
+		createBuildConflictCausesFile()
+		createTestConflictsCausesFiles()
+		createConflicAnalysisFile()
+ 	end
 
-		Dir.chdir getPathAllResults
+ 	def createAllResultsFile()
+ 		Dir.chdir getPathAllResults
 		CSV.open("AllProjectsResult.csv", "wb") do |csv|
 			csv << ["Project", "TotalBuildPush", "TotalPushPassed", "TotalPushErrored", "TotalPushFailed", "TotalPushCanceled", 
 				"TotalBuildPull", "TotalPullPassed", "TotalPullErrored", "TotalPullFailed", "TotalPullCanceled"]
 		end
-		
-		Dir.chdir getPathMergeScenariosAnalysis
+ 	end
+ 	
+ 	def createMergeScenariosAnalysisFile
+ 		Dir.chdir getPathMergeScenariosAnalysis
 		CSV.open("MergeScenariosProjects.csv", "wb") do |csv|
 			csv << ["Project", "TotalMS", "TotalMSNoBuilt","TotalMSParentPassed", "TotalMSParentsNoPassed", "TotalParentNoBuilt", "TotalRepeatedMSB", "AllBuilds", "ValidBuilds", "TotalMSPassed", "TotalMSErrored", "TotalMSFailed", "TotalMSCanceled"]
 		end
-		
-		Dir.chdir getPathConflictsCauses
+ 	end
+
+ 	def createBuildConflictCausesFile()
+ 		Dir.chdir getPathConflictsCauses
 		CSV.open("BuildConflictsCauses.csv", "wb") do |csv|
 			csv << ["ProjectName",	"Total", "NO FOUND SYMBOL", "MALFORMED EXPRESSION", "UPDATE MODIFIER", "DUPLICATE STATEMENT", "DEPENDENCY", "UNIMPLEMENTED METHOD", 
 					"GIT PROBLEM", "REMOTE ERROR", "COMPILER ERROR", "ANOTHER ERROR"]
 		end
+ 	end
 
-		CSV.open("TestConflictsCauses.csv", "wb") do |csv|
+ 	def createTestConflictsCausesFiles()
+ 		CSV.open("TestConflictsCauses.csv", "wb") do |csv|
 			csv << ["ProjectName",	"Total", "FAILED", "GIT PROBLEM", "REMOTE ERROR", "ANOTHER ERROR"]
 		end
+ 	end
 
+ 	def createResultByProjectFiles(projectName)
+		Dir.chdir getPathResultByProject()
+		CSV.open(projectName+"Final.csv", "w") do |csv|
+ 			csv << ["Status", "Type", "Commit", "ID"]
+ 		end
+	end
+
+	def createConflicAnalysisFile
 		Dir.chdir getPathConflicstAnalysis
 		CSV.open("ConflictsAnalysisFinal.csv", "w") do |csv|
  			csv << ["ProjectName", "MergeScenarios", "PushesNotBuilt", "TotalRepeat", "MSNoParent","TotalBuiltPushes","PushesPassed", "PassedTravis", "PassedTravisConf", 
@@ -115,13 +137,6 @@ class WriteCSVs
  				"FailedTravis", "FailedTravisConf", "FailedConfig", "FailedConfigConf","FailedSource", "FailedSourceConf", "FailedAll", "FailedAllConf", 
  				"PushesCanceled", "CanceledTravis", "CanceledTravisConf", "CanceledConfig", "CanceledConfigConf", "CanceledSource", "CanceledSourceConf", "CanceledAll", 
  				"CanceledAllConf"]
- 		end
- 	end
-
- 	def createResultByProjectFiles(projectName)
-		Dir.chdir getPathResultByProject()
-		CSV.open(projectName+"Final.csv", "w") do |csv|
- 			csv << ["Status", "Type", "Commit", "ID"]
  		end
 	end
 
