@@ -4,7 +4,7 @@
 class MergeCommit
 
 	def initialize()
-		@parentsCommit = []
+		@parentsCommit = Array.new
 	end
 
 	def getParentsMergeIfTrue(pathProject, commit)
@@ -15,12 +15,12 @@ class MergeCommit
 				break
 			end
 			if(line.include?('parent'))
-				commitSHA = line.partition('parent ').last.gsub('\n','').gsub(' ','')
-				@parentsCommit.push(commitSHA[0..39])
+				commitSHA = line.partition('parent ').last.gsub('\n','').gsub(' ','').gsub('\r','')
+				@parentsCommit.push(commitSHA[0..39].to_s)
 			end
 		end
 
-		if (@parentsCommit.length > 1)
+		if (@parentsCommit.size > 1)
 			return @parentsCommit
 		else
 			return nil

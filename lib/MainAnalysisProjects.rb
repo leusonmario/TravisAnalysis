@@ -17,13 +17,23 @@ class MainAnalysisProjects
 		@pathGumTree = pathGumTree
 		@localClone = Dir.pwd
 		delete = %x(rm -rf FinalResults)
-		FileUtils::mkdir_p 'FinalResults/ProjectWithoutForks'
-		FileUtils::mkdir_p 'FinalResults/ProjectWithForks'
-		Dir.chdir "FinalResults/ProjectWithForks"
-		@writeCSVProjectWithForks = WriteCSVWithForks.new(Dir.pwd)
+		FileUtils::mkdir_p 'FinalResults/ProjectWithoutForks/BuiltMergeScenarios'
+		FileUtils::mkdir_p 'FinalResults/ProjectWithoutForks/AllMergeScenarios'
+		FileUtils::mkdir_p 'FinalResults/ProjectWithoutForks/IntervalMergeScenarios'
+		FileUtils::mkdir_p 'FinalResults/ProjectWithForks/BuiltMergeScenarios'
+		FileUtils::mkdir_p 'FinalResults/ProjectWithForks/AllMergeScenarios'
+		FileUtils::mkdir_p 'FinalResults/ProjectWithForks/IntervalMergeScenarios'
+		Dir.chdir "FinalResults/ProjectWithForks/BuiltMergeScenarios"
+		@writeCSVWithForksBuiltMerge = WriteCSVWithForks.new(Dir.pwd)
 		Dir.chdir getLocalCLone
-		Dir.chdir "FinalResults/ProjectWithoutForks"
-		@writeCSVProjectWithoutForks = WriteCSVs.new(Dir.pwd)
+		Dir.chdir "FinalResults/ProjectWithForks/AllMergeScenarios"
+		@writeCSVWithForksAllMerge = WriteCSVWithForks.new(Dir.pwd)
+		Dir.chdir getLocalCLone
+		Dir.chdir "FinalResults/ProjectWithoutForks/BuiltMergeScenarios"
+		@writeCSVWithoutForksBuiltMerge = WriteCSVs.new(Dir.pwd)
+		Dir.chdir getLocalCLone
+		Dir.chdir "FinalResults/ProjectWithoutForks/AllMergeScenarios"
+		@writeCSVWithoutForksAllMerge = WriteCSVs.new(Dir.pwd)
 		Dir.chdir getLocalCLone
 		@projectsList = projectsList
 	end
@@ -44,12 +54,20 @@ class MainAnalysisProjects
 		@pathGumTree
 	end
 
-	def getWriteCSVs()
-		@writeCSVProjectWithForks
+	def getWriteCSVForkBuilt()
+		@writeCSVWithForksBuiltMerge
 	end
 
-	def getWriteCSVWithoutForks()
-		@writeCSVProjectWithoutForks
+	def getWriteCSVWithoutForksBuilt()
+		@writeCSVWithoutForksBuiltMerge
+	end
+
+	def getWriteCSVForkAll()
+		@writeCSVWithForksAllMerge
+	end
+
+	def getWriteCSVWithoutForksAll()
+		@writeCSVWithoutForksAllMerge
 	end
 
 	def getProjectsList()
@@ -86,7 +104,8 @@ class MainAnalysisProjects
 			if(mainGitProject.getProjectAvailable())
 				projectName = mainGitProject.getProjectName()
 				buildTravis = BuildTravis.new(projectName, mainGitProject)
-				mainProjectAnalysis = buildTravis.runAllAnalysis(projectName, getWriteCSVs(), getPathGumTree(), true)
+				mainProjectAnalysisBuilt = buildTravis.runAllAnalysisBuilt(projectName, getWriteCSVForkBuilt(), getPathGumTree(), true)
+				mainProjectAnalysisAll = buildTravis.runAllAnalysisAll(projectName, getWriteCSVForkAll(), getPathGumTree(), true)
 				mainGitProject.deleteProject()
 
 				projectWithoutForks = []
@@ -101,9 +120,13 @@ class MainAnalysisProjects
 					if(gitProject.getProjectAvailable())
 						projectName = gitProject.getProjectName()
 						buildTravis = BuildTravis.new(projectName, gitProject)
-						projectAnalysis = buildTravis.runAllAnalysis(projectName, getWriteCSVWithoutForks(), getPathGumTree(), false)
-						if (projectAnalysis != nil)
-							getWriteCSVWithoutForks().writeResultsAll(projectAnalysis)
+						projectAnalysisBuilt = buildTravis.runAllAnalysisBuilt(projectName, getWriteCSVWithoutForksBuilt(), getPathGumTree(), false)
+						projectAnalysisAll = buildTravis.runAllAnalysisAll(projectName, getWriteCSVWithoutForksAll(), getPathGumTree(), true)
+						if (projectAnalysisBuilt != nil)
+							getWriteCSVWithoutForksBuilt().writeResultsAll(projectAnalysisBuilt)
+						end
+						if (projectAnalysisAll != nil)
+							getWriteCSVWithoutForksAll().writeResultsAll(projectAnalysisAll)
 						end
 						gitProject.getDateFirstBuild()
 						if (gitProject.isRepositoryAvailable())
@@ -114,10 +137,14 @@ class MainAnalysisProjects
 					otherIndex += 1
 				end
 
-				#passar o projectAnalysis do primeiro for
-				if (mainProjectAnalysis != nil)
-					getWriteCSVs().writeResultsAll(mainProjectAnalysis)
-					getWriteCSVs().writeTravisAnalysis(mainGitProject.getProjectName(), mainGitProject.getNumberProjectForks(), mainGitProject.getForksListNames().size, numberForksWithTravisActive)
+				if (mainProjectAnalysisBuilt != nil)
+					getWriteCSVForkBuilt().writeResultsAll(mainProjectAnalysisBuilt)
+					getWriteCSVForkBuilt().writeTravisAnalysis(mainGitProject.getProjectName(), mainGitProject.getNumberProjectForks(), mainGitProject.getForksListNames().size, numberForksWithTravisActive)
+				end
+
+				if (mainProjectAnalysisAll != nil)
+					getWriteCSVForkAll().writeResultsAll(mainProjectAnalysisAll)
+					getWriteCSVForkAll().writeTravisAnalysis(mainGitProject.getProjectName(), mainGitProject.getNumberProjectForks(), mainGitProject.getForksListNames().size, numberForksWithTravisActive)
 				end
 			end
 			index += 1

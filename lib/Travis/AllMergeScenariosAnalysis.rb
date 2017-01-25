@@ -3,7 +3,7 @@
 require 'travis'
 require_relative 'MergeScenariosAnalysis.rb'
 
-class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
+class AllMergeScenariosAnalysis < MergeScenariosAnalysis
 
 	def getStatusBuildsProject(projectName, writeCSVs, pathGumTree, withWithoutForks)
 		buildTotalPush = 0
@@ -47,6 +47,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 		projectNameFile = projectName.gsub('/','-')
 		writeCSVs.createResultByProjectFiles(projectName.gsub('/','-'))
 
+		# nao precisa disso... Uma chamada apena e valida
 		@repositoryTravisProject = getGitProject.getRepositoryTravisByProject()
 
 		if (getRepositoryTravisProject() != nil)
@@ -90,37 +91,23 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 								builtMergeScenarios.push(build.commit.sha.gsub('\\n',''))
 								
 								mergeCommit = mergeScenariosAnalysis(build)
-								result = @gitProject.conflictScenario(mergeCommit, allBuilds, build)
-								if (result[0] != nil)
-									if (result[0])
-										totalPushes += 1
-									elsif (!result[0])
-										totalParentsNoPassed += 1				
-									end
-									#Independente dos parents de um merge tenham uma build associada no travis, 
-									#o codigo abaixo classifica a distribuiçao de cenarios de merge em passed, errored, failed e canceled status
+								if (mergeCommit.size > 1)
 									type = confBuild.typeConflict(build)
 									if (status == "passed")
 										totalMSPassed += 1
-										confBuild.conflictAnalysisCategories(passedConflicts, type, result[0])
+										confBuild.conflictAnalysisCategories(passedConflicts, type, true)
 									elsif (status == "errored")
 										totalMSErrored += 1
-										isConflict = confBuild.conflictAnalysisCategories(erroredConflicts, type, result[0])
-										if (isConflict and result[0] == true) 
-											writeCSVs.printConflictBuild(build, result[1][0], result[2][0], confErrored.findConflictCause(build, getPathProject(), pathGumTree, type), projectNameFile)
-										end
+										isConflict = confBuild.conflictAnalysisCategories(erroredConflicts, type, true)
+										writeCSVs.printConflictBuild(build, mergeCommit[0].to_s, mergeCommit[1].to_s, confErrored.findConflictCause(build, getPathProject(), pathGumTree, type), projectNameFile)
 									elsif (status == "failed")
 										totalMSFailed += 1
-										isConflict = confBuild.conflictAnalysisCategories(failedConflicts, type, result[0])
-										if (isConflict and result[0] == true) 
-											writeCSVs.printConflictTest(build, result[1][0], result[2][0], confFailed.findConflictCause(build), projectNameFile)
-										end
+										isConflict = confBuild.conflictAnalysisCategories(failedConflicts, type, true)
+										writeCSVs.printConflictTest(build, mergeCommit[0].to_s, mergeCommit[1].to_s, confFailed.findConflictCause(build), projectNameFile)
 									else
 										totalMSCanceled += 1
-										confBuild.conflictAnalysisCategories(canceledConflicts, type, result[0])
+										confBuild.conflictAnalysisCategories(canceledConflicts, type, true)
 									end
-								else
-									totalPushesNoBuilt+=1
 								end
 							end
 						end

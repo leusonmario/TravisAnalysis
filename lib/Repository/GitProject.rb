@@ -122,6 +122,7 @@ class GitProject
 	end
 
 	def getForksList()
+		@forksListNames.clear
 		result = []
 		Dir.chdir @path
 		Octokit.auto_paginate = true
