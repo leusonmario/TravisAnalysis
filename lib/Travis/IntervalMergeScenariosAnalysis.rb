@@ -1,7 +1,8 @@
 require 'require_all'
+require 'travis'
 require_rel 'MergeScenariosAnalysis'
 
-class AllMergeScenariosAnalysis < MergeScenariosAnalysis
+class IntervalMergeScenariosAnalysis < MergeScenariosAnalysis
 
 	def getStatusBuildsProject(projectName, writeCSVs, pathGumTree, withWithoutForks)
 		buildTotalPush = 0
@@ -86,25 +87,46 @@ class AllMergeScenariosAnalysis < MergeScenariosAnalysis
 								totalRepeatedBuilds += 1
 							else
 								totalPushesMergeScenarios += 1
-								builtMergeScenarios.push(build.commit.sha.gsub("\n",""))
+								builtMergeScenarios.push(build.commit.sha.gsub('\\n',''))
 								
 								mergeCommit = mergeScenariosAnalysis(build)
 								if (mergeCommit.size > 1)
-									type = confBuild.typeConflict(build)
-									if (status == "passed")
-										totalMSPassed += 1
-										confBuild.conflictAnalysisCategories(passedConflicts, type, true)
-									elsif (status == "errored")
-										totalMSErrored += 1
-										isConflict = confBuild.conflictAnalysisCategories(erroredConflicts, type, true)
-										writeCSVs.printConflictBuild(build, mergeCommit[0].to_s, mergeCommit[1].to_s, confErrored.findConflictCause(build, getPathProject(), pathGumTree, type), projectNameFile)
-									elsif (status == "failed")
-										totalMSFailed += 1
-										isConflict = confBuild.conflictAnalysisCategories(failedConflicts, type, true)
-										writeCSVs.printConflictTest(build, mergeCommit[0].to_s, mergeCommit[1].to_s, confFailed.findConflictCause(build), projectNameFile)
-									else
-										totalMSCanceled += 1
-										confBuild.conflictAnalysisCategories(canceledConflicts, type, true)
+									
+									commitsBuildsCloser = []
+									commitsBuildsCloser[0] = getGitProject().getCommitCloserToBuild(allBuilds, mergeCommit[0])
+									commitsBuildsCloser[1] = getGitProject().getCommitCloserToBuild(allBuilds, mergeCommit[1])
+
+									if (commitsBuildsCloser[0] != nil and commitsBuildsCloser[1] != nil)
+										result = @gitProject.conflictScenario(commitsBuildsCloser, allBuilds, build)
+										if (result[0] != nil)
+											if (result[0])
+												totalPushes += 1
+											elsif (!result[0])
+												totalParentsNoPassed += 1				
+											end
+											type = confBuild.typeConflict(build)
+											if (status == "passed")
+												totalMSPassed += 1
+												confBuild.conflictAnalysisCategories(passedConflicts, type, result[0])
+											elsif (status == "errored")
+												totalMSErrored += 1
+												isConflict = confBuild.conflictAnalysisCategories(erroredConflicts, type, result[0])
+												if (isConflict and result[0] == true) 
+													writeCSVs.printConflictBuild(build, result[1][0], result[2][0], confErrored.findConflictCause(build, getPathProject(), pathGumTree, type), projectNameFile)
+												end
+											elsif (status == "failed")
+												totalMSFailed += 1
+												isConflict = confBuild.conflictAnalysisCategories(failedConflicts, type, result[0])
+												if (isConflict and result[0] == true) 
+													writeCSVs.printConflictTest(build, result[1][0], result[2][0], confFailed.findConflictCause(build), projectNameFile)
+												end
+											else
+												totalMSCanceled += 1
+												confBuild.conflictAnalysisCategories(canceledConflicts, type, result[0])
+											end
+										else
+											totalPushesNoBuilt+=1
+										end
 									end
 								end
 							end

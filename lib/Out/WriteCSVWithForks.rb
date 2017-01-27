@@ -1,8 +1,7 @@
-#!/usr/bin/env ruby
-
 require 'fileutils'
 require 'csv'
-require_relative 'WriteCSVs.rb'
+require 'require_all'
+require_rel 'WriteCSVs'
 
 class WriteCSVWithForks < WriteCSVs
 	

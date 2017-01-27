@@ -1,7 +1,6 @@
-#!/usr/bin/env ruby
-#file: gitProject.rb
-
 require 'octokit'
+require 'active_support/core_ext/numeric/time'
+require 'date'
 
 class GitProject
 
@@ -97,12 +96,11 @@ class GitProject
 	def getMergesScenariosByProject()
 		Dir.chdir getPath()
 		@mergeScenarios = Array.new
-		#commitTravisInput = %x(git log --format=%aD .travis.yml | tail -1)
 		commitTravisInput = getDateFirstBuild()
 		if (commitTravisInput != nil)
 			merges = %x(git log --pretty=format:'%H' --merges --since="#{commitTravisInput}")
 			merges.each_line do |mergeScenario|
-				@mergeScenarios.push(mergeScenario.gsub('\\n',''))
+				@mergeScenarios.push(mergeScenario.gsub("\n",""))
 			end
 		end
 	end
@@ -134,14 +132,12 @@ class GitProject
 		forksProject = client.forks(getProjectName())
 		forksProject.each do |fork|
 			begin  
-				#puts fork.html_url
 				noTravisProject = 0
 				buildProjeto = Travis::Repository.find(fork.html_url.gsub('https://github.com/','')) 
 				newName = fork.html_url.partition('github.com/').last
 				if (buildProjeto != nil)
 					@forksListNames.push(newName)
 				end
-				#clone = %x(git clone #{fork.html_url} #{newName})
 				result.push(buildProjeto)
 				rescue Exception => e  
 				 	noTravisProject += 1
@@ -210,5 +206,23 @@ class GitProject
 			end
 		end
 		return nil, nil, nil
+	end
+
+	def getCommitCloserToBuild(allbuilds, commit)
+		Dir.chdir getPath
+		begin
+			aux = %x(git checkout #{commit})
+			date = %x(git show -s --format=%ci #{commit})
+			dateUntil = DateTime.parse(date)
+			dateSince = dateUntil - 15.days
+			log = %x(git log --pretty=format:'%H' --since=#{dateSince.strftime} --until=#{dateUntil.strftime})
+			log.each_line do |item|
+				if (allbuilds[item.gsub("\n", "")] != nil)
+					return item.gsub("\n", "")
+				end
+			end
+		rescue
+			return nil
+		end
 	end
 end

@@ -1,10 +1,8 @@
-#!/usr/bin/env ruby
-#file: GTAnalysis.rb
-
 require 'nokogiri'
 require 'open-uri'
 require 'rest-client'
-require './Repository/MergeCommit.rb'
+require 'require_all'
+require_all './Repository'
 
 class GTAnalysis
 	def initialize(gumTreePath)

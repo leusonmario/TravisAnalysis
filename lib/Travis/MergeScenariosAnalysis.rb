@@ -1,11 +1,10 @@
-#!/usr/bin/env ruby
-
+require 'require_all'
 require 'travis'
-require './Repository/MergeCommit.rb'
-require './Travis/ConflictCategoryErrored.rb'
-require './Travis/ConflictCategoryFailed.rb'
-require './Data/ConflictAnalysis.rb'
-require_relative 'ConflictBuild.rb'
+require_all './Repository'
+require_rel 'ConflictCategoryErrored'
+require_rel 'ConflictCategoryFailed'
+require_all './Data'
+require_rel 'ConflictBuild'
 
 class MergeScenariosAnalysis
 	def initialize(projectName, gitProject)

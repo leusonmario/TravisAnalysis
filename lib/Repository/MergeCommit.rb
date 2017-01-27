@@ -1,6 +1,3 @@
-#!/usr/bin/env ruby
-#file: mergeCommit.rb
-
 class MergeCommit
 
 	def initialize()

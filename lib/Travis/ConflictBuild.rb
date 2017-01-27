@@ -1,6 +1,3 @@
-#!/usr/bin/env ruby
-#file: conflictBuild.rb
-
 class ConflictBuild
 
 	def initialize(projectPath)
@@ -20,7 +17,6 @@ class ConflictBuild
 		else
 			filesConflict.each_line do |newLine|
 				if (!newLine[/.*pom.xml\n*$/] and !newLine[/.*.gradle\n*$/])
-					#linha nao apresentou mudanças nos arquivos de configuraçao do projeto - MUDANÇA NAO FOI APENAS NOS ARQUIVOS DE CONFIGURAÇAO
 					statusConfig = false
 					break
 				end
@@ -29,7 +25,6 @@ class ConflictBuild
 			if (statusConfig)
 				return "Config"
 			else
-				# depois dividir em apenas arquivos de codigo fonte, e a juncao dos outros
 				if (filesConflict.include?('pom.xml') || filesConflict.include?('.gradle') || filesConflict.include?('.travis.yml'))
 					if (filesConflict.include?('pom.xml') || filesConflict.include?('.gradle'))
 						return "All-Config"

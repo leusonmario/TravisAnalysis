@@ -1,7 +1,5 @@
-#!/usr/bin/env ruby
-#file: buildTravis.rb
-
-require './Repository/MergeCommit.rb'
+require 'require_all'
+require_all './Repository'
 
 class ConflictAnalysis
 

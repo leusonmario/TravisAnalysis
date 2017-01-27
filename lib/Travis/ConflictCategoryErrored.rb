@@ -1,9 +1,7 @@
-#!/usr/bin/env ruby
-#file: conflictCategory.rb
-
-require './GumTree/GTAnalysis.rb'
-require_relative 'ConflictCategories'
-require_relative 'CausesFilesConflicting'
+require 'require_all'
+require_all './GumTree' 
+require_rel 'ConflictCategories'
+require_rel 'CausesFilesConflicting'
 
 class ConflictCategoryErrored
 	include ConflictCategories
@@ -164,7 +162,6 @@ class ConflictCategoryErrored
 								end
 								causesFilesConflicts.insertNewCause("updateModifier", filesInformation)
 							rescue
-								puts "IT DID NOT WORK"
 								causesFilesConflicts.insertNewCause("updateModifier", [])
 							end
 						end
@@ -185,7 +182,6 @@ class ConflictCategoryErrored
 								end
 								causesFilesConflicts.insertNewCause("statementDuplication", filesInformation)
 							rescue
-								puts "IT DID NOT WORK"
 								causesFilesConflicts.insertNewCause("statementDuplication", [""])
 							end
 						end
@@ -219,7 +215,6 @@ class ConflictCategoryErrored
 								end
 								causesFilesConflicts.insertNewCause("unimplementedMethod",filesInformation)
 							rescue
-								puts "IT DID NOT WORK"
 								causesFilesConflicts.insertNewCause("unimplementedMethod",[""])
 							end
 						end
@@ -261,7 +256,6 @@ class ConflictCategoryErrored
 								end
 								causesFilesConflicts.insertNewCause("unavailableSymbol",filesInformation)
 							rescue
-								puts "IT DID NOT WORK"
 								causesFilesConflicts.insertNewCause("unavailableSymbol",[""])
 							end
 						end
@@ -301,7 +295,6 @@ class ConflictCategoryErrored
 	def getFinalStatus(pathGumTree, pathProject, build, conflictCauses, localUpdateModifier, localUnavailableSymbol, localDuplicateStatement, localUnimplementedMethod)
 		gtAnalysis = GTAnalysis.new(pathGumTree)
 		if(localUpdateModifier > 0 || localUnavailableSymbol > 0 || localDuplicateStatement > 0 || localUnimplementedMethod > 0)
-			#gtAnalysis.getGumTreeAnalysis(pathProject, build, conflictCauses)
 			if(localUnimplementedMethod > 0 or localUnavailableSymbol > 0 or localDuplicateStatement > 0 or localUpdateModifier > 0)
 				if (conflictCauses.getFilesConflict().size < 1)
 					return false
@@ -310,7 +303,6 @@ class ConflictCategoryErrored
 				end
 			end
 			return false
-			sleep(10)
 		end
 		return false
 	end

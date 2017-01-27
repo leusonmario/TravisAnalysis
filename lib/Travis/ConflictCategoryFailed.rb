@@ -1,7 +1,5 @@
-#!/usr/bin/env ruby
-#file: conflictCategory.rb
-
-require_relative 'ConflictCategories'
+require 'require_all'
+require_rel 'ConflictCategories'
 
 class ConflictCategoryFailed
 	include ConflictCategories

@@ -1,7 +1,6 @@
-#!/usr/bin/env ruby
-
+require 'require_all'
 require 'travis'
-require_relative 'MergeScenariosAnalysis.rb'
+require_rel 'MergeScenariosAnalysis'
 
 class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 

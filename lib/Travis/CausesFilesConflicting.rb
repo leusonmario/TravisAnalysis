@@ -1,6 +1,3 @@
-#!/usr/bin/env ruby
-#file: CausesFilesConflicting.rb
-
 class CausesFilesConflicting
 
 	def initialize()

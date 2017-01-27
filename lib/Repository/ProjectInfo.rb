@@ -1,7 +1,5 @@
-#!/usr/bin/env ruby
-#file: projectInfo.rb
-
-require_relative 'GitProject.rb'
+require 'require_all'
+require_rel 'GitProject'
 
 class ProjectInfo
 

@@ -1,8 +1,7 @@
-#!/usr/bin/env ruby
-
 require 'fileutils'
 require 'csv'
-require './Travis/BuildTravis.rb'
+require 'require_all'
+require_all './Travis'
 
 class WriteCSVs
 
