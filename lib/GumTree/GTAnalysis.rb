@@ -21,6 +21,7 @@ class GTAnalysis
 		pathCopies = createCopyProject(build.commit.sha, parents, pathProject)
 
 		Dir.chdir getGumTreePath()
+		#passar como parametro o path copies
 		#  		   result 			left 		right 		MergeCommit 	parent1 	parent2 	problemas
 		out = gumTreeDiffByBranch(pathCopies[1], pathCopies[2], pathCopies[3], pathCopies[4], conflictCauses)
 		deleteProjectCopies(pathCopies)
@@ -59,18 +60,18 @@ class GTAnalysis
 		base = %x(git merge-base --all #{parents[0]} #{parents[1]})
 		checkout = %x(git checkout #{base} > /dev/null 2>&1)
 		clone = %x(cp -R #{pathProject} #{copyBranch[4]})
-		invalidFiles = %x(find #{copyBranch[4]} -type f -regextype posix-extended -iregex '.*\.(sh|md|yaml|yml|conf|scala|properties|less|txt)$' -delete)
+		invalidFiles = %x(find #{copyBranch[4]} -type f -regextype posix-extended -iregex '.*\.(sh|md|yaml|yml|conf|scala|properties|less|txt|gitignore)$' -delete)
 		invalidFiles = %x(find #{copyBranch[4]} -type f  ! -name "*.?*" -delete)
 		checkout = %x(git checkout #{mergeCommit} > /dev/null 2>&1)
 		clone = %x(cp -R #{pathProject} #{copyBranch[1]})
-		invalidFiles = %x(find #{copyBranch[1]} -type f -regextype posix-extended -iregex '.*\.(sh|md|yaml|yml|conf|scala|properties|less|txt)$' -delete)
+		invalidFiles = %x(find #{copyBranch[1]} -type f -regextype posix-extended -iregex '.*\.(sh|md|yaml|yml|conf|scala|properties|less|txt|gitignore)$' -delete)
 		invalidFiles = %x(find #{copyBranch[4]} -type f  ! -name "*.?*" -delete)
 		
 		index = 0
 		while(index < parents.size)
 			checkout = %x(git checkout #{parents[index]} > /dev/null 2>&1)
 			clone = %x(cp -R #{pathProject} #{copyBranch[index+2]} > /dev/null 2>&1)
-			invalidFiles = %x(find #{copyBranch[index+2]} -type f -regextype posix-extended -iregex '.*\.(sh|md|yaml|yml|conf|scala|properties|less|txt)$' -delete)
+			invalidFiles = %x(find #{copyBranch[index+2]} -type f -regextype posix-extended -iregex '.*\.(sh|md|yaml|yml|conf|scala|properties|less|txt|gitignore)$' -delete)
 			invalidFiles = %x(find #{copyBranch[index+2]} -type f  ! -name "*.?*" -delete)
 			checkout = %x(git checkout master > /dev/null 2>&1)
 			index += 1
@@ -115,10 +116,11 @@ class GTAnalysis
 		baseRight = runAllDiff(base, right)
 		leftResult = runAllDiff(left, result)
 		rightResult = runAllDiff(right, result)
-		return verifyModificationStatus(baseLeft, leftResult, baseRight, rightResult, conflictCauses)
+		# passar como parametro o caminho dos diretorios (base, left, right, result). Por enquanto apenas o left e right
+		return verifyModificationStatus(baseLeft, leftResult, baseRight, rightResult, conflictCauses, left, right)
 	end
 
-	def verifyModificationStatus(baseLeft, leftResult, baseRight, rightResult, conflictCauses)
+	def verifyModificationStatus(baseLeft, leftResult, baseRight, rightResult, conflictCauses, leftPath, rightPath)
 		statusModified = verifyModifiedFile(baseLeft[0], leftResult[0], baseRight[0], rightResult[0])
 		statusAdded = verifyAddedDeletedFile(baseLeft[1], leftResult[1], baseRight[1], rightResult[1])
 		statusDeleted = verifyAddedDeletedFile(baseLeft[2], leftResult[2], baseRight[2], rightResult[2])
@@ -132,7 +134,7 @@ class GTAnalysis
 						return false
 					end
 				elsif (conflictCause == "unavailableSymbol")
-					if (verifyBuildConflictByUnavailableSymbol(baseLeft, leftResult, baseRight, rightResult, conflictCauses.getFilesConflict()[indexValue]) == false)
+					if (verifyBuildConflictByUnavailableSymbol(baseLeft, leftResult, baseRight, rightResult, conflictCauses.getFilesConflict()[indexValue], leftPath, rightPath) == false)
 						return false
 					end
 				elsif (conflictCause == "statementDuplication")
@@ -156,7 +158,7 @@ class GTAnalysis
 						return false	
 					end
 				elsif (conflictCause == "unavailableSymbol")
-					if (verifyBuildConflictByUnavailableSymbol(baseLeft, leftResult, baseRight, rightResult, conflictCauses.getFilesConflict()[indexValue]) == false)
+					if (verifyBuildConflictByUnavailableSymbol(baseLeft, leftResult, baseRight, rightResult, conflictCauses.getFilesConflict()[indexValue], leftPath, rightPath) == false)
 						return false
 					end
 				elsif (conflictCause == "statementDuplication")
@@ -178,13 +180,48 @@ class GTAnalysis
 	def verifyBuildConflictByUpdateModifier (baseLeft, leftResult, baseRight, rightResult, filesConflicting)
 		count = 0
 		while(count < filesConflicting.size)
-			if(leftResult[0][filesConflicting[count][0]] != nil and leftResult[0][filesConflicting[count][0]].to_s.match(/(Insert|Update) SimpleName: #{filesConflicting[count][1]}[\(\)0-9]* into SimpleType: #{filesConflicting[count][1]}[\(\)0-9]*|(Insert|Update) SimpleType: #{filesConflicting[count][1]}[\(\)0-9]* into VariableDeclarationStatement[\(\)0-9]*/) and rightResult[0][filesConflicting[count][1]] != nil and rightResult[0][filesConflicting[count][1]].to_s.match(/(Insert|Delete) SingleVariableDeclaration[\(\)0-9]* into MethodDeclaration[\(\)0-9]*/))
-				return true
+			if (filesConflicting[count].size > 2)
+				if(leftResult[0][filesConflicting[count][0]] != nil and leftResult[0][filesConflicting[count][0]].to_s.match(/(Insert|Update) SimpleName: #{filesConflicting[count][1]}[\(\)0-9]* into MethodInvocation[\(\)0-9]*/) and rightResult[0][filesConflicting[count][2]] != nil and rightResult[0][filesConflicting[count][2]].to_s.match(/Delete SimpleName: #{filesConflicting[count][1]}[\(\)0-9]*/))
+					return true
+				end
+
+				if(rightResult[0][filesConflicting[count][0]] != nil and rightResult[0][filesConflicting[count][0]].to_s.match(/(Insert|Update) SimpleName: #{filesConflicting[count][1]}[\(\)0-9]* into MethodInvocation[\(\)0-9]*/) and leftResult[0][filesConflicting[count][2]] != nil and leftResult[0][filesConflicting[count][2]].to_s.match(/Delete SimpleName: #{filesConflicting[count][1]}[\(\)0-9]*/))
+					return true
+				end
+				
+				baseLeft[1].each do |item|
+					if (item.include?(filesConflicting[count][0].to_s) and leftResult[0][filesConflicting[count][1]] != nil )
+						return true
+					end
+				end
+
+				baseRight[1].each do |item|
+					if (item.include?(filesConflicting[count][0].to_s) and rightResult[0][filesConflicting[count][1]] != nil)
+						return true
+					end
+				end
+			else
+				if(leftResult[0][filesConflicting[count][0]] != nil and leftResult[0][filesConflicting[count][0]].to_s.match(/(Insert|Update) SimpleName: #{filesConflicting[count][1]}[\(\)0-9]* into SimpleType: #{filesConflicting[count][1]}[\(\)0-9]*|(Insert|Update) SimpleType: #{filesConflicting[count][1]}[\(\)0-9]* into VariableDeclarationStatement[\(\)0-9]*/) and rightResult[0][filesConflicting[count][1]] != nil and rightResult[0][filesConflicting[count][1]].to_s.match(/(Insert|Delete) SingleVariableDeclaration[\(\)0-9]* into MethodDeclaration[\(\)0-9]*/))
+					return true
+				end
+
+				if(rightResult[0][filesConflicting[count][0]] != nil and rightResult[0][filesConflicting[count][0]].to_s.match(/(Insert|Update) SimpleName: #{filesConflicting[count][1]}[\(\)0-9]* into SimpleType: #{filesConflicting[count][1]}[\(\)0-9]*|(Insert|Update) SimpleType: #{filesConflicting[count][1]}[\(\)0-9]* into VariableDeclarationStatement[\(\)0-9]*/) and leftResult[0][filesConflicting[count][1]] != nil and leftResult[0][filesConflicting[count][1]].to_s.match(/(Insert|Delete) SingleVariableDeclaration[\(\)0-9]* into MethodDeclaration[\(\)0-9]*/))
+					return true
+				end
+
+				baseLeft[1].each do |item|
+					if (item.include?(filesConflicting[count][0].to_s) and leftResult[0][filesConflicting[count][1]] != nil )
+						return true
+					end
+				end
+
+				baseRight[1].each do |item|
+					if (item.include?(filesConflicting[count][0].to_s) and rightResult[0][filesConflicting[count][1]] != nil)
+						return true
+					end
+				end
 			end
 
-			if(rightResult[0][filesConflicting[count][0]] != nil and rightResult[0][filesConflicting[count][0]].to_s.match(/(Insert|Update) SimpleName: #{filesConflicting[count][1]}[\(\)0-9]* into SimpleType: #{filesConflicting[count][1]}[\(\)0-9]*|(Insert|Update) SimpleType: #{filesConflicting[count][1]}[\(\)0-9]* into VariableDeclarationStatement[\(\)0-9]*/) and leftResult[0][filesConflicting[count][1]] != nil and leftResult[0][filesConflicting[count][1]].to_s.match(/(Insert|Delete) SingleVariableDeclaration[\(\)0-9]* into MethodDeclaration[\(\)0-9]*/))
-				return true
-			end
 			count += 1
 		end
 		return false
@@ -225,7 +262,7 @@ class GTAnalysis
 		end
 	end
 
-	def verifyBuildConflictByUnavailableSymbol (baseLeft, leftResult, baseRight, rightResult, filesConflicting)
+	def verifyBuildConflictByUnavailableSymbol (baseLeft, leftResult, baseRight, rightResult, filesConflicting, leftPath, rightPath)
 		count = 0
 		while(count < filesConflicting.size)
 			if(leftResult[0][filesConflicting[count][0]] != nil and leftResult[0][filesConflicting[count][0]].to_s.match(/Delete SimpleName: #{filesConflicting[count][1]}[\s\S]*[\n\r]?|Update SimpleName: #{filesConflicting[count][1]}[\s\S]*[\n\r]?/))
@@ -257,6 +294,13 @@ class GTAnalysis
 						return true
 					end
 				end
+			end
+			Dir.chdir leftPath
+			pathFileLeft = %x(find -name #{filesConflicting[count][1]+".java"})
+			Dir.chdir rightPath
+			pathFileRight = %x(find -name #{filesConflicting[count][1]+".java"})
+			if (pathFileLeft != pathFileRight)
+				return true
 			end
 			count += 1
 		end

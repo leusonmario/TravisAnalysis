@@ -14,7 +14,12 @@ class CausesFilesConflicting
 	end
 
 	def insertNewCause(cause, filesRelated)
-		@causesConflict.push(cause)
-		@filesConflict.push(filesRelated)
+		if (filesRelated.size > 0)
+			@causesConflict.push(cause)
+			@filesConflict.push(filesRelated)
+		elsif (cause=="compilerError" or cause=="dependencyProblem" or cause=="remoteError" or cause=="gitProblem")
+			@causesConflict.push(cause)
+			@filesConflict.push(filesRelated)
+		end
 	end
 end
