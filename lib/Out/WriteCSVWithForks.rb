@@ -24,4 +24,18 @@ class WriteCSVWithForks < WriteCSVs
 		end
  	end
 
+ 	def writeResultByProject(projectName, typeBuild, build)
+		Dir.chdir getPathResultByProject()
+		if (File.exists?(projectName+"Final.csv"))
+			CSV.open(projectName+"Final.csv", "a+") do |csv|
+				csv << [build.state, typeBuild, build.commit.sha, build.id]
+			end
+		else
+			CSV.open(projectName+"Final.csv", "w") do |csv|
+	 			csv << ["Status", "Type", "Commit", "ID"]
+	 			csv << [build.state, typeBuild, build.commit.sha, build.id]
+	 		end			
+		end
+	end
+
 end

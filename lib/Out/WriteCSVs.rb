@@ -8,6 +8,7 @@ class WriteCSVs
 	def initialize(actualPath)
 		@pathAllResults = ""
 		@pathResultByProject = ""
+		@pathResultByProjectDirectory = ""
 		@pathConflicstAnalysis = ""
 		@pathMergeScenariosAnalysis = ""
 		@pathConflictsAnalysis = ""
@@ -38,6 +39,14 @@ class WriteCSVs
 
 	def getPathResultByProject()
 		@pathResultByProject
+	end
+
+	def getPathResultByProjectDirectory()
+		@pathResultByProjectDirectory
+	end
+
+	def setPathResultByProjectDirectory(newPath)
+		@pathResultByProjectDirectory = newPath
 	end
 
 	def getPathConflicstAnalysis()
@@ -81,6 +90,13 @@ class WriteCSVs
 		Dir.chdir "FailedCases"
 		@pathFailedCases = Dir.pwd
 		createCSV()
+	end
+
+	def createDirectoryByProject(projectName)
+		Dir.chdir getPathResultByProject
+		FileUtils::mkdir_p projectName
+		Dir.chdir projectName
+		setPathResultByProjectDirectory(Dir.pwd)
 	end
 
 	def createCSV()
@@ -148,9 +164,18 @@ class WriteCSVs
 	end
 
 	def writeResultByProject(projectName, typeBuild, build)
-		Dir.chdir getPathResultByProject()
-		CSV.open(projectName+"Final.csv", "a+") do |csv|
-			csv << [build.state, typeBuild, build.commit.sha, build.id]
+		if (typeBuild != "")
+			Dir.chdir getPathResultByProjectDirectory()
+			if (File.exists?(projectName+"Final.csv"))
+				CSV.open(projectName+"Final.csv", "a+") do |csv|
+					csv << [build.state, typeBuild, build.commit.sha, build.id]
+				end
+			else
+				CSV.open(projectName+"Final.csv", "w") do |csv|
+		 			csv << ["Status", "Type", "Commit", "ID"]
+		 			csv << [build.state, typeBuild, build.commit.sha, build.id]
+		 		end			
+			end
 		end
 	end
 

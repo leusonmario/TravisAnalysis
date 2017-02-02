@@ -44,14 +44,12 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 		confFailed = ConflictCategoryFailed.new()
 
 		projectNameFile = projectName.gsub('/','-')
-		writeCSVs.createResultByProjectFiles(projectName.gsub('/','-'))
-
+		
 		@repositoryTravisProject = getGitProject.getRepositoryTravisByProject()
 
 		if (getRepositoryTravisProject() != nil)
 			allBuilds = loadAllBuilds(getRepositoryTravisProject(), confBuild, withWithoutForks)
 			getRepositoryTravisProject().each_build do |build|
-
 				if (build != nil)
 					status = confBuild.getBuildStatus(build)
 					if build.pull_request
@@ -124,10 +122,8 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 							end
 						end
 					end
+					writeCSVs.writeResultByProject(projectName.gsub('/','-'), typeBuild, build)
 				end
-
-				writeCSVs.writeResultByProject(projectName.gsub('/','-'), typeBuild, build)
-	 			
 			end
 			
 		 	writeCSVs.writeMergeScenariosFinal(projectName, @projectMergeScenarios.size, @projectMergeScenarios.size-builtMergeScenarios.size, totalPushes, totalParentsNoPassed, totalPushesNoBuilt, totalRepeatedBuilds, totalBuilds, totalPushes+totalParentsNoPassed, totalMSPassed, totalMSErrored, 

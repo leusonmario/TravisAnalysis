@@ -44,8 +44,7 @@ class IntervalMergeScenariosAnalysis < MergeScenariosAnalysis
 		confFailed = ConflictCategoryFailed.new()
 
 		projectNameFile = projectName.gsub('/','-')
-		writeCSVs.createResultByProjectFiles(projectName.gsub('/','-'))
-
+		
 		# nao precisa disso... Uma chamada apena e valida
 		@repositoryTravisProject = getGitProject.getRepositoryTravisByProject()
 
@@ -132,10 +131,8 @@ class IntervalMergeScenariosAnalysis < MergeScenariosAnalysis
 							end
 						end
 					end
+					writeCSVs.writeResultByProject(projectName.gsub('/','-'), typeBuild, build)
 				end
-
-				writeCSVs.writeResultByProject(projectName.gsub('/','-'), typeBuild, build)
-	 			
 			end
 			
 		 	writeCSVs.writeMergeScenariosFinal(projectName, @projectMergeScenarios.size, @projectMergeScenarios.size-builtMergeScenarios.size, totalPushes, totalParentsNoPassed, totalPushesNoBuilt, totalRepeatedBuilds, totalBuilds, totalPushes+totalParentsNoPassed, totalMSPassed, totalMSErrored, 
