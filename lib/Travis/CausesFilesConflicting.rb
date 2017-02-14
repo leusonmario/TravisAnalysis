@@ -13,7 +13,7 @@ class CausesFilesConflicting
 		@filesConflict
 	end
 
-	def insertNewCause(cause, filesRelated)
+	def insertNewCauseOne(cause, filesRelated)
 		if (filesRelated.size > 0)
 			@causesConflict.push(cause)
 			@filesConflict.push(filesRelated)
@@ -21,5 +21,9 @@ class CausesFilesConflicting
 			@causesConflict.push(cause)
 			@filesConflict.push(filesRelated)
 		end
+	end
+
+	def insertNewCause(cause)
+		@causesConflict.push(cause)
 	end
 end

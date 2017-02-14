@@ -6,23 +6,10 @@ require_all './Travis'
 class WriteCSVs
 
 	def initialize(actualPath)
-		@pathAllResults = ""
-		@pathResultByProject = ""
-		@pathResultByProjectDirectory = ""
 		@pathConflicstAnalysis = ""
-		@pathMergeScenariosAnalysis = ""
-		@pathConflictsAnalysis = ""
 		@pathErroredCases = ""
 		@pathFailedCases = ""
 		creatingResultsDirectories(actualPath)
-	end
-
-	def getDbConnection()
-		@dbConnection
-	end
-
-	def getPathAnalysis()
-		@pathAnalysis
 	end
 
 	def getPathErroredCases()
@@ -33,28 +20,8 @@ class WriteCSVs
 		@pathFailedCases
 	end
 
-	def getPathAllResults()
-		@pathAllResults
-	end
-
-	def getPathResultByProject()
-		@pathResultByProject
-	end
-
-	def getPathResultByProjectDirectory()
-		@pathResultByProjectDirectory
-	end
-
-	def setPathResultByProjectDirectory(newPath)
-		@pathResultByProjectDirectory = newPath
-	end
-
 	def getPathConflicstAnalysis()
 		@pathConflicstAnalysis
-	end
-
-	def getPathMergeScenariosAnalysis()
-		@pathMergeScenariosAnalysis
 	end
 
 	def getPathConflictsCauses()
@@ -64,29 +31,20 @@ class WriteCSVs
 	def creatingResultsDirectories(actualPath)
 		Dir.chdir actualPath
 		delete = %x(rm -rf FinalResults)
-		FileUtils::mkdir_p 'FinalResults/ResultsByProject'
-		FileUtils::mkdir_p 'FinalResults/ConflictsAnalysis'
-		FileUtils::mkdir_p 'FinalResults/MergeScenariosAnalysis'
-		FileUtils::mkdir_p 'FinalResults/ConflictsCauses'
-		FileUtils::mkdir_p 'FinalResults/ErroredCases'
-		FileUtils::mkdir_p 'FinalResults/FailedCases'
-		Dir.chdir "FinalResults"
-		@pathAllResults = Dir.pwd
-		Dir.chdir "ResultsByProject"
-		@pathResultByProject = Dir.pwd
-		Dir.chdir @pathAllResults
+		FileUtils::mkdir_p 'ConflictsAnalysis'
+		FileUtils::mkdir_p 'ConflictsCauses'
+		FileUtils::mkdir_p 'ErroredCases'
+		FileUtils::mkdir_p 'FailedCases'
+		Dir.chdir actualPath
 		Dir.chdir "ConflictsAnalysis"
 		@pathConflicstAnalysis = Dir.pwd
-		Dir.chdir @pathAllResults
-		Dir.chdir "MergeScenariosAnalysis"
-		@pathMergeScenariosAnalysis = Dir.pwd
-		Dir.chdir @pathAllResults
+		Dir.chdir actualPath
 		Dir.chdir "ConflictsCauses"
 		@pathConflictsCauses = Dir.pwd
-		Dir.chdir @pathAllResults
+		Dir.chdir actualPath
 		Dir.chdir "ErroredCases"
 		@pathErroredCases = Dir.pwd
-		Dir.chdir @pathAllResults
+		Dir.chdir actualPath
 		Dir.chdir "FailedCases"
 		@pathFailedCases = Dir.pwd
 		createCSV()
@@ -100,30 +58,13 @@ class WriteCSVs
 	end
 
 	def createCSV()
-		createAllResultsFile()
-		createMergeScenariosAnalysisFile()
 		createBuildConflictCausesFile()
 		createTestConflictsCausesFiles()
 		createConflicAnalysisFile()
  	end
 
- 	def createAllResultsFile()
- 		Dir.chdir getPathAllResults
-		CSV.open("AllProjectsResult.csv", "wb") do |csv|
-			csv << ["Project", "TotalBuildPush", "TotalPushPassed", "TotalPushErrored", "TotalPushFailed", "TotalPushCanceled", 
-				"TotalBuildPull", "TotalPullPassed", "TotalPullErrored", "TotalPullFailed", "TotalPullCanceled"]
-		end
- 	end
- 	
- 	def createMergeScenariosAnalysisFile
- 		Dir.chdir getPathMergeScenariosAnalysis
-		CSV.open("MergeScenariosProjects.csv", "wb") do |csv|
-			csv << ["Project", "TotalMS", "TotalMSNoBuilt","TotalMSParentPassed", "TotalMSParentsNoPassed", "TotalParentNoBuilt", "TotalRepeatedMSB", "AllBuilds", "ValidBuilds", "TotalMSPassed", "TotalMSErrored", "TotalMSFailed", "TotalMSCanceled"]
-		end
- 	end
-
  	def createBuildConflictCausesFile()
- 		Dir.chdir getPathConflictsCauses
+ 		Dir.chdir getPathConflictsCauses()
 		CSV.open("BuildConflictsCauses.csv", "wb") do |csv|
 			csv << ["ProjectName",	"Total", "NO FOUND SYMBOL", "MALFORMED EXPRESSION", "UPDATE MODIFIER", "DUPLICATE STATEMENT", "DEPENDENCY", "UNIMPLEMENTED METHOD", 
 					"GIT PROBLEM", "REMOTE ERROR", "COMPILER ERROR", "ANOTHER ERROR"]
@@ -131,17 +72,11 @@ class WriteCSVs
  	end
 
  	def createTestConflictsCausesFiles()
+ 		Dir.chdir getPathConflictsCauses()
  		CSV.open("TestConflictsCauses.csv", "wb") do |csv|
 			csv << ["ProjectName",	"Total", "FAILED", "GIT PROBLEM", "REMOTE ERROR", "ANOTHER ERROR"]
 		end
  	end
-
- 	def createResultByProjectFiles(projectName)
-		Dir.chdir getPathResultByProject()
-		CSV.open(projectName+"Final.csv", "w") do |csv|
- 			csv << ["Status", "Type", "Commit", "ID"]
- 		end
-	end
 
 	def createConflicAnalysisFile
 		Dir.chdir getPathConflicstAnalysis
@@ -153,39 +88,6 @@ class WriteCSVs
  				"PushesCanceled", "CanceledTravis", "CanceledTravisConf", "CanceledConfig", "CanceledConfigConf", "CanceledSource", "CanceledSourceConf", "CanceledAll", 
  				"CanceledAllConf"]
  		end
-	end
-
- 	def writeResultsAll(projectInfo)
- 		Dir.chdir getPathAllResults
-	 	CSV.open("AllProjectsResult.csv", "a+") do |csv|
- 			csv << [projectInfo[0], projectInfo[1], projectInfo[2], projectInfo[3], projectInfo[4], projectInfo[5], projectInfo[6], projectInfo[7], projectInfo[8], 
-			projectInfo[9], projectInfo[10]]
-		end
-	end
-
-	def writeResultByProject(projectName, typeBuild, build)
-		if (typeBuild != "")
-			Dir.chdir getPathResultByProjectDirectory()
-			if (File.exists?(projectName+"Final.csv"))
-				CSV.open(projectName+"Final.csv", "a+") do |csv|
-					csv << [build.state, typeBuild, build.commit.sha, build.id]
-				end
-			else
-				CSV.open(projectName+"Final.csv", "w") do |csv|
-		 			csv << ["Status", "Type", "Commit", "ID"]
-		 			csv << [build.state, typeBuild, build.commit.sha, build.id]
-		 		end			
-			end
-		end
-	end
-
-	def writeMergeScenariosFinal(projectName, allMergeScenariosProject, noBuiltMergeScenario, builtPassedParentMergeScenarios, noBuiltPassedParentMergeScenarios, noParentBuilt, totalRepeatedBuilds, totalBuilds, validBuilds, totalMSPassed, totalMSErrored, 
-								totalMSFailed, totalMSCanceled)
-		Dir.chdir getPathMergeScenariosAnalysis()
-		CSV.open("MergeScenariosProjects.csv", "a+") do |csv|
-			csv << [projectName, allMergeScenariosProject, noBuiltMergeScenario, builtPassedParentMergeScenarios, noBuiltPassedParentMergeScenarios, noParentBuilt, totalRepeatedBuilds, totalBuilds, validBuilds, totalMSPassed, totalMSErrored, totalMSFailed, 
-					totalMSCanceled]
-		end
 	end
 
 	def writeBuildConflicts(projectName, confErroredTotal, confErroredunavailableSymbol, confErroredMalformedExp, confErroredUpdateModifier, confErroredDuplicate, 

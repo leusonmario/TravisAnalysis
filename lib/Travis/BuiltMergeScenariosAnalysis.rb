@@ -4,7 +4,7 @@ require_rel 'MergeScenariosAnalysis'
 
 class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 
-	def getStatusBuildsProject(projectName, writeCSVs, pathGumTree, withWithoutForks)
+	def getStatusBuildsProject(projectName, writeCSVAllBuilds, writeCSVBuilt, writeCSVForkAll, writeCSVForkInterval, pathGumTree, withWithoutForks)
 		buildTotalPush = 0
 		buildTotalPull = 0
 		buildPushPassed = 0
@@ -40,8 +40,14 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 		canceledConflicts = ConflictAnalysis.new()
 		
 		confBuild = ConflictBuild.new(@pathProject)
-		confErrored = ConflictCategoryErrored.new()
-		confFailed = ConflictCategoryFailed.new()
+		confAllErrored = ConflictCategoryErroredAll.new()
+		confErroredForkBuilt = ConflictCategoryErrored.new()
+		confForkIntervalErrored = ConflictCategoryErrored.new()
+		confForkAllErrored = ConflictCategoryErrored.new()
+		confFailedBuilt = ConflictCategoryFailed.new()
+		confFailedAllErrored = ConflictCategoryFailed.new()
+		confFailedAll = ConflictCategoryFailed.new()
+		confFailedInterval = ConflictCategoryFailed.new()
 
 		projectNameFile = projectName.gsub('/','-')
 		
@@ -70,8 +76,10 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 						if (status == "passed")
 							buildPushPassed += 1
 						elsif (status == "errored")
+							writeCSVAllBuilds.printErroredBuild(projectName.split("/").last, build, confAllErrored.findConflictCause(build, getPathProject())[0])
 							buildPushErrored += 1
 						elsif (status == "failed")
+							#writeCSVAllBuilds.printFailedBuild(projectName.split("/").last, build, confFailedAllErrored.findConflictCause(build))
 							buildPushFailed += 1
 						else
 							buildPushCanceled += 1
@@ -97,21 +105,40 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 									#Independente dos parents de um merge tenham uma build associada no travis, 
 									#o codigo abaixo classifica a distribuiçao de cenarios de merge em passed, errored, failed e canceled status
 									type = confBuild.typeConflict(build)
+									commitsBuildsCloser = []
+									commitsBuildsCloser[0] = getGitProject().getCommitCloserToBuild(allBuilds, mergeCommit[0])
+									commitsBuildsCloser[1] = getGitProject().getCommitCloserToBuild(allBuilds, mergeCommit[1])
+									resultCommitsCloser = @gitProject.conflictScenario(commitsBuildsCloser, allBuilds, build)
+									
 									if (status == "passed")
 										totalMSPassed += 1
 										confBuild.conflictAnalysisCategories(passedConflicts, type, result[0])
 									elsif (status == "errored")
 										totalMSErrored += 1
 										isConflict = confBuild.conflictAnalysisCategories(erroredConflicts, type, result[0])
+										writeCSVForkAll.printConflictBuild(build, mergeCommit[0].to_s, mergeCommit[1].to_s, confForkAllErrored.findConflictCause(build, getPathProject(), pathGumTree, type, true), projectNameFile)
+										
+										if (commitsBuildsCloser[0] != nil and commitsBuildsCloser[1] != nil and resultCommitsCloser[0] == true and isConflict == true)
+											writeCSVForkInterval.printConflictBuild(build, commitsBuildsCloser[0], commitsBuildsCloser[1], confForkIntervalErrored.findConflictCause(build, getPathProject(), pathGumTree, type, true), projectNameFile)
+										end
+										
 										if (isConflict and result[0] == true) 
-											writeCSVs.printConflictBuild(build, result[1][0], result[2][0], confErrored.findConflictCause(build, getPathProject(), pathGumTree, type), projectNameFile)
+											writeCSVBuilt.printConflictBuild(build, result[1][0], result[2][0], confErroredForkBuilt.findConflictCause(build, getPathProject(), pathGumTree, type, true), projectNameFile)
 										end
 									elsif (status == "failed")
 										totalMSFailed += 1
 										isConflict = confBuild.conflictAnalysisCategories(failedConflicts, type, result[0])
-										if (isConflict and result[0] == true) 
-											writeCSVs.printConflictTest(build, result[1][0], result[2][0], confFailed.findConflictCause(build), projectNameFile)
-										end
+										#writeCSVForkAll.printConflictTest(build, mergeCommit[0].to_s, mergeCommit[1].to_s, confFailedAll.findConflictCause(build), projectNameFile)
+
+										#if (commitsBuildsCloser[0] != nil and commitsBuildsCloser[1] != nil and resultCommitsCloser[0] == true)
+										#	if (isConflict)
+										#		writeCSVForkInterval.printConflictTest(build, commitsBuildsCloser[0], commitsBuildsCloser[1], confFailedAll.findConflictCause(build), projectNameFile)
+										#	end
+										#end
+
+										#if (isConflict and result[0] == true) 
+										#	writeCSVBuilt.printConflictTest(build, result[1][0], result[2][0], confFailedBuilt.findConflictCause(build), projectNameFile)
+										#end
 									else
 										totalMSCanceled += 1
 										confBuild.conflictAnalysisCategories(canceledConflicts, type, result[0])
@@ -122,21 +149,21 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 							end
 						end
 					end
-					writeCSVs.writeResultByProject(projectName.gsub('/','-'), typeBuild, build)
+					writeCSVBuilt.writeResultByProject(projectName.gsub('/','-'), typeBuild, build)
 				end
 			end
 			
-		 	writeCSVs.writeMergeScenariosFinal(projectName, @projectMergeScenarios.size, @projectMergeScenarios.size-builtMergeScenarios.size, totalPushes, totalParentsNoPassed, totalPushesNoBuilt, totalRepeatedBuilds, totalBuilds, totalPushes+totalParentsNoPassed, totalMSPassed, totalMSErrored, 
+		 	writeCSVBuilt.writeMergeScenariosFinal(projectName, @projectMergeScenarios.size, @projectMergeScenarios.size-builtMergeScenarios.size, totalPushes, totalParentsNoPassed, totalPushesNoBuilt, totalRepeatedBuilds, totalBuilds, totalPushes+totalParentsNoPassed, totalMSPassed, totalMSErrored, 
 					totalMSFailed, totalMSCanceled)
 			
-			writeCSVs.writeBuildConflicts(projectName, confErrored.getTotal(), confErrored.getunavailableSymbol(), confErrored.getMalformedExp(), 
-				confErrored.getUpdateModifier(), confErrored.getDuplicateStatement(), confErrored.getDependencyProblem(), confErrored.getUnimplementedMethod(), 
-				confErrored.getGitProblem(), confErrored.getRemoteError(), confErrored.getCompilerError(), confErrored.getOtherError())
+			writeCSVBuilt.writeBuildConflicts(projectName, confErroredForkBuilt.getTotal(), confErroredForkBuilt.getunavailableSymbol(), confErroredForkBuilt.getMalformedExp(), 
+				confErroredForkBuilt.getUpdateModifier(), confErroredForkBuilt.getDuplicateStatement(), confErroredForkBuilt.getDependencyProblem(), confErroredForkBuilt.getUnimplementedMethod(), 
+				confErroredForkBuilt.getGitProblem(), confErroredForkBuilt.getRemoteError(), confErroredForkBuilt.getCompilerError(), confErroredForkBuilt.getOtherError())
 
-			writeCSVs.writeTestConflicts(projectName, confFailed.getTotal(), confFailed.getFailed(), confFailed.getGitProblem(), confFailed.getRemoteError(), confFailed.getPermission(), 
-				confFailed.getOtherError())
+			writeCSVBuilt.writeTestConflicts(projectName, confFailedBuilt.getTotal(), confFailedBuilt.getFailed(), confFailedBuilt.getGitProblem(), confFailedBuilt.getRemoteError(), confFailedBuilt.getPermission(), 
+				confFailedBuilt.getOtherError())
 
-			writeCSVs.writeConflictsAnalysisFinal(projectName, @projectMergeScenarios.size, @projectMergeScenarios.size - builtMergeScenarios.size, totalRepeatedBuilds, totalPushesNoBuilt, totalPushes, 
+			writeCSVBuilt.writeConflictsAnalysisFinal(projectName, @projectMergeScenarios.size, @projectMergeScenarios.size - builtMergeScenarios.size, totalRepeatedBuilds, totalPushesNoBuilt, totalPushes, 
 							passedConflicts.getTotalPushes, passedConflicts.getTotalTravis, passedConflicts.getTotalTravisConf, passedConflicts.getTotalConfig, 
 							passedConflicts.getTotalConfigConf, passedConflicts.getTotalSource, passedConflicts.getTotalSourceConf, passedConflicts.getTotalAll, 
 							passedConflicts.getTotalAllConf, erroredConflicts.getTotalPushes, erroredConflicts.getTotalTravis, erroredConflicts.getTotalTravisConf, 

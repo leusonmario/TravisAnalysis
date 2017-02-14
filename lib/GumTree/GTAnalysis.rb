@@ -240,7 +240,7 @@ class GTAnalysis
 					end
 					internalCount += 1
 				end
-				if(rightResult[0][filesConflicting[count][0]].to_s.match(/Insert SimpleName: f[0-9\(\)]* into [a-zA-Z]*[0-9\(\)]*/))
+				if(rightResult[0][filesConflicting[count][0]].to_s.match(/Insert SimpleName: #{filesConflicting[count][1]}[0-9\(\)]* into [a-zA-Z]*[0-9\(\)]*/))
 					return true
 				end
 			end
@@ -254,7 +254,7 @@ class GTAnalysis
 					end
 					internalCount += 1
 				end
-				if(leftResult[0][filesConflicting[count][0]].to_s.match(/Insert SimpleName: f[0-9\(\)]* into [a-zA-Z]*[0-9\(\)]*/))
+				if(leftResult[0][filesConflicting[count][0]].to_s.match(/Insert SimpleName: #{filesConflicting[count][1]}[0-9\(\)]* into [a-zA-Z]*[0-9\(\)]*/))
 					return true
 				end
 			end
