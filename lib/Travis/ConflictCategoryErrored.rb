@@ -11,7 +11,7 @@ class ConflictCategoryErrored
 		@malformedExp = 0
 		@remoteError = 0
 		@compilerError = 0
-		@updateModifier = 0
+		@methodUpdate = 0
 		@unavailableSymbol = 0
 		@duplicateStatement = 0
 		@dependencyProblem = 0
@@ -23,8 +23,8 @@ class ConflictCategoryErrored
 		@gitProblem
 	end
 
-	def getUpdateModifier()
-		@updateModifier
+	def getMethodUpdate()
+		@methodUpdate
 	end
 
 	def getUnimplementedMethod()
@@ -60,12 +60,12 @@ class ConflictCategoryErrored
 	end
 
 	def getTotal()
-		return getGitProblem() + getRemoteError() + getCompilerError() + getunavailableSymbol() + getOtherError() + getUpdateModifier() + getMalformedExp() + getDuplicateStatement() + getDependencyProblem() + getUnimplementedMethod()
+		return getGitProblem() + getRemoteError() + getCompilerError() + getunavailableSymbol() + getOtherError() + getMethodUpdate() + getMalformedExp() + getDuplicateStatement() + getDependencyProblem() + getUnimplementedMethod()
 	end
 
 	def findConflictCause(build, pathProject, pathGumTree, type, mergeScenario)
 		localUnavailableSymbol = 0 
-		localUpdateModifier = 0 
+		localMethodUpdate = 0 
 		localMalformedExp = 0 
 		localDuplicateStatement = 0 
 		localDependencyProblem = 0 
@@ -140,7 +140,6 @@ class ConflictCategoryErrored
 					build.jobs[indexJob].log.body do |bodyJob|
 						if (bodyJob != nil)	
 							otherCase = true
-							puts build.id
 							if (bodyJob.include?('Retrying, 3 of 3'))
 								body = bodyJob[/Retrying, 3 of 3[\s\S]*/]
 							else
@@ -151,34 +150,12 @@ class ConflictCategoryErrored
 							#	causesFilesConflicts.insertNewCause("updateModifier", [])
 							#end
 						
-							if (body[/\[ERROR\] [a-zA-Z0-9\/\-\.\:\[\]\, ]* has private access in [a-zA-Z0-9\/\-\.\:\[\]\,]*/] || body[/\[#{stringErro}\][\s\S]*#{stringNoApplied}[\s\S]*(\[#{stringErro}\])?\;/] || body[/\[#{stringErro}\][\s\S]*#{stringUpdate}[\s\S]*\[#{stringInfo}\](.*)?[0-9]/] || body[/\[#{stringErro}\]#{stringCompError}[\s\S]*[.java][\s\S]*#{stringNoConvert}/] || body[/#{stringWrongReturn}/] || body[/#{stringIncompatibleType}/])
-								localUpdateModifier = body.scan(/\[ERROR\] [a-zA-Z0-9\/\-\.\:\[\]\, ]* has private access in [a-zA-Z0-9\/\-\.\:\[\]\,]*|\[#{stringErro}\][\s\S]*#{stringNoApplied}[\s\S]*(\[#{stringErro}\])?\;|\[#{stringErro}\][\s\S]*#{stringUpdate}[\s\S]*\[#{stringInfo}\](.*)?[0-9]|\[#{stringErro}\]#{stringCompError}[\s\S]*[.java][\s\S]*#{stringNoConvert}|#{stringWrongReturn}|#{stringIncompatibleType}|\[#{stringErro}\][\s\S]*[#{stringConstructorFound}]?[\s\S]*#{stringDifferArgument}/).size
-								@updateModifier += localUpdateModifier
+							if (body[/\[ERROR\][ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,\(\) ]* (no suitable method found for|cannot be applied to)+ [a-zA-Z0-9\/\-\.\:\[\]\,]*/] || body[/\[ERROR\] [a-zA-Z0-9\/\-\.\:\[\]\, ]* has private access in [a-zA-Z0-9\/\-\.\:\[\]\,]*/] || body[/\[#{stringErro}\][\s\S]*#{stringNoApplied}[\s\S]*(\[#{stringErro}\])?\;/] || body[/\[#{stringErro}\][\s\S]*#{stringUpdate}[\s\S]*\[#{stringInfo}\](.*)?[0-9]/] || body[/\[#{stringErro}\]#{stringCompError}[\s\S]*[.java][\s\S]*#{stringNoConvert}/] || body[/#{stringWrongReturn}/] || body[/#{stringIncompatibleType}/])
+								localMethodUpdate = body.scan(/\[ERROR\] [a-zA-Z0-9\/\-\.\:\[\]\, ]* has private access in [a-zA-Z0-9\/\-\.\:\[\]\,]*|\[#{stringErro}\][\s\S]*#{stringNoApplied}[\s\S]*(\[#{stringErro}\])?\;|\[#{stringErro}\][\s\S]*#{stringUpdate}[\s\S]*\[#{stringInfo}\](.*)?[0-9]|\[#{stringErro}\]#{stringCompError}[\s\S]*[.java][\s\S]*#{stringNoConvert}|#{stringWrongReturn}|#{stringIncompatibleType}|\[#{stringErro}\][\s\S]*[#{stringConstructorFound}]?[\s\S]*#{stringDifferArgument}/).size
+								@methodUpdate += localMethodUpdate
 								filesInformation = []
 								otherCase = false
 								begin
-									if (body[/BUILD FAILURE[\s\S]*/].to_s[/\[ERROR\][ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,]* no suitable constructor found for [a-zA-Z0-9\/\-\.\:\[\]\,]*/])
-										changedClasses = body[/BUILD FAILURE[\s\S]*/].to_s.to_enum(:scan, /\[ERROR\][ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,]* no suitable constructor found for [a-zA-Z0-9\/\-\.\:\[\]\,]*/).map { Regexp.last_match }
-										callClassFiles = body.to_enum(:scan, /\[ERROR\][ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,]*[ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,\(\)]* is not applicable/).map { Regexp.last_match }
-										count = 0
-										while (count < changedClasses.size)
-											changedClass = changedClasses[count].to_s.match(/\[ERROR\][ \t\r\n\f]*[a-zA-Z0-9\/\-\.\,]*/)[0].split("/").last.gsub('.java','')
-											callClassFile = callClassFiles[count].to_s.match(/\[ERROR\][ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,]*[ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,]*/)[0].split(".").last
-											filesInformation.push([changedClass, callClassFile])
-											count += 1
-										end
-									end
-									if (body[/\[ERROR\][ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\, ]* in a multi-catch statement cannot be related [a-zA-Z0-9\/\-\.\:\[\]\,]*/])
-										changedClasses = body[/BUILD FAILURE[\s\S]*/].to_s.to_enum(:scan, /\[ERROR\][ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\, ]* in a multi-catch statement cannot be related [a-zA-Z0-9\/\-\.\:\[\]\,]*/).map { Regexp.last_match }
-										callClassFiles = body.to_enum(:scan, /\[ERROR\][ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,]*[ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,\(\)]* is a subclass of alternative/).map { Regexp.last_match }
-										count = 0
-										while (count < changedClasses.size)
-											changedClass = changedClasses[count].to_s.match(/\[ERROR\][ \t\r\n\f]*[a-zA-Z0-9\/\-\.\,]*/)[0].split("/").last.gsub('.java','')
-											callClassFile = callClassFiles[count].to_s.match(/\[ERROR\][ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,]*[ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,]*/)[0].split(".").last
-											filesInformation.push([changedClass, callClassFile])
-											count += 1
-										end
-									end
 									if (body[/BUILD FAILURE[\s\S]*/].to_s[/\[ERROR\][ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\, ]* no suitable method found for [a-zA-Z0-9\/\-\.\:\[\]\,]*/])
 										changedClasses = body[/BUILD FAILURE[\s\S]*/].to_s.to_enum(:scan, /\[ERROR\][ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\, ]* no suitable method found for [a-zA-Z0-9\/\-\.\:\[\]\,]*/).map { Regexp.last_match }
 										callClassFiles = body.to_enum(:scan, /\[ERROR\] method [ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,]*[ \t\r\n\f]*/).map { Regexp.last_match }
@@ -192,33 +169,21 @@ class ConflictCategoryErrored
 											count += 1
 										end
 									end
-									if (body[/\[ERROR\][\s\S]* cannot be applied to[\s\S]*(\[ERROR\])?\;/])
-										changedClasses = body.to_enum(:scan, /\[ERROR\][\s\S]*.java/).map { Regexp.last_match }
-										#puts changedClasses
+									if (body[/\[ERROR\][ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,\(\) ]* cannot be applied to [a-zA-Z0-9\/\-\.\:\[\]\,]*/])
+										changedClasses = body[/BUILD FAILURE[\s\S]*/].to_s.to_enum(:scan, /\[ERROR\][ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,\(\) ]* cannot be applied to [a-zA-Z0-9\/\-\.\:\[\]\,]*/).map { Regexp.last_match }
 										count = 0
 										while (count < changedClasses.size)
-											aux = changedClasses[count].to_s.split('/').last
-											filesInformation.push(changedClasses[count])
+											changedClass = changedClasses[count].to_s.match(/\[ERROR\][ \t\r\n\f]*[a-zA-Z0-9\/\-\.\,]*/)[0].split("/").last.gsub('.java','')
+										    aux = changedClasses[count].to_s.match(/\[ERROR\][ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,]*[ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,\(\) ]* cannot be applied to/)[0].split("method").last
+										    callClassFile = aux.split('.').last.gsub(' cannot be applied to', '')
+										    methodName = aux.split('] ').last.match(/[a-zA-Z]*/)
+											filesInformation.push([changedClass, methodName, callClassFile])
 											count += 1
 										end
-										#puts filesInformation.size()
 									end
-									if (body[/\[ERROR\] [a-zA-Z0-9\/\-\.\:\[\]\, ]* has private access in [a-zA-Z0-9\/\-\.\:\[\]\,]*/])
-										callClasses = body.to_enum(:scan, /\[ERROR\] [a-zA-Z0-9\/\-\.\:\[\]\, ]*\.java/).map { Regexp.last_match }
-										changedClasses = body.to_enum(:scan, /\[ERROR\] [a-zA-Z0-9\/\-\.\:\[\]\, ]* has private access in [a-zA-Z0-9\/\-\.\:\[\]\,]*/).map { Regexp.last_match }
-										#puts changedClasses
-										count = 0
-										while (count < changedClasses.size)
-											callClass = callClasses[count].to_s.split('/').last.gsub('.java','')
-											changedClass = changedClasses[count].to_s.split('.')
-											filesInformation.push(callClass, changedClass)
-											count += 1
-										end
-										#puts filesInformation.size()
-									end
-									causesFilesConflicts.insertNewCauseOne("updateModifier", filesInformation)
+									causesFilesConflicts.insertNewCauseOne("methodUpdate", filesInformation)
 								rescue
-									causesFilesConflicts.insertNewCauseOne("updateModifier", [])
+									causesFilesConflicts.insertNewCauseOne("methodUpdate", [])
 								end
 							end
 							if (body[/\[#{stringErro}\][\s\S]*#{stringDefined}[\s\S]*\[#{stringInfo}\](.*)?[0-9]/])
@@ -292,7 +257,6 @@ class ConflictCategoryErrored
 								localUnavailableSymbol = body.scan(/\[ERROR\] [a-zA-Z0-9\/\-\.\:\[\]\,]* cannot find symbol[\n\r]+\[ERROR\]?[ \t\r\n\f]*symbol[ \t\r\n\f]*:[ \t\r\n\f]*method [a-zA-Z0-9\/\-\.\:\[\]\,\(\)]*[\n\r]+\[ERROR\]?[ \t\r\n\f]*location[ \t\r\n\f]*:[ \t\r\n\f]*class[ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,\(\)]*[\n\r]?|\[#{stringErro}\][\s\S]*#{stringNotFindType}|\[#{stringErro}\][\s\S]*#{stringNotMember}|\[ERROR\]?[\s\S]*cannot find symbol/).size
 								@unavailableSymbol += localUnavailableSymbol
 								filesInformation = []
-								puts "AQUI"
 								begin
 									if (body[/\[ERROR\]?[\s\S]*cannot find symbol/] || body[/\[ERROR\] [a-zA-Z0-9\/\-\.\:\[\]\,]* cannot find symbol[\n\r]+\[ERROR\]?[ \t\r\n\f]*symbol[ \t\r\n\f]*:[ \t\r\n\f]*method [a-zA-Z0-9\/\-\.\:\[\]\,\(\)]*[\n\r]+\[ERROR\]?[ \t\r\n\f]*location[ \t\r\n\f]*:[ \t\r\n\f]*class[ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,\(\)]*[\n\r]?/])
 										methodNames = body.to_enum(:scan, /\[ERROR\][ \t\r\n\f]*symbol[ \t\r\n\f]*:[ \t\r\n\f]*[method|class|variable|constructor|static]*[ \t\r\n\f]*[a-zA-Z0-9\(\)\.\/\,\_]*[ \t\r\n\f]*\[ERROR\][ \t\r\n\f]*location/).map { Regexp.last_match }
@@ -324,9 +288,10 @@ class ConflictCategoryErrored
 								@malformedExp += localMalformedExp
 								otherCase = false
 							end
-							if (body[/\[ERROR\] Failed to execute goal [a-zA-Z0-9\/\-\.\:\[\]\,\(\) ]* Fatal error compiling: invalid/] || body[/\[ERROR\] Failed to execute goal [a-zA-Z0-9\/\-\.\:\[\]\,\(\) ]* There (were|was) [0-9]* error(s)?/] || body[/#{stringErroInput}/] || body[/\[#{stringErro}\][\s\S]*deprecated[\s\S]*#{stringNoMaintained}/] || body[/#{stringAccess}/] || body[/#{stringFailedGoal}[\s\S]*#{stringBuildsFailed}/] || body[/#{stringNotDefinedProp}/] || body[/#{stringFailedGoal}[\s\S]*#{stringNotResolvedDep}[#{stringFailedCollect}]?[\s\S]*[#{stringConnectionReset}]?/] || body[/#{stringUnsupported}[\s\S]*#{stringStopped}/] || body[/#{stringErrorProcessing}[\s\S]*/] || body[/\[(ERROR|WARNING)\][ \t\r\n\f]*(Non-resolvable parent POM:)? (Failure to find|Could not find artifact|Could not transfer)+/] || body[/\[#{stringErro}\][\s\S]*(\:jar)#{stringMissing}[\s\S]*/] || body[/\[#{stringErro}\][\s\S]*(\:jar)#{stringValidVersion}[\s\S]*/] || body[/#{stringElement}[(\n\s)(a-zA-Z0-9)(\'\-\/\.\:\,\[\])]*#{stringNoExist}/])
+							# depois ver a questao do |Could not transfer
+							if (body[/\[ERROR\] Failed to execute goal [a-zA-Z0-9\/\-\.\:\[\]\,\(\) ]* Fatal error compiling: invalid/] || body[/\[ERROR\] Failed to execute goal [a-zA-Z0-9\/\-\.\:\[\]\,\(\) ]* There (were|was) [0-9]* error(s)?/] || body[/#{stringErroInput}/] || body[/\[#{stringErro}\][\s\S]*deprecated[\s\S]*#{stringNoMaintained}/] || body[/#{stringAccess}/] || body[/#{stringFailedGoal}[\s\S]*#{stringBuildsFailed}/] || body[/#{stringNotDefinedProp}/] || body[/#{stringFailedGoal}[\s\S]*#{stringNotResolvedDep}[#{stringFailedCollect}]?[\s\S]*[#{stringConnectionReset}]?/] || body[/#{stringUnsupported}[\s\S]*#{stringStopped}/] || body[/#{stringErrorProcessing}[\s\S]*/] || body[/\[(ERROR|WARNING)\][ \t\r\n\f]*(Non-resolvable parent POM:)? (Failure to find|Could not find artifact)+/] || body[/\[#{stringErro}\][\s\S]*(\:jar)#{stringMissing}[\s\S]*/] || body[/\[#{stringErro}\][\s\S]*(\:jar)#{stringValidVersion}[\s\S]*/] || body[/#{stringElement}[(\n\s)(a-zA-Z0-9)(\'\-\/\.\:\,\[\])]*#{stringNoExist}/])
 								causesFilesConflicts.insertNewCauseOne("compilerError",[])
-								@compilerError += body.scan(/\[ERROR\] Failed to execute goal [a-zA-Z0-9\/\-\.\:\[\]\,\(\) ]* Fatal error compiling: invalid|\[ERROR\] Failed to execute goal [a-zA-Z0-9\/\-\.\:\[\]\,\(\) ]* There (were|was) [0-9]* error(s)?|#{stringErroInput}|\[#{stringErro}\][\s\S]*deprecated[\s\S]*#{stringNoMaintained}|#{stringAccess}|#{stringFailedGoal}[\s\S]*#{stringBuildsFailed}|#{stringNotDefinedProp}|#{stringFailedGoal}[\s\S]*#{stringNotResolvedDep}[#{stringFailedCollect}]?[\s\S]*[#{stringConnectionReset}]?|#{stringUnsupported}[\s\S]*#{stringStopped}|#{stringErrorProcessing}[\s\S]*|\[(ERROR|WARNING)\][ \t\r\n\f]*(Non-resolvable parent POM:)? (Failure to find|Could not find artifact|Could not transfer)?|\[#{stringErro}\][\s\S]*(\:jar)#{stringMissing}[\s\S]*|\[#{stringErro}\][\s\S]*(\:jar)#{stringValidVersion}[\s\S]*|#{stringElement}[(\n\s)(a-zA-Z0-9)(\'\-\/\.\:\,\[\])]*#{stringNoExist}/).size
+								@compilerError += body.scan(/\[ERROR\] Failed to execute goal [a-zA-Z0-9\/\-\.\:\[\]\,\(\) ]* Fatal error compiling: invalid|\[ERROR\] Failed to execute goal [a-zA-Z0-9\/\-\.\:\[\]\,\(\) ]* There (were|was) [0-9]* error(s)?|#{stringErroInput}|\[#{stringErro}\][\s\S]*deprecated[\s\S]*#{stringNoMaintained}|#{stringAccess}|#{stringFailedGoal}[\s\S]*#{stringBuildsFailed}|#{stringNotDefinedProp}|#{stringFailedGoal}[\s\S]*#{stringNotResolvedDep}[#{stringFailedCollect}]?[\s\S]*[#{stringConnectionReset}]?|#{stringUnsupported}[\s\S]*#{stringStopped}|#{stringErrorProcessing}[\s\S]*|\[(ERROR|WARNING)\][ \t\r\n\f]*(Non-resolvable parent POM:)? (Failure to find|Could not find artifact)?|\[#{stringErro}\][\s\S]*(\:jar)#{stringMissing}[\s\S]*|\[#{stringErro}\][\s\S]*(\:jar)#{stringValidVersion}[\s\S]*|#{stringElement}[(\n\s)(a-zA-Z0-9)(\'\-\/\.\:\,\[\])]*#{stringNoExist}/).size
 								otherCase = false
 							end
 							if (body[/#{stringTheCommand}(#{stringGitClone}|#{stringGitCheckout})(.*?)#{stringFailed}(.*)[\n]*/])
@@ -349,16 +314,16 @@ class ConflictCategoryErrored
 			indexJob += 1
 		end
 		if (mergeScenario)
-			return causesFilesConflicts.getCausesConflict(), getFinalStatus(pathGumTree, pathProject, build, causesFilesConflicts, localUpdateModifier, localUnavailableSymbol, localDuplicateStatement, localUnimplementedMethod)
+			return causesFilesConflicts.getCausesConflict(), getFinalStatus(pathGumTree, pathProject, build, causesFilesConflicts, localMethodUpdate, localUnavailableSymbol, localDuplicateStatement, localUnimplementedMethod)
 		else
 			return causesFilesConflicts.getCausesConflict()
 		end
 	end
 
-	def getFinalStatus(pathGumTree, pathProject, build, conflictCauses, localUpdateModifier, localUnavailableSymbol, localDuplicateStatement, localUnimplementedMethod)
+	def getFinalStatus(pathGumTree, pathProject, build, conflictCauses, localMethodUpdate, localUnavailableSymbol, localDuplicateStatement, localUnimplementedMethod)
 		gtAnalysis = GTAnalysis.new(pathGumTree)
-		if(localUpdateModifier > 0 || localUnavailableSymbol > 0 || localDuplicateStatement > 0 || localUnimplementedMethod > 0)
-			if(localUnimplementedMethod > 0 or localUnavailableSymbol > 0 or localDuplicateStatement > 0 or localUpdateModifier > 0)
+		if(localMethodUpdate > 0 || localUnavailableSymbol > 0 || localDuplicateStatement > 0 || localUnimplementedMethod > 0)
+			if(localUnimplementedMethod > 0 or localUnavailableSymbol > 0 or localDuplicateStatement > 0 or localMethodUpdate > 0)
 				if (conflictCauses.getFilesConflict().size < 1)
 					return false
 				else

@@ -90,11 +90,11 @@ class WriteCSVs
  		end
 	end
 
-	def writeBuildConflicts(projectName, confErroredTotal, confErroredunavailableSymbol, confErroredMalformedExp, confErroredUpdateModifier, confErroredDuplicate, 
+	def writeBuildConflicts(projectName, confErroredTotal, confErroredunavailableSymbol, confErroredMalformedExp, confErroredMethodUpdate, confErroredDuplicate, 
 							confErroredDependency, confErroredMethod, confErroredGitProblem, confErroredRemoteError, confErroredCompilerError, confErroredOtherError)
 		Dir.chdir getPathConflictsCauses()
 		CSV.open("BuildConflictsCauses.csv", "a+") do |csv|
-			csv << [projectName, confErroredTotal, confErroredunavailableSymbol, confErroredMalformedExp, confErroredUpdateModifier, confErroredDuplicate, 
+			csv << [projectName, confErroredTotal, confErroredunavailableSymbol, confErroredMalformedExp, confErroredMethodUpdate, confErroredDuplicate, 
 					confErroredDependency, confErroredMethod, confErroredGitProblem, confErroredRemoteError, confErroredCompilerError, confErroredOtherError]
 		end
 	end

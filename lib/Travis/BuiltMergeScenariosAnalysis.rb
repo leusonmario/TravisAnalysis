@@ -157,7 +157,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 					totalMSFailed, totalMSCanceled)
 			
 			writeCSVBuilt.writeBuildConflicts(projectName, confErroredForkBuilt.getTotal(), confErroredForkBuilt.getunavailableSymbol(), confErroredForkBuilt.getMalformedExp(), 
-				confErroredForkBuilt.getUpdateModifier(), confErroredForkBuilt.getDuplicateStatement(), confErroredForkBuilt.getDependencyProblem(), confErroredForkBuilt.getUnimplementedMethod(), 
+				confErroredForkBuilt.getMethodUpdate(), confErroredForkBuilt.getDuplicateStatement(), confErroredForkBuilt.getDependencyProblem(), confErroredForkBuilt.getUnimplementedMethod(), 
 				confErroredForkBuilt.getGitProblem(), confErroredForkBuilt.getRemoteError(), confErroredForkBuilt.getCompilerError(), confErroredForkBuilt.getOtherError())
 
 			writeCSVBuilt.writeTestConflicts(projectName, confFailedBuilt.getTotal(), confFailedBuilt.getFailed(), confFailedBuilt.getGitProblem(), confFailedBuilt.getRemoteError(), confFailedBuilt.getPermission(), 

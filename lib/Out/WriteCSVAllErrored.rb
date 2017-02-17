@@ -48,7 +48,7 @@ class WriteCSVAllErrored
  	def createErroredCausesFile()
  		Dir.chdir getPathErroredCauses
 		CSV.open("BuildConflictsCauses.csv", "wb") do |csv|
-			csv << ["ProjectName",	"Total", "NO FOUND SYMBOL", "MALFORMED EXPRESSION", "UPDATE MODIFIER", "DUPLICATE STATEMENT", "DEPENDENCY", "UNIMPLEMENTED METHOD", 
+			csv << ["ProjectName",	"Total", "NO FOUND SYMBOL", "MALFORMED EXPRESSION", "METHOD UPDATE", "DUPLICATE STATEMENT", "DEPENDENCY", "UNIMPLEMENTED METHOD", 
 					"GIT PROBLEM", "REMOTE ERROR", "COMPILER ERROR", "ANOTHER ERROR"]
 		end
 

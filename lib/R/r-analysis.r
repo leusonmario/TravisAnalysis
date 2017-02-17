@@ -7,7 +7,7 @@ dir.create(file.path(rAnalysisPath, allErrored), showWarnings = FALSE)
 
 setwd(file.path(rootPathProject, "FinalResults/AllErroredBuilds/ErroredCases"))
 listFiles = list.files(path = ".", pattern = "*.csv", all.files = FALSE, full.names = FALSE, recursive = FALSE)
-infoCSVFile = matrix(c("ProjectName", "gitProblem", "unavailableSymbol", "compilerError", "updateModifier", "", "remoteError", "malformedExpression", "unimplementedMethod", "dependencyProblem"), ncol=10)
+infoCSVFile = matrix(c("ProjectName", "gitProblem", "unavailableSymbol", "compilerError", "methodUpdate", "", "remoteError", "malformedExpression", "unimplementedMethod", "statementDuplication", "dependencyProblem"), ncol=11)
 setwd(file.path(rAnalysisPath, "AllErroredAnalysis"))
 unlink("AllBuildErroredAnalysis.csv", recursive = FALSE, force = FALSE)
 write.table(infoCSVFile, file = "AllBuildErroredAnalysis.csv", col.names=F, row.names=F, append=TRUE, sep=",")
@@ -25,35 +25,37 @@ while(indexFiles <= length(listFiles)){
 	}
 	indexFiles = indexFiles + 1
 	setwd(file.path(rAnalysisPath, "AllErroredAnalysis"))
-	write.table(matrix(c(relatedValue), ncol=10), file = "AllBuildErroredAnalysis.csv", row.names=F, col.names=F, sep=",", append=TRUE)
+	write.table(matrix(c(relatedValue), ncol=11), file = "AllBuildErroredAnalysis.csv", row.names=F, col.names=F, sep=",", append=TRUE)
 }
 setwd(file.path(rAnalysisPath, "AllErroredAnalysis"))
 allErroredAnalysis = read.csv("AllBuildErroredAnalysis.csv", header=T)
 allErroredGitProblem = mean(allErroredAnalysis$gitProblem)
 allErroredUnavailableSymbol = mean(allErroredAnalysis$unavailableSymbol)
 allErroredCompilerError = mean(allErroredAnalysis$compilerError)
-allErroredUpdateModifier = mean(allErroredAnalysis$updateModifier)
+allErroredMethodUpdate = mean(allErroredAnalysis$methodUpdate)
 allErroredAnother = mean(allErroredAnalysis$X)
 allErroredRemote = mean(allErroredAnalysis$remoteError)
 allErroredMalformed = mean(allErroredAnalysis$malformedExpression)
 allErroredDependency = mean(allErroredAnalysis$dependencyProblem)
+allErroredDuplication = mean(allErroredAnalysis$statementDuplication)
 allErroredUnimplemented = mean(allErroredAnalysis$unimplementedMethod)
 
 GitProblem = allErroredAnalysis[,2]
 UnavSymbol = allErroredAnalysis[,3]
 CompilerError = allErroredAnalysis[,4]
-UpdateModifier = allErroredAnalysis[,5]
+MethodUpdate = allErroredAnalysis[,5]
 Remote = allErroredAnalysis[,7]
 Malformed = allErroredAnalysis[,8]
 Unimplemented = allErroredAnalysis[,9]
-Dependency = allErroredAnalysis[,10]
+StatDuplication = allErroredAnalysis[,10]
+Dependency = allErroredAnalysis[,11]
 Another = allErroredAnalysis[,6]
 
-Compilation = allErroredAnalysis[,3] + allErroredAnalysis[,5] + allErroredAnalysis[,8] + allErroredAnalysis[,9] + allErroredAnalysis[,10]
+Compilation = allErroredAnalysis[,3] + allErroredAnalysis[,5] + allErroredAnalysis[,8] + allErroredAnalysis[,9] + allErroredAnalysis[,10] + allErroredAnalysis[,10]
 Environment = allErroredAnalysis[,2] + allErroredAnalysis[,4]
 
-png(paste("beanplot-individual-cases.png", sep=""), width=950, height=650)
-bplotIndividual = cbind(GitProblem, UnavSymbol, UpdateModifier, Malformed, Unimplemented, CompilerError, Dependency, Remote, Another)
+png(paste("beanplot-individual-cases.png", sep=""), width=1200, height=650)
+bplotIndividual = cbind(GitProblem, UnavSymbol, MethodUpdate, Malformed, Unimplemented, CompilerError, Dependency, StatDuplication, Remote, Another)
 boxplot(bplotIndividual, col="gray")
 dev.off()
 
@@ -62,8 +64,8 @@ bplotGeneral = cbind(Compilation, Environment, Remote)
 boxplot(bplotGeneral, col="gray")
 dev.off()
 
-meanInfo = c("Mean", allErroredGitProblem, allErroredUnavailableSymbol, allErroredCompilerError, allErroredUpdateModifier, allErroredAnother, allErroredRemote, allErroredMalformed, allErroredUnimplemented, allErroredDependency)
-write.table(matrix(c(meanInfo), ncol=10), file = "AllBuildErroredAnalysis.csv", row.names=F, col.names=F, sep=",", append=TRUE)
+meanInfo = c("Mean", allErroredGitProblem, allErroredUnavailableSymbol, allErroredCompilerError, allErroredMethodUpdate, allErroredAnother, allErroredRemote, allErroredMalformed, allErroredUnimplemented, allErroredDuplication, allErroredDependency)
+write.table(matrix(c(meanInfo), ncol=11), file = "AllBuildErroredAnalysis.csv", row.names=F, col.names=F, sep=",", append=TRUE)
 
 pathResultsAll = c(rootPathProject, "/FinalResults/MergeScenarios/BuiltMergeScenarios/AllProjectsResult.csv")
 resultsAll = read.csv(paste(pathResultsAll, collapse=""), header=T)
@@ -644,7 +646,7 @@ setwd(file.path(mainDir, rq9))
 totalCausesErrored = sum(causesErroredBuilds$Total, na.rm=TRUE)
 noFoundSymbolErrored = sum(causesErroredBuilds$NO.FOUND.SYMBOL, na.rm=TRUE)*100/totalCausesErrored
 malformedExpression = sum(causesErroredBuilds$MALFORMED.EXPRESSION, na.rm=TRUE)*100/totalCausesErrored
-updateModifier = sum(causesErroredBuilds$UPDATE.MODIFIER, na.rm=TRUE)*100/totalCausesErrored
+methodUpdate = sum(causesErroredBuilds$METHOD.UPDATE, na.rm=TRUE)*100/totalCausesErrored
 duplicate = sum(causesErroredBuilds$DUPLICATE.STATEMENT, na.rm=TRUE)*100/totalCausesErrored
 dependency = sum(causesErroredBuilds$DEPENDENCY, na.rm=TRUE)*100/totalCausesErrored
 unimplementedMethod = sum(causesErroredBuilds$UNIMPLEMENTED.METHOD, na.rm=TRUE)*100/totalCausesErrored
@@ -665,7 +667,7 @@ print(noFoundSymbolErrored)
 print("Malformed Expression")
 print(malformedExpression)
 print("Update Modifier")
-print(updateModifier)
+print(methodUpdate)
 print("Duplicate Statement")
 print(duplicate)
 print("Dependency")
@@ -727,7 +729,7 @@ listFiles = list.files(path = ".", pattern = "*.csv", all.files = FALSE, full.na
 setwd(file.path(mainDir, rq11))
 unlink("AllBuiltMergeAnalysis.csv", recursive = FALSE, force = FALSE)
 unlink("BuildConflictsAnalysis.csv", recursive = FALSE, force = FALSE)
-infoCSVFile = matrix(c("ProjectName", "gitProblem", "unavailableSymbol", "compilerError", "updateModifier", "AnotherError", "remoteError", "malformedExpression", "unimplementedMethod", "dependencyProblem"), ncol=10)
+infoCSVFile = matrix(c("ProjectName", "gitProblem", "unavailableSymbol", "compilerError", "methodUpdate", "AnotherError", "remoteError", "malformedExpression", "unimplementedMethod", "statementDuplication", "dependencyProblem"), ncol=11)
 write.table(infoCSVFile, file = "AllBuiltMergeAnalysis.csv", col.names=F, row.names=F, append=TRUE, sep=",")
 write.table(infoCSVFile, file = "BuildConflictsAnalysis.csv", col.names=F, row.names=F, append=TRUE, sep=",")
 indexFiles = 1
@@ -735,8 +737,8 @@ while(indexFiles <= length(listFiles)){
 	setwd(file.path(rootPathProject, "FinalResults/MergeScenarios/BuiltMergeScenarios/ErroredCases"))
 	projectInfo = read.csv(listFiles[indexFiles], header=T)
 	projectName = strsplit(strsplit(listFiles[indexFiles], "Errored")[[1]], ".csv")[[2]][1]
-	infoValues = matrix(c("gitProblem", 0, "unavailableSymbol", 0, "compilerError", 0, "updateModifier", 0, " ", 0, "remoteError", 0, "malformedExpression", 0, "unimplementedMethod", 0, "dependencyProblem", 0), ncol=9, nrow=2)
-	buildConflicts = matrix(c("gitProblem", 0, "unavailableSymbol", 0, "compilerError", 0, "updateModifier", 0, " ", 0, "remoteError", 0, "malformedExpression", 0, "unimplementedMethod", 0, "dependencyProblem", 0), ncol=9, nrow=2)
+	infoValues = matrix(c("gitProblem", 0, "unavailableSymbol", 0, "compilerError", 0, "methodUpdate", 0, " ", 0, "remoteError", 0, "malformedExpression", 0, "unimplementedMethod", 0, "statementDuplication", 0, "dependencyProblem", 0), ncol=10, nrow=2)
+	buildConflicts = matrix(c("gitProblem", 0, "unavailableSymbol", 0, "compilerError", 0, "methodUpdate", 0, " ", 0, "remoteError", 0, "malformedExpression", 0, "unimplementedMethod", 0, "statementDuplication", 0, "dependencyProblem", 0), ncol=10, nrow=2)
 	countLines = 1
 	numberLines = length(projectInfo[projectInfo$MessageState])
 	while (countLines <= numberLines){
@@ -771,8 +773,8 @@ while(indexFiles <= length(listFiles)){
 		setwd(file.path(mainDir, rq11))
 	}
 	setwd(file.path(mainDir, rq11))
-	write.table(matrix(c(projectName, infoValues[2,]), ncol=10), file = "AllBuiltMergeAnalysis.csv", row.names=F, col.names=F, sep=",", append=TRUE)
-	write.table(matrix(c(projectName, buildConflicts[2,]), ncol=10), file = "BuildConflictsAnalysis.csv", row.names=F, col.names=F, sep=",", append=TRUE)
+	write.table(matrix(c(projectName, infoValues[2,]), ncol=11), file = "AllBuiltMergeAnalysis.csv", row.names=F, col.names=F, sep=",", append=TRUE)
+	write.table(matrix(c(projectName, buildConflicts[2,]), ncol=11), file = "BuildConflictsAnalysis.csv", row.names=F, col.names=F, sep=",", append=TRUE)
 	indexFiles = indexFiles + 1
 }
 
@@ -781,7 +783,7 @@ allErroredAnalysis = read.csv("AllBuiltMergeAnalysis.csv", header=T)
 allErroredGitProblem = mean(allErroredAnalysis$gitProblem)
 allErroredUnavailableSymbol = mean(allErroredAnalysis$unavailableSymbol)
 allErroredCompilerError = mean(allErroredAnalysis$compilerError)
-allErroredUpdateModifier = mean(allErroredAnalysis$updateModifier)
+allErroredMethodUpdate = mean(allErroredAnalysis$methodUpdate)
 allErroredAnother = mean(allErroredAnalysis$AnotherError)
 allErroredRemote = mean(allErroredAnalysis$remoteError)
 allErroredMalformed = mean(allErroredAnalysis$malformedExpression)
@@ -790,17 +792,18 @@ allErroredUnimplemented = mean(allErroredAnalysis$unimplementedMethod)
 GitProblem = allErroredAnalysis[,2]
 UnavSymbol = allErroredAnalysis[,3]
 CompilerError = allErroredAnalysis[,4]
-UpdateModifier = allErroredAnalysis[,5]
+MethodUpdate = allErroredAnalysis[,5]
 Remote = allErroredAnalysis[,7]
 Malformed = allErroredAnalysis[,8]
 Unimplemented = allErroredAnalysis[,9]
+StatDuplication = allErroredAnalysis[,10]
 Another = allErroredAnalysis[,6]
 
-Compilation = allErroredAnalysis[,3] + allErroredAnalysis[,5] + allErroredAnalysis[,8] + allErroredAnalysis[,9]
+Compilation = allErroredAnalysis[,3] + allErroredAnalysis[,5] + allErroredAnalysis[,8] + allErroredAnalysis[,9] + allErroredAnalysis[,10]
 Environment = allErroredAnalysis[,2] + allErroredAnalysis[,4]
 
-png(paste("beanplot-individual-cases.png", sep=""), width=900, height=650)
-bplotIndividual = cbind(GitProblem, UnavSymbol, CompilerError, UpdateModifier, Remote, Malformed, Unimplemented, Another)
+png(paste("beanplot-individual-cases.png", sep=""), width=1200, height=650)
+bplotIndividual = cbind(GitProblem, UnavSymbol, CompilerError, MethodUpdate, Remote, Malformed, Unimplemented, StatDuplication, Another)
 boxplot(bplotIndividual, col="gray")
 dev.off()
 
@@ -813,7 +816,7 @@ setwd(file.path(mainDir, rq11))
 csvFileAll = read.csv("AllBuiltMergeAnalysis.csv", header=T)
 csvFileBC = read.csv("BuildConflictsAnalysis.csv", header=T)
 unlink("BuildConflictsPercentage.csv", recursive = FALSE, force = FALSE)
-infoCSVFile = matrix(c("ProjectName", "unavailableSymbol", "updateModifier", "malformedExpression", "unimplementedMethod", "dependencyProblem", "General"), ncol=7)
+infoCSVFile = matrix(c("ProjectName", "unavailableSymbol", "methodUpdate", "malformedExpression", "unimplementedMethod", "statementDuplication", "dependencyProblem", "General"), ncol=8)
 write.table(infoCSVFile, file = "BuildConflictsPercentage.csv", col.names=F, row.names=F, append=TRUE, sep=",")
 countLine = 1
 
@@ -824,8 +827,9 @@ while (countLine < length(readLines("AllBuiltMergeAnalysis.csv"))) {
 						sum(strtoi(csvFileBC[countLine,8]))*100/sum(strtoi(csvFileAll[countLine,8])),
 						sum(strtoi(csvFileBC[countLine,9]))*100/sum(strtoi(csvFileAll[countLine,9])),
 						sum(strtoi(csvFileBC[countLine,10]))*100/sum(strtoi(csvFileAll[countLine,10])),
-						sum(sum(strtoi(csvFileBC[countLine,3]), strtoi(csvFileBC[countLine,5]), strtoi(csvFileBC[countLine,8]), strtoi(csvFileBC[countLine,9])))*100/sum(sum(strtoi(csvFileAll[countLine,3]),strtoi(csvFileAll[countLine,5]),strtoi(csvFileAll[countLine,8]),strtoi(csvFileAll[countLine,9])))
-	), ncol=7), file = "BuildConflictsPercentage.csv", row.names=F, col.names=F, sep=",", append=TRUE)
+						sum(strtoi(csvFileBC[countLine,11]))*100/sum(strtoi(csvFileAll[countLine,11])),
+						sum(sum(strtoi(csvFileBC[countLine,3]), strtoi(csvFileBC[countLine,5]), strtoi(csvFileBC[countLine,8]), strtoi(csvFileBC[countLine,9]), strtoi(csvFileBC[countLine,10])))*100/sum(sum(strtoi(csvFileAll[countLine,3]),strtoi(csvFileAll[countLine,5]),strtoi(csvFileAll[countLine,8]),strtoi(csvFileAll[countLine,9]), strtoi(csvFileAll[countLine,10])))
+	), ncol=8), file = "BuildConflictsPercentage.csv", row.names=F, col.names=F, sep=",", append=TRUE)
 
 	countLine = countLine + 1
 }

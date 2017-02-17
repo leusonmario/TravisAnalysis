@@ -141,8 +141,8 @@ class GTAnalysis
 					if (verifyBuildConflictByStatementDuplication(baseLeft, leftResult, baseRight, rightResult, conflictCauses.getFilesConflict()[indexValue]) == false)
 						return false
 					end
-				elsif (conflictCause == "updateModifier")
-					if (verifyBuildConflictByUpdateModifier(baseLeft, leftResult, baseRight, rightResult, conflictCauses.getFilesConflict()[indexValue]) == false)
+				elsif (conflictCause == "methodUpdate")
+					if (verifyBuildConflictByMethodUpdate(leftPath, rightPath, conflictCauses.getFilesConflict()[indexValue]) == false)
 						return false
 					end
 				end
@@ -165,8 +165,8 @@ class GTAnalysis
 					if (verifyBuildConflictByStatementDuplication(baseLeft, leftResult, baseRight, rightResult, conflictCauses.getFilesConflict()[indexValue]) == false)
 						return false
 					end
-				elsif (conflictCause == "updateModifier")
-					if (verifyBuildConflictByUpdateModifier(baseLeft, leftResult, baseRight, rightResult, conflictCauses.getFilesConflict()[indexValue]) == false)
+				elsif (conflictCause == "methodUpdate")
+					if (verifyBuildConflictByMethodUpdate(leftPath, rightPath, conflictCauses.getFilesConflict()[indexValue]) == false)
 						return false
 					end
 				end
@@ -177,54 +177,27 @@ class GTAnalysis
 		return false
 	end
 
-	def verifyBuildConflictByUpdateModifier (baseLeft, leftResult, baseRight, rightResult, filesConflicting)
+	def verifyBuildConflictByMethodUpdate (leftPath, rightPath, filesConflicting)
 		count = 0
-		while(count < filesConflicting.size)
-			if (filesConflicting[count].size > 2)
-				if(leftResult[0][filesConflicting[count][0]] != nil and leftResult[0][filesConflicting[count][0]].to_s.match(/(Insert|Update) SimpleName: #{filesConflicting[count][1]}[\(\)0-9]* into MethodInvocation[\(\)0-9]*/) and rightResult[0][filesConflicting[count][2]] != nil and rightResult[0][filesConflicting[count][2]].to_s.match(/Delete SimpleName: #{filesConflicting[count][1]}[\(\)0-9]*/))
-					return true
-				end
+		while (count < filesConflicting.size)
+			leftPathMethods = getParametersListSize(leftPath, filesConflicting[0][2], filesConflicting[0][1])
+			rightPathMethods = getParametersListSize(rightPath, filesConflicting[0][2], filesConflicting[0][1])
 
-				if(rightResult[0][filesConflicting[count][0]] != nil and rightResult[0][filesConflicting[count][0]].to_s.match(/(Insert|Update) SimpleName: #{filesConflicting[count][1]}[\(\)0-9]* into MethodInvocation[\(\)0-9]*/) and leftResult[0][filesConflicting[count][2]] != nil and leftResult[0][filesConflicting[count][2]].to_s.match(/Delete SimpleName: #{filesConflicting[count][1]}[\(\)0-9]*/))
-					return true
-				end
-				
-				baseLeft[1].each do |item|
-					if (item.include?(filesConflicting[count][0].to_s) and leftResult[0][filesConflicting[count][1]] != nil )
-						return true
-					end
-				end
-
-				baseRight[1].each do |item|
-					if (item.include?(filesConflicting[count][0].to_s) and rightResult[0][filesConflicting[count][1]] != nil)
-						return true
-					end
-				end
-			else
-				if(leftResult[0][filesConflicting[count][0]] != nil and leftResult[0][filesConflicting[count][0]].to_s.match(/(Insert|Update) SimpleName: #{filesConflicting[count][1]}[\(\)0-9]* into SimpleType: #{filesConflicting[count][1]}[\(\)0-9]*|(Insert|Update) SimpleType: #{filesConflicting[count][1]}[\(\)0-9]* into VariableDeclarationStatement[\(\)0-9]*/) and rightResult[0][filesConflicting[count][1]] != nil and rightResult[0][filesConflicting[count][1]].to_s.match(/(Insert|Delete) SingleVariableDeclaration[\(\)0-9]* into MethodDeclaration[\(\)0-9]*/))
-					return true
-				end
-
-				if(rightResult[0][filesConflicting[count][0]] != nil and rightResult[0][filesConflicting[count][0]].to_s.match(/(Insert|Update) SimpleName: #{filesConflicting[count][1]}[\(\)0-9]* into SimpleType: #{filesConflicting[count][1]}[\(\)0-9]*|(Insert|Update) SimpleType: #{filesConflicting[count][1]}[\(\)0-9]* into VariableDeclarationStatement[\(\)0-9]*/) and leftResult[0][filesConflicting[count][1]] != nil and leftResult[0][filesConflicting[count][1]].to_s.match(/(Insert|Delete) SingleVariableDeclaration[\(\)0-9]* into MethodDeclaration[\(\)0-9]*/))
-					return true
-				end
-
-				baseLeft[1].each do |item|
-					if (item.include?(filesConflicting[count][0].to_s) and leftResult[0][filesConflicting[count][1]] != nil )
-						return true
-					end
-				end
-
-				baseRight[1].each do |item|
-					if (item.include?(filesConflicting[count][0].to_s) and rightResult[0][filesConflicting[count][1]] != nil)
-						return true
-					end
-				end
+			equalParametersNumber = 0
+			leftPathMethods.each do |leftMethod|
+			    rightPathMethods.each do |rightMethod|
+			        if (leftMethod == rightMethod)
+			            equalParametersNumber += 1
+			        end
+			    end
+			end
+			if (leftPathMethods.size != equalParametersNumber)
+				return false
 			end
 
 			count += 1
 		end
-		return false
+		return true
 	end
 
 	def verifyBuildConflictByStatementDuplication(baseLeft, leftResult, baseRight, rightResult, filesConflicting)
@@ -403,4 +376,47 @@ class GTAnalysis
 		end
 		return result
 	end
+
+	def getParametersListSize(pathBranch, fileName, methodName)
+		actualPath = Dir.pwd
+        Dir.chdir pathBranch
+
+        pathFile = %x(find -name #{fileName+".java"})
+        newPathFile = %x(readlink -f #{pathFile})
+        Dir.chdir getGumTreePath()
+        data = %x(./gumtree parse #{newPathFile})
+        stringJson = JSON.parse(data)
+
+        countMethod = []
+        variableDeclaration = 0
+        indexMethodID = 0
+        stringJson["root"]["children"].each do |child|
+            child["children"].each do |newChild|
+                if (newChild["typeLabel"] == "MethodDeclaration")
+                    aux = false
+                    newChild["children"].each do |methodDeclaration|
+                        if (methodDeclaration["label"] == methodName)
+                            variableDeclaration = true
+                        end
+
+                        if (variableDeclaration == true and methodDeclaration["typeLabel"] == "SingleVariableDeclaration")
+                            if (countMethod[indexMethodID] != nil)
+                                countMethod[indexMethodID] = countMethod[indexMethodID] + 1
+                            else
+                                countMethod[indexMethodID] = 0 + 1
+                            end
+                        end
+
+                        if (variableDeclaration == true and methodDeclaration["typeLabel"] == "Block")
+                            indexMethodID += 1
+                            variableDeclaration = false
+                        end
+                    end
+                end
+            end
+        end
+        Dir.chdir actualPath
+        return countMethod
+    end
+
 end

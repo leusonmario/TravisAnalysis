@@ -212,7 +212,8 @@ class GitProject
 		Dir.chdir getPath
 		begin
 			aux = %x(git checkout #{commit})
-			date = %x(git show -s --format=%ci #{commit})
+			#antes estava %ci
+			date = %x(git show -s --format=%cd #{commit})
 			dateUntil = DateTime.parse(date)
 			dateSince = dateUntil - 15.days
 			log = %x(git log --pretty=format:'%H' --since=#{dateSince.strftime} --until=#{dateUntil.strftime})

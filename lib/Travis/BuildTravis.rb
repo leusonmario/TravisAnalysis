@@ -156,7 +156,7 @@ class BuildTravis
 					totalMSFailed, totalMSCanceled)
 			
 			writeCSVs.writeBuildConflicts(projectName, confErrored.getTotal(), confErrored.getunavailableSymbol(), confErrored.getMalformedExp(), 
-				confErrored.getUpdateModifier(), confErrored.getDuplicateStatement(), confErrored.getDependencyProblem(), confErrored.getUnimplementedMethod(), 
+				confErrored.getMethodUpdate(), confErrored.getDuplicateStatement(), confErrored.getDependencyProblem(), confErrored.getUnimplementedMethod(), 
 				confErrored.getGitProblem(), confErrored.getRemoteError(), confErrored.getCompilerError(), confErrored.getOtherError())
 
 			writeCSVs.writeTestConflicts(projectName, confFailed.getTotal(), confFailed.getFailed(), confFailed.getGitProblem(), confFailed.getRemoteError(), confFailed.getPermission(), 
