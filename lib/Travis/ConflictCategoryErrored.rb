@@ -150,7 +150,7 @@ class ConflictCategoryErrored
 							#	causesFilesConflicts.insertNewCause("updateModifier", [])
 							#end
 						
-							if (body[/\[ERROR\][ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,\(\) ]* (no suitable method found for|cannot be applied to)+ [a-zA-Z0-9\/\-\.\:\[\]\,]*/] || body[/\[ERROR\] [a-zA-Z0-9\/\-\.\:\[\]\, ]* has private access in [a-zA-Z0-9\/\-\.\:\[\]\,]*/] || body[/\[#{stringErro}\][\s\S]*#{stringNoApplied}[\s\S]*(\[#{stringErro}\])?\;/] || body[/\[#{stringErro}\][\s\S]*#{stringUpdate}[\s\S]*\[#{stringInfo}\](.*)?[0-9]/] || body[/\[#{stringErro}\]#{stringCompError}[\s\S]*[.java][\s\S]*#{stringNoConvert}/] || body[/#{stringWrongReturn}/] || body[/#{stringIncompatibleType}/])
+							if (body[/\[ERROR\] \(actual and formal argument lists differ in length\)/] || body[/\[ERROR\][ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,\(\) ]* (no suitable method found for|cannot be applied to)+ [a-zA-Z0-9\/\-\.\:\[\]\,]*/] || body[/\[ERROR\] [a-zA-Z0-9\/\-\.\:\[\]\, ]* has private access in [a-zA-Z0-9\/\-\.\:\[\]\,]*/] || body[/\[#{stringErro}\][\s\S]*#{stringNoApplied}[\s\S]*(\[#{stringErro}\])?\;/] || body[/\[#{stringErro}\][\s\S]*#{stringUpdate}[\s\S]*\[#{stringInfo}\](.*)?[0-9]/] || body[/\[#{stringErro}\]#{stringCompError}[\s\S]*[.java][\s\S]*#{stringNoConvert}/] || body[/#{stringWrongReturn}/] || body[/#{stringIncompatibleType}/])
 								localMethodUpdate = body.scan(/\[ERROR\] [a-zA-Z0-9\/\-\.\:\[\]\, ]* has private access in [a-zA-Z0-9\/\-\.\:\[\]\,]*|\[#{stringErro}\][\s\S]*#{stringNoApplied}[\s\S]*(\[#{stringErro}\])?\;|\[#{stringErro}\][\s\S]*#{stringUpdate}[\s\S]*\[#{stringInfo}\](.*)?[0-9]|\[#{stringErro}\]#{stringCompError}[\s\S]*[.java][\s\S]*#{stringNoConvert}|#{stringWrongReturn}|#{stringIncompatibleType}|\[#{stringErro}\][\s\S]*[#{stringConstructorFound}]?[\s\S]*#{stringDifferArgument}/).size
 								@methodUpdate += localMethodUpdate
 								filesInformation = []
@@ -165,7 +165,7 @@ class ConflictCategoryErrored
 											aux = callClassFiles[count].to_s.match(/\[ERROR\][ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,]*[ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,]*/)[0].split("method").last
 											methodName = aux.split('.').last
 											callClassFile = aux.split('.'+methodName).last.split('.').last
-											filesInformation.push([changedClass, methodName, callClassFile])
+											filesInformation.push([changedClass, methodName, callClassFile, "method"])
 											count += 1
 										end
 									end
@@ -177,7 +177,16 @@ class ConflictCategoryErrored
 										    aux = changedClasses[count].to_s.match(/\[ERROR\][ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,]*[ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,\(\) ]* cannot be applied to/)[0].split("method").last
 										    callClassFile = aux.split('.').last.gsub(' cannot be applied to', '')
 										    methodName = aux.split('] ').last.match(/[a-zA-Z]*/)
-											filesInformation.push([changedClass, methodName, callClassFile])
+											filesInformation.push([changedClass, methodName, callClassFile, "method"])
+											count += 1
+										end
+									end
+									if (body[/\[ERROR\] \(actual and formal argument lists differ in length\)/])
+										changedClasses = body[/BUILD FAILURE[\s\S]*/].to_s.to_enum(:scan, /no suitable constructor found for [a-zA-Z]*/).map { Regexp.last_match }
+										count = 0
+										while (count < changedClasses.size)
+											changedClass = changedClasses[count].to_s.split("no suitable constructor found for ").last
+										   	filesInformation.push([changedClass, changedClass, changedClass, "constructor"])
 											count += 1
 										end
 									end
