@@ -128,17 +128,17 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 									elsif (status == "failed")
 										totalMSFailed += 1
 										isConflict = confBuild.conflictAnalysisCategories(failedConflicts, type, result[0])
-										#writeCSVForkAll.printConflictTest(build, mergeCommit[0].to_s, mergeCommit[1].to_s, confFailedAll.findConflictCause(build), projectNameFile)
+										writeCSVForkAll.printConflictTest(build, mergeCommit[0].to_s, mergeCommit[1].to_s, confFailedAll.findConflictCause(build), projectNameFile)
 
-										#if (commitsBuildsCloser[0] != nil and commitsBuildsCloser[1] != nil and resultCommitsCloser[0] == true)
-										#	if (isConflict)
-										#		writeCSVForkInterval.printConflictTest(build, commitsBuildsCloser[0], commitsBuildsCloser[1], confFailedAll.findConflictCause(build), projectNameFile)
-										#	end
-										#end
+										if (commitsBuildsCloser[0] != nil and commitsBuildsCloser[1] != nil and resultCommitsCloser[0] == true)
+											if (isConflict)
+												writeCSVForkInterval.printConflictTest(build, commitsBuildsCloser[0], commitsBuildsCloser[1], confFailedAll.findConflictCause(build), projectNameFile)
+											end
+										end
 
-										#if (isConflict and result[0] == true) 
-										#	writeCSVBuilt.printConflictTest(build, result[1][0], result[2][0], confFailedBuilt.findConflictCause(build), projectNameFile)
-										#end
+										if (isConflict and result[0] == true) 
+											writeCSVBuilt.printConflictTest(build, result[1][0], result[2][0], confFailedBuilt.findConflictCause(build), projectNameFile)
+										end
 									else
 										totalMSCanceled += 1
 										confBuild.conflictAnalysisCategories(canceledConflicts, type, result[0])

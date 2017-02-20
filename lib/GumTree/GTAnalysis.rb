@@ -131,50 +131,50 @@ class GTAnalysis
 			conflictCauses.getCausesConflict().each do |conflictCause|
 				if(conflictCause == "unimplementedMethod")
 					if (verifyBuildConflictByUnimplementedMethod(baseLeft[0], leftResult[0], baseRight[0], rightResult[0], conflictCauses.getFilesConflict()[indexValue]) == false)
-						return false
+						return false, true
 					end
 				elsif (conflictCause == "unavailableSymbol")
 					if (verifyBuildConflictByUnavailableSymbol(baseLeft, leftResult, baseRight, rightResult, conflictCauses.getFilesConflict()[indexValue], leftPath, rightPath) == false)
-						return false
+						return false, true
 					end
 				elsif (conflictCause == "statementDuplication")
 					if (verifyBuildConflictByStatementDuplication(baseLeft, leftResult, baseRight, rightResult, conflictCauses.getFilesConflict()[indexValue]) == false)
-						return false
+						return false, true
 					end
 				elsif (conflictCause == "methodUpdate")
 					if (verifyBuildConflictByMethodUpdate(leftPath, rightPath, conflictCauses.getFilesConflict()[indexValue]) == false)
-						return false
+						return false, true
 					end
 				end
 				indexValue += 1
 			end
-			return true
+			return true, true
 		else 
 			#IT WAS NOT LOVE (COMMIT WITH MERGE CONFLICTS), IT WAS A PERFECT ILLUSION
 			indexValue = 0
 			conflictCauses.getCausesConflict().each do |conflictCause|
 				if(conflictCause == "unimplementedMethod")
 					if (verifyBuildConflictByUnimplementedMethod(baseLeft[0], leftResult[0], baseRight[0], rightResult[0], conflictCauses.getFilesConflict()[indexValue]) == false)
-						return false	
+						return false, false
 					end
 				elsif (conflictCause == "unavailableSymbol")
 					if (verifyBuildConflictByUnavailableSymbol(baseLeft, leftResult, baseRight, rightResult, conflictCauses.getFilesConflict()[indexValue], leftPath, rightPath) == false)
-						return false
+						return false, false
 					end
 				elsif (conflictCause == "statementDuplication")
 					if (verifyBuildConflictByStatementDuplication(baseLeft, leftResult, baseRight, rightResult, conflictCauses.getFilesConflict()[indexValue]) == false)
-						return false
+						return false, false
 					end
 				elsif (conflictCause == "methodUpdate")
 					if (verifyBuildConflictByMethodUpdate(leftPath, rightPath, conflictCauses.getFilesConflict()[indexValue]) == false)
-						return false
+						return false, false
 					end
 				end
 				indexValue += 1
 			end
-			return true
+			return true, false
 		end
-		return false
+		return false, nil
 	end
 
 	def verifyBuildConflictByMethodUpdate (leftPath, rightPath, filesConflicting)

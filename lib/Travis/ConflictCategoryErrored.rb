@@ -334,13 +334,13 @@ class ConflictCategoryErrored
 		if(localMethodUpdate > 0 || localUnavailableSymbol > 0 || localDuplicateStatement > 0 || localUnimplementedMethod > 0)
 			if(localUnimplementedMethod > 0 or localUnavailableSymbol > 0 or localDuplicateStatement > 0 or localMethodUpdate > 0)
 				if (conflictCauses.getFilesConflict().size < 1)
-					return false
+					return false, nil
 				else
 					return gtAnalysis.getGumTreeAnalysis(pathProject, build, conflictCauses)
 				end
 			end
-			return false
+			return false, nil
 		end
-		return false
+		return false, nil
 	end
 end
