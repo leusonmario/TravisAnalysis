@@ -2,15 +2,24 @@ rAnalysisPath = getwd()
 setwd("..")
 rootPathProject = getwd()
 
+frequencyBuildConflicts = c()
+frequencyConflictingContributions = c()
+
+library(beanplot)
+
 allErroredBuilds = "AllErroredBuilds"
 dir.create(file.path(rAnalysisPath, allErroredBuilds), showWarnings = FALSE)
 mergeScenariosBuilds = "MergeScenariosBuilds"
 dir.create(file.path(rAnalysisPath, mergeScenariosBuilds), showWarnings = FALSE)
+frequencyAnalysis = "FrequencyAnalysis"
+dir.create(file.path(rAnalysisPath, frequencyAnalysis), showWarnings = FALSE)
 
 setwd(file.path(rAnalysisPath, allErroredBuilds))
 allErroredBuildsPath = getwd()
 setwd(file.path(rAnalysisPath, mergeScenariosBuilds))
 mergeScenariosBuildsPath = getwd()
+setwd(file.path(rAnalysisPath, frequencyAnalysis))
+frequencyAnalysisPath = getwd()
 
 foldersMergeScenarios = c("BuiltMergeScenarios", "AllMergeScenarios", "IntervalMergeScenarios")
 dir.create(file.path(mergeScenariosBuildsPath, foldersMergeScenarios[1]), showWarnings = FALSE)
@@ -30,7 +39,7 @@ dir.create(file.path(allErroredBuildsPath, allErrored), showWarnings = FALSE)
 
 setwd(file.path(rAnalysisPath))
 
-setwd(file.path(rootPathProject, "FinalResults/AllErroredBuilds/ErroredCases"))
+setwd(file.path(rootPathProject, "FinalResults/AllErroredBuilds/ErroredCases/AllBuilds"))
 listFiles = list.files(path = ".", pattern = "*.csv", all.files = FALSE, full.names = FALSE, recursive = FALSE)
 infoCSVFile = matrix(c("ProjectName", "gitProblem", "unavailableSymbol", "compilerError", "methodUpdate", "", "remoteError", "malformedExpression", "unimplementedMethod", "statementDuplication", "dependencyProblem"), ncol=11)
 setwd(file.path(allErroredBuildsPath, "AllErroredAnalysis"))
@@ -38,7 +47,7 @@ unlink("AllBuildErroredAnalysis.csv", recursive = FALSE, force = FALSE)
 write.table(infoCSVFile, file = "AllBuildErroredAnalysis.csv", col.names=F, row.names=F, append=TRUE, sep=",")
 indexFiles = 1
 while(indexFiles <= length(listFiles)){
-	setwd(file.path(rootPathProject, "FinalResults/AllErroredBuilds/ErroredCases"))
+	setwd(file.path(rootPathProject, "FinalResults/AllErroredBuilds/ErroredCases/AllBuilds"))
 	projectInfo = read.csv(listFiles[indexFiles], header=T)
 	index = 2
 	total = length(projectInfo[projectInfo$Message,]$BuildID)
@@ -79,27 +88,88 @@ Another = allErroredAnalysis[,6]
 Compilation = allErroredAnalysis[,3] + allErroredAnalysis[,5] + allErroredAnalysis[,8] + allErroredAnalysis[,9] + allErroredAnalysis[,10] + allErroredAnalysis[,10]
 Environment = allErroredAnalysis[,2] + allErroredAnalysis[,4]
 
-png(paste("beanplot-individual-cases.png", sep=""), width=1200, height=650)
-bplotIndividual = cbind(GitProblem, UnavSymbol, MethodUpdate, Malformed, Unimplemented, CompilerError, Dependency, StatDuplication, Remote, Another)
-boxplot(bplotIndividual, col="gray")
+png(paste("beanplot-individual-cases-all-builds.png", sep=""), width=800, height=650)
+#bplotIndividual = cbind(GitProblem, UnavSymbol, MethodUpdate, Malformed, Unimplemented, CompilerError, Dependency, StatDuplication, Remote, Another)
+beanplot(UnavSymbol, MethodUpdate, Unimplemented, StatDuplication, col="gray", names=c("Unavailable Symbol", "Method Update", "Unimplemented Method", "Statement Duplication"), xlab="Causes", ylab="Percentage(%)")
 dev.off()
 
-png(paste("beanplot-general-cases.png", sep=""), width=400, height=550)
-bplotGeneral = cbind(Compilation, Environment, Remote)
-boxplot(bplotGeneral, col="gray")
+png(paste("beanplot-general-cases-all-builds.png", sep=""), width=500, height=450)
+#bplotGeneral = cbind(Compilation, Environment, Remote)
+beanplot(Compilation, Environment, Remote, Another, col="gray", names=c("Compilation", "Environment", "Remote", "Another"), xlab="Causes", ylab="Percentage(%)")
 dev.off()
 
 meanInfo = c("Mean", allErroredGitProblem, allErroredUnavailableSymbol, allErroredCompilerError, allErroredMethodUpdate, allErroredAnother, allErroredRemote, allErroredMalformed, allErroredUnimplemented, allErroredDuplication, allErroredDependency)
 write.table(matrix(c(meanInfo), ncol=11), file = "AllBuildErroredAnalysis.csv", row.names=F, col.names=F, sep=",", append=TRUE)
+
+setwd(file.path(rAnalysisPath))
+
+setwd(file.path(rootPathProject, "FinalResults/AllErroredBuilds/ErroredCases/PullRequests"))
+listFiles = list.files(path = ".", pattern = "*.csv", all.files = FALSE, full.names = FALSE, recursive = FALSE)
+infoCSVFile = matrix(c("ProjectName", "gitProblem", "unavailableSymbol", "compilerError", "methodUpdate", "", "remoteError", "malformedExpression", "unimplementedMethod", "statementDuplication", "dependencyProblem"), ncol=11)
+setwd(file.path(allErroredBuildsPath, "AllErroredAnalysis"))
+unlink("AllBuildErroredAnalysisPullRequests.csv", recursive = FALSE, force = FALSE)
+write.table(infoCSVFile, file = "AllBuildErroredAnalysisPullRequests.csv", col.names=F, row.names=F, append=TRUE, sep=",")
+indexFiles = 1
+while(indexFiles <= length(listFiles)){
+	setwd(file.path(rootPathProject, "FinalResults/AllErroredBuilds/ErroredCases/PullRequests"))
+	projectInfo = read.csv(listFiles[indexFiles], header=T)
+	index = 2
+	total = length(projectInfo[projectInfo$Message,]$BuildID)
+	projectName = strsplit(strsplit(listFiles[indexFiles], "Errored")[[1]], ".csv")[[2]][1]
+	relatedValue = cbind(projectName)
+	while(index <= length(infoCSVFile)) {
+		relatedValue = c(relatedValue, length(projectInfo[projectInfo$Message==infoCSVFile[index],]$BuildID)*100/total)
+		index = index + 1; 
+	}
+	indexFiles = indexFiles + 1
+	setwd(file.path(allErroredBuildsPath, "AllErroredAnalysis"))
+	write.table(matrix(c(relatedValue), ncol=11), file = "AllBuildErroredAnalysisPullRequests.csv", row.names=F, col.names=F, sep=",", append=TRUE)
+}
+setwd(file.path(allErroredBuildsPath, "AllErroredAnalysis"))
+allErroredAnalysis = read.csv("AllBuildErroredAnalysisPullRequests.csv", header=T)
+allErroredGitProblem = mean(allErroredAnalysis$gitProblem)
+allErroredUnavailableSymbol = mean(allErroredAnalysis$unavailableSymbol)
+allErroredCompilerError = mean(allErroredAnalysis$compilerError)
+allErroredMethodUpdate = mean(allErroredAnalysis$methodUpdate)
+allErroredAnother = mean(allErroredAnalysis$X)
+allErroredRemote = mean(allErroredAnalysis$remoteError)
+allErroredMalformed = mean(allErroredAnalysis$malformedExpression)
+allErroredDependency = mean(allErroredAnalysis$dependencyProblem)
+allErroredDuplication = mean(allErroredAnalysis$statementDuplication)
+allErroredUnimplemented = mean(allErroredAnalysis$unimplementedMethod)
+
+GitProblem = allErroredAnalysis[,2]
+UnavSymbol = allErroredAnalysis[,3]
+CompilerError = allErroredAnalysis[,4]
+MethodUpdate = allErroredAnalysis[,5]
+Remote = allErroredAnalysis[,7]
+Malformed = allErroredAnalysis[,8]
+Unimplemented = allErroredAnalysis[,9]
+StatDuplication = allErroredAnalysis[,10]
+Dependency = allErroredAnalysis[,11]
+Another = allErroredAnalysis[,6]
+
+Compilation = allErroredAnalysis[,3] + allErroredAnalysis[,5] + allErroredAnalysis[,8] + allErroredAnalysis[,9] + allErroredAnalysis[,10] + allErroredAnalysis[,10]
+Environment = allErroredAnalysis[,2] + allErroredAnalysis[,4]
+
+png(paste("beanplot-individual-cases-pull-requests.png", sep=""), width=800, height=650)
+#bplotIndividual = cbind(GitProblem, UnavSymbol, MethodUpdate, Malformed, Unimplemented, CompilerError, Dependency, StatDuplication, Remote, Another)
+beanplot(UnavSymbol, MethodUpdate, Unimplemented, StatDuplication, col="gray", names=c("Unavailable Symbol", "Method Update", "Unimplemented Method", "Statement Duplication"), xlab="Causes", ylab="Percentage(%)")
+dev.off()
+
+png(paste("beanplot-general-cases-pull-requests.png", sep=""), width=500, height=450)
+#bplotGeneral = cbind(Compilation, Environment, Remote)
+beanplot(Compilation, Environment, Remote, Another, col="gray", names=c("Compilation", "Environment", "Remote", "Another"), xlab="Causes", ylab="Percentage(%)")
+dev.off()
+
+meanInfo = c("Mean", allErroredGitProblem, allErroredUnavailableSymbol, allErroredCompilerError, allErroredMethodUpdate, allErroredAnother, allErroredRemote, allErroredMalformed, allErroredUnimplemented, allErroredDuplication, allErroredDependency)
+write.table(matrix(c(meanInfo), ncol=11), file = "AllBuildErroredAnalysisPullRequests.csv", row.names=F, col.names=F, sep=",", append=TRUE)
 
 library(beanplot)
 mainDir = getwd()
 
 count = 1
 while (count <= length(pathFoldersMergeScenarios)){
-
-	
-
 	setwd(rootPathProject)
 	pathCausesFailed = c(rootPathProject, paste("/FinalResults/MergeScenarios",foldersMergeScenarios[count],"ConflictsCauses/TestConflictsCauses.csv", sep="/"))
 	causesFailedBuilds = read.csv(paste(pathCausesFailed, collapse=""), header=T)
@@ -195,11 +265,11 @@ while (count <= length(pathFoldersMergeScenarios)){
 		sink()
 
 		png(paste("beanplot-broken-build.png", sep=""), width=300, height=350)
-		beanplot(averagePushesErrored+averagePushesFailed, col="gray")
+		beanplot(averagePushesErrored+averagePushesFailed, col="gray", ylab="Percentage(%)")
 		dev.off()
 
 		png(paste("beanplot-broken-pull-request.png", sep=""), width=300, height=350)
-		beanplot(averagePRErrored+averagePRFailed, col="gray")
+		beanplot(averagePRErrored+averagePRFailed, col="gray", ylab="Percentage(%)")
 		dev.off()
 
 		png(paste("broken-build.png", sep=""), width=425, height=350)
@@ -269,11 +339,11 @@ while (count <= length(pathFoldersMergeScenarios)){
 		sink()
 
 		png(paste("beanplot-errored-build.png", sep=""), width=300, height=350)
-		beanplot(averagePushesErrored, col="gray")
+		beanplot(averagePushesErrored, col="gray", ylab="Percentage(%)")
 		dev.off()
 
 		png(paste("beanplot-errored-pull-request.png", sep=""), width=300, height=350)
-		beanplot(averagePRErrored, col="gray")
+		beanplot(averagePRErrored, col="gray", ylab="Percentage(%)")
 		dev.off()
 
 		png(paste("errored-build.png", sep=""), width=425, height=350)
@@ -343,11 +413,11 @@ while (count <= length(pathFoldersMergeScenarios)){
 		sink()
 
 		png(paste("beanplot-failed-build.png", sep=""), width=300, height=350)
-		beanplot(averagePushesFailed, col="gray")
+		beanplot(averagePushesFailed, col="gray", ylab="Percentage(%)")
 		dev.off()
 
 		png(paste("beanplot-failed-pull-request.png", sep=""), width=300, height=350)
-		beanplot(averagePRFailed, col="gray")
+		beanplot(averagePRFailed, col="gray", ylab="Percentage(%)")
 		dev.off()
 
 		png(paste("failed-build.png", sep=""), width=425, height=350)
@@ -404,7 +474,7 @@ while (count <= length(pathFoldersMergeScenarios)){
 		sink()
 
 		png(paste("beanplot-merge-scenario.png", sep=""), width=300, height=350)
-		beanplot(averageMergeScenarios, col="gray")
+		beanplot(averageMergeScenarios, col="gray", ylab="Percentage(%)")
 		dev.off()
 
 		png(paste("merge-scenario.png", sep=""), width=425, height=350)
@@ -415,7 +485,7 @@ while (count <= length(pathFoldersMergeScenarios)){
 		dev.off()
 
 		png(paste("beanplot-merge-scenario-valid.png", sep=""), width=300, height=350)
-		beanplot(averageMergeScenariosValid, col="gray")
+		beanplot(averageMergeScenariosValid, col="gray", ylab="Percentage(%)")
 		dev.off()
 
 		png(paste("merge-scenario-valid.png", sep=""), width=425, height=350)
@@ -436,9 +506,12 @@ while (count <= length(pathFoldersMergeScenarios)){
 
 	#Average
 	averageMergeScenariosErrored = mergeScenarios$PushesErrored*100/(totalMergeScenarios$TotalMS-totalMergeScenarios$TotalMSNoBuilt)
+	#averageMergeScenariosErrored = mergeScenarios$PushesErrored*100/(totalMergeScenarios$ValidBuilds)
 	averageMergeScenariosErroredPerc = mean(averageMergeScenariosErrored, na=TRUE)
 	#Aggregated
+	
 	AggregatedMergeScenariosErrored = sum(mergeScenarios$PushesErrored)*100/sum(totalMergeScenarios$TotalMS-totalMergeScenarios$TotalMSNoBuilt)
+	#AggregatedMergeScenariosErrored = sum(mergeScenarios$PushesErrored)*100/sum(totalMergeScenarios$ValidBuilds)
 
 	#Changes Distributions on modified Files
 
@@ -452,6 +525,16 @@ while (count <= length(pathFoldersMergeScenarios)){
 	averageErroredPushSourceAllPerc = mean(erroredPushSourceAll, na=TRUE)
 	averageErroredPushAllTogetherPerc = mean(erroredPushAllTogether, na=TRUE)
 
+	#png(paste("beanplot-errored-build-frequency-ms.png", sep=""), width=300, height=350)
+	#beanplot(averageMergeScenariosErrored, col="gray", ylab="Percentage(%)")
+	#dev.off()
+
+	png(paste("errored-build-frequency-ms.png", sep=""), width=425, height=350)
+	mydataMergeScenario <- data.frame(row.names =c("Aggregated", "Average"), NotErrored =c(100-AggregatedMergeScenariosErrored, 100-averageMergeScenariosErroredPerc), Errored =c(AggregatedMergeScenariosErrored, averageMergeScenariosErroredPerc))
+	x <- barplot(t(as.matrix(mydataMergeScenario)), col=c("gray", "red"), legend=TRUE, border=NA, xlim=c(0,4), args.legend=list(bty="n", border=NA), ylab="% Percentage")
+	text(x, mydataMergeScenario$NotErrored-8, labels=round(mydataMergeScenario$NotErrored), col="black")
+	text(x, mydataMergeScenario$NotErrored+10, labels=round(mydataMergeScenario$Errored))
+	dev.off()
 	#Txt File with the informations about the RQ5
 	sink("rq5.txt")
 	cat("How frequently are Errored Builds resulting from Built Merge Scenarios?")
@@ -763,9 +846,15 @@ while (count <= length(pathFoldersMergeScenarios)){
 	setwd(file.path(pathFoldersMergeScenarios[count], rq11))
 	unlink("AllBuiltMergeAnalysis.csv", recursive = FALSE, force = FALSE)
 	unlink("BuildConflictsAnalysis.csv", recursive = FALSE, force = FALSE)
+	unlink("ConflictingContributionAnalysis.csv", recursive = FALSE, force = FALSE)
+	unlink("FrequencyBuildsContributionsConflict.csv", recursive = FALSE, force = FALSE)
 	infoCSVFile = matrix(c("ProjectName", "gitProblem", "unavailableSymbol", "compilerError", "methodUpdate", "AnotherError", "remoteError", "malformedExpression", "unimplementedMethod", "statementDuplication", "dependencyProblem"), ncol=11)
 	write.table(infoCSVFile, file = "AllBuiltMergeAnalysis.csv", col.names=F, row.names=F, append=TRUE, sep=",")
 	write.table(infoCSVFile, file = "BuildConflictsAnalysis.csv", col.names=F, row.names=F, append=TRUE, sep=",")
+	write.table(infoCSVFile, file = "ConflictingContributionAnalysis.csv", col.names=F, row.names=F, append=TRUE, sep=",")
+	infoFrequency = matrix(c("ProjectName", "BuildConflict", "ContributionConflicting"), ncol=3)
+	write.table(infoFrequency, file = "FrequencyBuildsContributionsConflict.csv", col.names=F, row.names=F, append=TRUE, sep=",")
+	
 	indexFiles = 1
 	while(indexFiles <= length(listFiles)){
 		setwd(file.path(rootPathProject, paste("FinalResults/MergeScenarios",foldersMergeScenarios[count],"ErroredCases", sep="/")))
@@ -773,6 +862,7 @@ while (count <= length(pathFoldersMergeScenarios)){
 		projectName = strsplit(strsplit(listFiles[indexFiles], "Errored")[[1]], ".csv")[[2]][1]
 		infoValues = matrix(c("gitProblem", 0, "unavailableSymbol", 0, "compilerError", 0, "methodUpdate", 0, " ", 0, "remoteError", 0, "malformedExpression", 0, "unimplementedMethod", 0, "statementDuplication", 0, "dependencyProblem", 0), ncol=10, nrow=2)
 		buildConflicts = matrix(c("gitProblem", 0, "unavailableSymbol", 0, "compilerError", 0, "methodUpdate", 0, " ", 0, "remoteError", 0, "malformedExpression", 0, "unimplementedMethod", 0, "statementDuplication", 0, "dependencyProblem", 0), ncol=10, nrow=2)
+		conflictingContribution = matrix(c("gitProblem", 0, "unavailableSymbol", 0, "compilerError", 0, "methodUpdate", 0, " ", 0, "remoteError", 0, "malformedExpression", 0, "unimplementedMethod", 0, "statementDuplication", 0, "dependencyProblem", 0), ncol=10, nrow=2)
 		countLines = 1
 		numberLines = length(projectInfo[projectInfo$MessageState])
 		while (countLines <= numberLines){
@@ -796,7 +886,12 @@ while (count <= length(pathFoldersMergeScenarios)){
 					if (matchLine[countMatchLine] == TRUE){
 						infoValues[countMessage+2] = strtoi(infoValues[countMessage+2]) + 1
 						if (projectInfo$BuildConflict[countLines] == "true"){
-							buildConflicts[countMessage+2] = strtoi(buildConflicts[countMessage+2]) + 1
+							if (projectInfo$AllColaborationsIntgrated[countLines] == "true"){
+								buildConflicts[countMessage+2] = strtoi(buildConflicts[countMessage+2]) + 1
+							}else{
+								conflictingContribution[countMessage+2] = strtoi(buildConflicts[countMessage+2]) + 1
+							}
+							
 						}
 					}
 					countMatchLine = countMatchLine + 1
@@ -809,42 +904,67 @@ while (count <= length(pathFoldersMergeScenarios)){
 		setwd(file.path(pathFoldersMergeScenarios[count], rq11))
 		write.table(matrix(c(projectName, infoValues[2,]), ncol=11), file = "AllBuiltMergeAnalysis.csv", row.names=F, col.names=F, sep=",", append=TRUE)
 		write.table(matrix(c(projectName, buildConflicts[2,]), ncol=11), file = "BuildConflictsAnalysis.csv", row.names=F, col.names=F, sep=",", append=TRUE)
+		write.table(matrix(c(projectName, conflictingContribution[2,]), ncol=11), file = "ConflictingContributionAnalysis.csv", row.names=F, col.names=F, sep=",", append=TRUE)
+		write.table(matrix(c(projectName, sum(strtoi(buildConflicts[2,]))*100/sum(strtoi(infoValues[2,])), sum(strtoi(conflictingContribution[2,]))*100/sum(strtoi(infoValues[2,]))), ncol=3), file = "FrequencyBuildsContributionsConflict.csv", row.names=F, col.names=F, sep=",", append=TRUE)
 		indexFiles = indexFiles + 1
 	}
 
 	setwd(file.path(pathFoldersMergeScenarios[count], rq11))
-	allErroredAnalysis = read.csv("AllBuiltMergeAnalysis.csv", header=T)
-	allErroredGitProblem = mean(allErroredAnalysis$gitProblem)
-	allErroredUnavailableSymbol = mean(allErroredAnalysis$unavailableSymbol)
-	allErroredCompilerError = mean(allErroredAnalysis$compilerError)
-	allErroredMethodUpdate = mean(allErroredAnalysis$methodUpdate)
-	allErroredAnother = mean(allErroredAnalysis$AnotherError)
-	allErroredRemote = mean(allErroredAnalysis$remoteError)
-	allErroredMalformed = mean(allErroredAnalysis$malformedExpression)
-	allErroredUnimplemented = mean(allErroredAnalysis$unimplementedMethod)
+	frequencyBCC = read.csv("FrequencyBuildsContributionsConflict.csv", header=T)
 
-	GitProblem = allErroredAnalysis[,2]
-	UnavSymbol = allErroredAnalysis[,3]
-	CompilerError = allErroredAnalysis[,4]
-	MethodUpdate = allErroredAnalysis[,5]
-	Remote = allErroredAnalysis[,7]
-	Malformed = allErroredAnalysis[,8]
-	Unimplemented = allErroredAnalysis[,9]
-	StatDuplication = allErroredAnalysis[,10]
-	Another = allErroredAnalysis[,6]
+	#png(paste("frequency-build-conflicts", foldersMergeScenarios[count], ".png", sep="-"), width=400, height=550)
+	#boxplot(frequencyBCC$BuildConflict, col="gray", ylab="Percentage(%)", xlab=foldersMergeScenarios[count])
+	#dev.off()
+	frequencyBuildConflicts = cbind(frequencyBuildConflicts, frequencyBCC$BuildConflict)
+	#png(paste("frequency-conflicting-contribution", foldersMergeScenarios[count], ".png", sep="-"), width=400, height=550)
+	#boxplot(frequencyBCC$ContributionConflicting, col="gray", ylab="Percentage(%)", xlab=foldersMergeScenarios[count])
+	#dev.off()
+	frequencyConflictingContributions = cbind(frequencyConflictingContributions, frequencyBCC$BuildConflict)
 
-	Compilation = allErroredAnalysis[,3] + allErroredAnalysis[,5] + allErroredAnalysis[,8] + allErroredAnalysis[,9] + allErroredAnalysis[,10]
-	Environment = allErroredAnalysis[,2] + allErroredAnalysis[,4]
+	filesConflicts = c("ErroredCases/BuildConflictsAnalysis.csv", "ErroredCases/ConflictingContributionAnalysis.csv")
+	namesConflictingPics = c("build-conflicts", "conflicting-contributions")
+	countFilesConflicting = 1
+	while (countFilesConflicting <= length(filesConflicts)){
+		setwd(file.path(pathFoldersMergeScenarios[count], rq11))
+		pathFileConflicting = c(pathFoldersMergeScenarios[count], paste("",filesConflicts[countFilesConflicting], sep="/"))
+		allErroredAnalysis = read.csv(paste(pathFileConflicting, collapse=""), header=T)
 
-	png(paste("beanplot-individual-cases.png", sep=""), width=1200, height=650)
-	bplotIndividual = cbind(GitProblem, UnavSymbol, CompilerError, MethodUpdate, Remote, Malformed, Unimplemented, StatDuplication, Another)
-	boxplot(bplotIndividual, col="gray")
-	dev.off()
+		allErroredGitProblem = mean(allErroredAnalysis$gitProblem)
+		allErroredUnavailableSymbol = mean(allErroredAnalysis$unavailableSymbol)
+		allErroredCompilerError = mean(allErroredAnalysis$compilerError)
+		allErroredMethodUpdate = mean(allErroredAnalysis$methodUpdate)
+		allErroredAnother = mean(allErroredAnalysis$AnotherError)
+		allErroredRemote = mean(allErroredAnalysis$remoteError)
+		allErroredMalformed = mean(allErroredAnalysis$malformedExpression)
+		allErroredUnimplemented = mean(allErroredAnalysis$unimplementedMethod)
 
-	png(paste("beanplot-general-cases.png", sep=""), width=400, height=550)
-	bplotGeneral = cbind(Compilation, Environment, Remote)
-	boxplot(bplotGeneral, col="gray")
-	dev.off()
+		GitProblem = allErroredAnalysis[,2]
+		UnavSymbol = allErroredAnalysis[,3]
+		CompilerError = allErroredAnalysis[,4]
+		MethodUpdate = allErroredAnalysis[,5]
+		Remote = allErroredAnalysis[,7]
+		Malformed = allErroredAnalysis[,8]
+		Unimplemented = allErroredAnalysis[,9]
+		StatDuplication = allErroredAnalysis[,10]
+		Another = allErroredAnalysis[,6]
+
+		Compilation = allErroredAnalysis[,3] + allErroredAnalysis[,5] + allErroredAnalysis[,8] + allErroredAnalysis[,9] + allErroredAnalysis[,10]
+		Environment = allErroredAnalysis[,2] + allErroredAnalysis[,4]
+
+		png(paste("beanplot-individual-cases", namesConflictingPics[countFilesConflicting],".png", sep="-"), width=1200, height=650)
+		#beanplot(UnavSymbol, MethodUpdate, Unimplemented, StatDuplication, names=c("Unavailable Symbol", "Method Update", "Unimplemented Method", "Statement Duplication"), col="gray", ylab="Percentage(%)")
+		bplotIndividual = cbind(UnavSymbol, MethodUpdate, Unimplemented, StatDuplication)
+		boxplot(bplotIndividual, col="gray", ylab="Number of Occurences", xlab=c(paste("Causes", foldersMergeScenarios[count], sep=" - ")), names=c("Unavailable Symbol", "Method Update", "Unimplemented Method", "Statement Duplication"))
+		dev.off()
+
+		png(paste("beanplot-general-cases", namesConflictingPics[countFilesConflicting], ".png", sep="-"), width=400, height=550, title="Teste")
+		#beanplot(Compilation, Environment, Remote, Another, names=c("Compilation", "Environment", "Remote", "Another"), col="gray", ylab="Percentage(%)")
+		bplotGeneral = cbind(Compilation, Environment, Remote, Another)
+		boxplot(bplotGeneral, col="gray", ylab="Number of Occurences", xlab=c(paste("Causes", foldersMergeScenarios[count], sep=" - ")), names=c("Compilation", "Environment", "Remote", "Another"))
+		dev.off()
+
+		countFilesConflicting = countFilesConflicting + 1
+	}
 
 	setwd(file.path(pathFoldersMergeScenarios[count], rq11))
 	csvFileAll = read.csv("AllBuiltMergeAnalysis.csv", header=T)
@@ -870,3 +990,13 @@ while (count <= length(pathFoldersMergeScenarios)){
 
 	count = count + 1
 }
+
+setwd(file.path(rAnalysisPath, frequencyAnalysis))
+png(paste("frequency-build-conflicts-BC.png", sep="-"), width=600, height=550)
+boxplot(frequencyBuildConflicts, col="gray", ylab="Percentage(%)", xlab=foldersMergeScenarios[count], names=c("BuiltMergeScenarios", "AllMergeScenarios", "IntervalMergeScenarios"))
+dev.off()
+
+png(paste("frequency-conflicting-contribution-CC.png", sep="-"), width=600, height=550)
+boxplot(frequencyConflictingContributions, col="gray", ylab="Percentage(%)", xlab=foldersMergeScenarios[count], names=c("BuiltMergeScenarios", "AllMergeScenarios", "IntervalMergeScenarios"))
+dev.off()
+

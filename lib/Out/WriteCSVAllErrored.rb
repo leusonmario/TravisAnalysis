@@ -12,8 +12,12 @@ class WriteCSVAllErrored
 		creatingResultsDirectories(actualPath)
 	end
 
-	def getPathErroredCases()
-		@pathErroredCases
+	def getPathErroredCasesBuilds()
+		@pathErroredCasesBuilds
+	end
+
+	def getPathErroredCasesPullRequests()
+		@pathErroredCasesPullRequests
 	end
 
 	def getPathFailedCases()
@@ -27,14 +31,18 @@ class WriteCSVAllErrored
 	def creatingResultsDirectories(actualPath)
 		Dir.chdir actualPath
 		FileUtils::mkdir_p 'ErroredCauses'
-		FileUtils::mkdir_p 'ErroredCases'
+		FileUtils::mkdir_p 'ErroredCases/AllBuilds'
+		FileUtils::mkdir_p 'ErroredCases/PullRequests'
 		FileUtils::mkdir_p 'FailedCases'
 		
 		Dir.chdir "ErroredCauses"
 		@pathErroredCauses = Dir.pwd
 		Dir.chdir actualPath
-		Dir.chdir "ErroredCases"
-		@pathErroredCases = Dir.pwd
+		Dir.chdir "ErroredCases/AllBuilds"
+		@pathErroredCasesBuilds = Dir.pwd
+		Dir.chdir actualPath
+		Dir.chdir "ErroredCases/PullRequests"
+		@pathErroredCasesPullRequests = Dir.pwd
 		Dir.chdir actualPath
 		Dir.chdir "FailedCases"
 		@pathFailedCases = Dir.pwd
@@ -58,7 +66,7 @@ class WriteCSVAllErrored
  	end
 
  	def printErroredBuild(projectName, build, cause)
-		Dir.chdir getPathErroredCases()
+		Dir.chdir getPathErroredCasesBuilds()
 		if (File.exists?("Errored"+projectName+".csv"))
 			CSV.open("Errored"+projectName+".csv", "a+") do |csv|
 				csv << [build.id, cause]
@@ -70,6 +78,20 @@ class WriteCSVAllErrored
 			end			
 		end
 	end
+
+	def printErroredBuildPull(projectName, build, cause)
+		Dir.chdir getPathErroredCasesPullRequests()
+		if (File.exists?("Errored"+projectName+"Pull.csv"))
+			CSV.open("Errored"+projectName+"Pull.csv", "a+") do |csv|
+				csv << [build.id, cause]
+			end
+		else
+			CSV.open("Errored"+projectName+"Pull.csv", "w") do |csv|
+				csv << ["BuildID", "Message"]
+				csv << [build.id, cause]
+			end			
+		end
+	end	
 
 	def printFailedBuild(projectName, build, cause)
 		Dir.chdir getPathFailedCases()

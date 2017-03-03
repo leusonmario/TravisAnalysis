@@ -41,6 +41,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 		
 		confBuild = ConflictBuild.new(@pathProject)
 		confAllErrored = ConflictCategoryErroredAll.new()
+		confAllErroredPull = ConflictCategoryErroredAll.new()
 		confErroredForkBuilt = ConflictCategoryErrored.new()
 		confForkIntervalErrored = ConflictCategoryErrored.new()
 		confForkAllErrored = ConflictCategoryErrored.new()
@@ -64,6 +65,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 						if (status == "passed")
 							buildPullPassed += 1
 						elsif (status == "errored")
+							writeCSVAllBuilds.printErroredBuildPull(projectName.split("/").last, build, confAllErroredPull.findConflictCause(build, getPathProject())[0])
 							buildPullErrored += 1
 						elsif (status == "failed")
 							buildPullFailed += 1
@@ -163,6 +165,8 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 			writeCSVBuilt.writeTestConflicts(projectName, confFailedBuilt.getTotal(), confFailedBuilt.getFailed(), confFailedBuilt.getGitProblem(), confFailedBuilt.getRemoteError(), confFailedBuilt.getPermission(), 
 				confFailedBuilt.getOtherError())
 
+			#Add chamada aqui para criacao dos arquivos de conflictAnalysis de all and interval filters
+			# Para tanto instanciar objetos de ConflictsAnalysis para tais filtros
 			writeCSVBuilt.writeConflictsAnalysisFinal(projectName, @projectMergeScenarios.size, @projectMergeScenarios.size - builtMergeScenarios.size, totalRepeatedBuilds, totalPushesNoBuilt, totalPushes, 
 							passedConflicts.getTotalPushes, passedConflicts.getTotalTravis, passedConflicts.getTotalTravisConf, passedConflicts.getTotalConfig, 
 							passedConflicts.getTotalConfigConf, passedConflicts.getTotalSource, passedConflicts.getTotalSourceConf, passedConflicts.getTotalAll, 
