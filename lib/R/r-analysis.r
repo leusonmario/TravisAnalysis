@@ -864,7 +864,7 @@ while (count <= length(pathFoldersMergeScenarios)){
 		buildConflicts = matrix(c("gitProblem", 0, "unavailableSymbol", 0, "compilerError", 0, "methodUpdate", 0, " ", 0, "remoteError", 0, "malformedExpression", 0, "unimplementedMethod", 0, "statementDuplication", 0, "dependencyProblem", 0), ncol=10, nrow=2)
 		conflictingContribution = matrix(c("gitProblem", 0, "unavailableSymbol", 0, "compilerError", 0, "methodUpdate", 0, " ", 0, "remoteError", 0, "malformedExpression", 0, "unimplementedMethod", 0, "statementDuplication", 0, "dependencyProblem", 0), ncol=10, nrow=2)
 		countLines = 1
-		numberLines = length(projectInfo[projectInfo$MessageState])
+		numberLines = length(projectInfo$MessageState)
 		while (countLines <= numberLines){
 			countMessage = 0
 			while ((countMessage/2)+1 <= length(infoValues[1,])){
@@ -889,7 +889,7 @@ while (count <= length(pathFoldersMergeScenarios)){
 							if (projectInfo$AllColaborationsIntgrated[countLines] == "true"){
 								buildConflicts[countMessage+2] = strtoi(buildConflicts[countMessage+2]) + 1
 							}else{
-								conflictingContribution[countMessage+2] = strtoi(buildConflicts[countMessage+2]) + 1
+								conflictingContribution[countMessage+2] = strtoi(conflictingContribution[countMessage+2]) + 1
 							}
 							
 						}
@@ -919,7 +919,7 @@ while (count <= length(pathFoldersMergeScenarios)){
 	#png(paste("frequency-conflicting-contribution", foldersMergeScenarios[count], ".png", sep="-"), width=400, height=550)
 	#boxplot(frequencyBCC$ContributionConflicting, col="gray", ylab="Percentage(%)", xlab=foldersMergeScenarios[count])
 	#dev.off()
-	frequencyConflictingContributions = cbind(frequencyConflictingContributions, frequencyBCC$BuildConflict)
+	frequencyConflictingContributions = cbind(frequencyConflictingContributions, frequencyBCC$ContributionConflicting)
 
 	filesConflicts = c("ErroredCases/BuildConflictsAnalysis.csv", "ErroredCases/ConflictingContributionAnalysis.csv")
 	namesConflictingPics = c("build-conflicts", "conflicting-contributions")
