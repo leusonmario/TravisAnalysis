@@ -4,8 +4,11 @@ rootPathProject = getwd()
 
 frequencyBuildConflicts = c()
 frequencyConflictingContributions = c()
+csvFileCCPercent = ""
+csvFileBCPercent = ""
 
 library(beanplot)
+library(vioplot)
 
 allErroredBuilds = "AllErroredBuilds"
 dir.create(file.path(rAnalysisPath, allErroredBuilds), showWarnings = FALSE)
@@ -154,12 +157,12 @@ Environment = allErroredAnalysis[,2] + allErroredAnalysis[,4]
 
 png(paste("beanplot-individual-cases-pull-requests.png", sep=""), width=800, height=650)
 #bplotIndividual = cbind(GitProblem, UnavSymbol, MethodUpdate, Malformed, Unimplemented, CompilerError, Dependency, StatDuplication, Remote, Another)
-beanplot(UnavSymbol, MethodUpdate, Unimplemented, StatDuplication, col="gray", names=c("Unavailable Symbol", "Method Update", "Unimplemented Method", "Statement Duplication"), xlab="Causes", ylab="Percentage(%)")
+boxplot(UnavSymbol, MethodUpdate, Unimplemented, StatDuplication, col="gray", names=c("Unavailable Symbol", "Method Update", "Unimplemented Method", "Statement Duplication"), xlab="Causes", ylab="Percentage(%)")
 dev.off()
 
 png(paste("beanplot-general-cases-pull-requests.png", sep=""), width=500, height=450)
 #bplotGeneral = cbind(Compilation, Environment, Remote)
-beanplot(Compilation, Environment, Remote, Another, col="gray", names=c("Compilation", "Environment", "Remote", "Another"), xlab="Causes", ylab="Percentage(%)")
+boxplot(Compilation, Environment, Remote, Another, col="gray", names=c("Compilation", "Environment", "Remote", "Another"), xlab="Causes", ylab="Percentage(%)")
 dev.off()
 
 meanInfo = c("Mean", allErroredGitProblem, allErroredUnavailableSymbol, allErroredCompilerError, allErroredMethodUpdate, allErroredAnother, allErroredRemote, allErroredMalformed, allErroredUnimplemented, allErroredDuplication, allErroredDependency)
@@ -496,79 +499,78 @@ while (count <= length(pathFoldersMergeScenarios)){
 		dev.off()
 
 		setwd(file.path(mainDir))
+
+		#Slide - How frequently are Errored Builds resulting from Built Merge Scenarios?
+		#What files are modified in Built Merge Scenarios of Errored Builds?
+		rq5 = "RQ5"
+		dir.create(file.path(pathFoldersMergeScenarios[count], rq5), showWarnings = FALSE)
+		setwd(file.path(pathFoldersMergeScenarios[count], rq5))
+		#Average
+		averageMergeScenariosErrored = mergeScenarios$PushesErrored*100/(totalMergeScenarios$TotalMS-totalMergeScenarios$TotalMSNoBuilt)
+		#averageMergeScenariosErrored = mergeScenarios$PushesErrored*100/(totalMergeScenarios$ValidBuilds)
+		averageMergeScenariosErroredPerc = mean(averageMergeScenariosErrored, na=TRUE)
+		#Aggregated
+		
+		AggregatedMergeScenariosErrored = sum(mergeScenarios$PushesErrored)*100/sum(totalMergeScenarios$TotalMS-totalMergeScenarios$TotalMSNoBuilt)
+		#AggregatedMergeScenariosErrored = sum(mergeScenarios$PushesErrored)*100/sum(totalMergeScenarios$ValidBuilds)
+
+		#Changes Distributions on modified Files
+
+		erroredPushTravisAll = mergeScenarios$ErroredTravis*100/mergeScenarios$PushesErrored
+		erroredPushConfigAll = mergeScenarios$ErroredConfig*100/mergeScenarios$PushesErrored
+		erroredPushSourceAll = mergeScenarios$ErroredSource*100/mergeScenarios$PushesErrored
+		erroredPushAllTogether = mergeScenarios$ErroredAll*100/mergeScenarios$PushesErrored
+
+		averageErroredPushTravisAllPerc = mean(erroredPushTravisAll, na=TRUE)
+		averageErroredPushConfigAllPerc = mean(erroredPushConfigAll, na=TRUE)
+		averageErroredPushSourceAllPerc = mean(erroredPushSourceAll, na=TRUE)
+		averageErroredPushAllTogetherPerc = mean(erroredPushAllTogether, na=TRUE)
+		print (median(averageMergeScenariosErrored))
+		png(paste("beanplot-errored-build-errored-ms.png", sep=""), width=300, height=350)
+		beanplot(averageMergeScenariosErrored, col="gray", ylab="Percentage(%)")
+		dev.off()
+
+		png(paste("errored-build-frequency-ms.png", sep=""), width=425, height=350)
+		mydataMergeScenario <- data.frame(row.names =c("Aggregated", "Average"), NotErrored =c(100-AggregatedMergeScenariosErrored, 100-averageMergeScenariosErroredPerc), Errored =c(AggregatedMergeScenariosErrored, averageMergeScenariosErroredPerc))
+		x <- barplot(t(as.matrix(mydataMergeScenario)), col=c("gray", "red"), legend=TRUE, border=NA, xlim=c(0,4), args.legend=list(bty="n", border=NA), ylab="% Percentage")
+		text(x, mydataMergeScenario$NotErrored-8, labels=round(mydataMergeScenario$NotErrored), col="black")
+		text(x, mydataMergeScenario$NotErrored+10, labels=round(mydataMergeScenario$Errored))
+		dev.off()
+		#Txt File with the informations about the RQ5
+		sink("rq5.txt")
+		cat("How frequently are Errored Builds resulting from Built Merge Scenarios?")
+		cat("\n")
+		cat("Errored Builds from Merge Scenarios")
+		cat("\n")
+		print("Aggregated Value - Errored Builds")
+		print(AggregatedMergeScenariosErrored)
+		print("Average Value - Errored Builds")
+		print(mean(averageMergeScenariosErrored))
+		cat("\n")
+		cat("\n")
+		cat("What files are modified in Built Merge Scenarios of Errored Builds?")
+		cat("\n")
+		cat("Changes Distribution on Modified Files - Average")
+		print("Travis Changes")
+		print(averageErroredPushTravisAllPerc)
+		print("Config Changes")
+		print(averageErroredPushConfigAllPerc)
+		print("Souce-code Changes")
+		print(averageErroredPushSourceAllPerc)
+		print("All Together Changes")
+		print(averageErroredPushAllTogetherPerc)
+		cat("\n")
+		sink()
+
+		png(paste("errored-build-changes-file.png", sep=""), width=425, height=350)
+		mydataErroredChanges <- data.frame(row.names =c("Average"), Travis=c(averageErroredPushTravisAllPerc), Config=c(averageErroredPushConfigAllPerc), Source=c(averageErroredPushSourceAllPerc), All=c(averageErroredPushAllTogetherPerc))
+		x <- barplot(t(as.matrix(mydataErroredChanges)), col=c("cornflowerblue", "red", "darkgreen", "violet"), legend=TRUE, border=NA, xlim=c(0,4), args.legend=list(bty="n", border=NA), ylab="% Percentage")
+		text(x, mydataErroredChanges$Travis-1, labels=round(mydataErroredChanges$Travis), col="black")
+		text(x, mydataErroredChanges$Travis+3, labels=round(mydataErroredChanges$Config), col="black")
+		text(x, mydataErroredChanges$Source-8, labels=round(mydataErroredChanges$Source), col="black")
+		text(x, mydataErroredChanges$Source+10, labels=round(mydataErroredChanges$All), col="black")
+		dev.off()
 	}
-
-	#Slide - How frequently are Errored Builds resulting from Built Merge Scenarios?
-	#What files are modified in Built Merge Scenarios of Errored Builds?
-	rq5 = "RQ5"
-	dir.create(file.path(pathFoldersMergeScenarios[count], rq5), showWarnings = FALSE)
-	setwd(file.path(pathFoldersMergeScenarios[count], rq5))
-
-	#Average
-	averageMergeScenariosErrored = mergeScenarios$PushesErrored*100/(totalMergeScenarios$TotalMS-totalMergeScenarios$TotalMSNoBuilt)
-	#averageMergeScenariosErrored = mergeScenarios$PushesErrored*100/(totalMergeScenarios$ValidBuilds)
-	averageMergeScenariosErroredPerc = mean(averageMergeScenariosErrored, na=TRUE)
-	#Aggregated
-	
-	AggregatedMergeScenariosErrored = sum(mergeScenarios$PushesErrored)*100/sum(totalMergeScenarios$TotalMS-totalMergeScenarios$TotalMSNoBuilt)
-	#AggregatedMergeScenariosErrored = sum(mergeScenarios$PushesErrored)*100/sum(totalMergeScenarios$ValidBuilds)
-
-	#Changes Distributions on modified Files
-
-	erroredPushTravisAll = mergeScenarios$ErroredTravis*100/mergeScenarios$PushesErrored
-	erroredPushConfigAll = mergeScenarios$ErroredConfig*100/mergeScenarios$PushesErrored
-	erroredPushSourceAll = mergeScenarios$ErroredSource*100/mergeScenarios$PushesErrored
-	erroredPushAllTogether = mergeScenarios$ErroredAll*100/mergeScenarios$PushesErrored
-
-	averageErroredPushTravisAllPerc = mean(erroredPushTravisAll, na=TRUE)
-	averageErroredPushConfigAllPerc = mean(erroredPushConfigAll, na=TRUE)
-	averageErroredPushSourceAllPerc = mean(erroredPushSourceAll, na=TRUE)
-	averageErroredPushAllTogetherPerc = mean(erroredPushAllTogether, na=TRUE)
-
-	#png(paste("beanplot-errored-build-frequency-ms.png", sep=""), width=300, height=350)
-	#beanplot(averageMergeScenariosErrored, col="gray", ylab="Percentage(%)")
-	#dev.off()
-
-	png(paste("errored-build-frequency-ms.png", sep=""), width=425, height=350)
-	mydataMergeScenario <- data.frame(row.names =c("Aggregated", "Average"), NotErrored =c(100-AggregatedMergeScenariosErrored, 100-averageMergeScenariosErroredPerc), Errored =c(AggregatedMergeScenariosErrored, averageMergeScenariosErroredPerc))
-	x <- barplot(t(as.matrix(mydataMergeScenario)), col=c("gray", "red"), legend=TRUE, border=NA, xlim=c(0,4), args.legend=list(bty="n", border=NA), ylab="% Percentage")
-	text(x, mydataMergeScenario$NotErrored-8, labels=round(mydataMergeScenario$NotErrored), col="black")
-	text(x, mydataMergeScenario$NotErrored+10, labels=round(mydataMergeScenario$Errored))
-	dev.off()
-	#Txt File with the informations about the RQ5
-	sink("rq5.txt")
-	cat("How frequently are Errored Builds resulting from Built Merge Scenarios?")
-	cat("\n")
-	cat("Errored Builds from Merge Scenarios")
-	cat("\n")
-	print("Aggregated Value - Errored Builds")
-	print(AggregatedMergeScenariosErrored)
-	print("Average Value - Errored Builds")
-	print(averageMergeScenariosErroredPerc)
-	cat("\n")
-	cat("\n")
-	cat("What files are modified in Built Merge Scenarios of Errored Builds?")
-	cat("\n")
-	cat("Changes Distribution on Modified Files - Average")
-	print("Travis Changes")
-	print(averageErroredPushTravisAllPerc)
-	print("Config Changes")
-	print(averageErroredPushConfigAllPerc)
-	print("Souce-code Changes")
-	print(averageErroredPushSourceAllPerc)
-	print("All Together Changes")
-	print(averageErroredPushAllTogetherPerc)
-	cat("\n")
-	sink()
-
-	png(paste("errored-build-changes-file.png", sep=""), width=425, height=350)
-	mydataErroredChanges <- data.frame(row.names =c("Average"), Travis=c(averageErroredPushTravisAllPerc), Config=c(averageErroredPushConfigAllPerc), Source=c(averageErroredPushSourceAllPerc), All=c(averageErroredPushAllTogetherPerc))
-	x <- barplot(t(as.matrix(mydataErroredChanges)), col=c("cornflowerblue", "red", "darkgreen", "violet"), legend=TRUE, border=NA, xlim=c(0,4), args.legend=list(bty="n", border=NA), ylab="% Percentage")
-	text(x, mydataErroredChanges$Travis-1, labels=round(mydataErroredChanges$Travis), col="black")
-	text(x, mydataErroredChanges$Travis+3, labels=round(mydataErroredChanges$Config), col="black")
-	text(x, mydataErroredChanges$Source-8, labels=round(mydataErroredChanges$Source), col="black")
-	text(x, mydataErroredChanges$Source+10, labels=round(mydataErroredChanges$All), col="black")
-	dev.off()
 
 	setwd(file.path(mainDir))
 
@@ -969,34 +971,105 @@ while (count <= length(pathFoldersMergeScenarios)){
 	setwd(file.path(pathFoldersMergeScenarios[count], rq11))
 	csvFileAll = read.csv("AllBuiltMergeAnalysis.csv", header=T)
 	csvFileBC = read.csv("BuildConflictsAnalysis.csv", header=T)
+	csvFileCC = read.csv("ConflictingContributionAnalysis.csv", header=T)
 	unlink("BuildConflictsPercentage.csv", recursive = FALSE, force = FALSE)
+	unlink("ConflictingContributionsPercentage.csv", recursive = FALSE, force = FALSE)
+	#unlink("BuildConflictsPercentageGeneral.csv", recursive = FALSE, force = FALSE)
 	infoCSVFile = matrix(c("ProjectName", "unavailableSymbol", "methodUpdate", "malformedExpression", "unimplementedMethod", "statementDuplication", "dependencyProblem", "General"), ncol=8)
+	infoCSVBCGeneral = matrix(c("ProjectName", "BC", "CC"), ncol=3)
 	write.table(infoCSVFile, file = "BuildConflictsPercentage.csv", col.names=F, row.names=F, append=TRUE, sep=",")
+	write.table(infoCSVFile, file = "ConflictingContributionsPercentage.csv", col.names=F, row.names=F, append=TRUE, sep=",")
 	countLine = 1
 
 	while (countLine < length(readLines("AllBuiltMergeAnalysis.csv"))) {
 		write.table(matrix(c( as.character(csvFileAll[countLine,1]), 
-							sum(strtoi(csvFileBC[countLine,3]))*100/sum(strtoi(csvFileAll[countLine,3])),
-							sum(strtoi(csvFileBC[countLine,5]))*100/sum(strtoi(csvFileAll[countLine,5])),
-							sum(strtoi(csvFileBC[countLine,8]))*100/sum(strtoi(csvFileAll[countLine,8])),
-							sum(strtoi(csvFileBC[countLine,9]))*100/sum(strtoi(csvFileAll[countLine,9])),
-							sum(strtoi(csvFileBC[countLine,10]))*100/sum(strtoi(csvFileAll[countLine,10])),
-							sum(strtoi(csvFileBC[countLine,11]))*100/sum(strtoi(csvFileAll[countLine,11])),
+							sum(strtoi(csvFileBC[countLine,3]))*100/(sum(strtoi(csvFileBC[countLine,]))-countLine),
+							sum(strtoi(csvFileBC[countLine,5]))*100/(sum(strtoi(csvFileBC[countLine,]))-countLine),
+							sum(strtoi(csvFileBC[countLine,8]))*100/(sum(strtoi(csvFileBC[countLine,]))-countLine),
+							sum(strtoi(csvFileBC[countLine,9]))*100/(sum(strtoi(csvFileBC[countLine,]))-countLine),
+							sum(strtoi(csvFileBC[countLine,10]))*100/(sum(strtoi(csvFileBC[countLine,]))-countLine),
+							sum(strtoi(csvFileBC[countLine,11]))*100/(sum(strtoi(csvFileBC[countLine,]))-countLine),
 							sum(sum(strtoi(csvFileBC[countLine,3]), strtoi(csvFileBC[countLine,5]), strtoi(csvFileBC[countLine,8]), strtoi(csvFileBC[countLine,9]), strtoi(csvFileBC[countLine,10])))*100/sum(sum(strtoi(csvFileAll[countLine,3]),strtoi(csvFileAll[countLine,5]),strtoi(csvFileAll[countLine,8]),strtoi(csvFileAll[countLine,9]), strtoi(csvFileAll[countLine,10])))
 		), ncol=8), file = "BuildConflictsPercentage.csv", row.names=F, col.names=F, sep=",", append=TRUE)
-
+		write.table(matrix(c( as.character(csvFileAll[countLine,1]), 
+							sum(strtoi(csvFileCC[countLine,3]))*100/(sum(strtoi(csvFileCC[countLine,]))-countLine),
+							sum(strtoi(csvFileCC[countLine,5]))*100/(sum(strtoi(csvFileCC[countLine,]))-countLine),
+							sum(strtoi(csvFileCC[countLine,8]))*100/(sum(strtoi(csvFileCC[countLine,]))-countLine),
+							sum(strtoi(csvFileCC[countLine,9]))*100/(sum(strtoi(csvFileCC[countLine,]))-countLine),
+							sum(strtoi(csvFileCC[countLine,10]))*100/(sum(strtoi(csvFileCC[countLine,]))-countLine),
+							sum(strtoi(csvFileCC[countLine,11]))*100/(sum(strtoi(csvFileCC[countLine,]))-countLine),
+							sum(sum(strtoi(csvFileCC[countLine,3]), strtoi(csvFileBC[countLine,5]), strtoi(csvFileBC[countLine,8]), strtoi(csvFileBC[countLine,9]), strtoi(csvFileBC[countLine,10])))*100/sum(sum(strtoi(csvFileAll[countLine,3]),strtoi(csvFileAll[countLine,5]),strtoi(csvFileAll[countLine,8]),strtoi(csvFileAll[countLine,9]), strtoi(csvFileAll[countLine,10])))
+		), ncol=8), file = "ConflictingContributionsPercentage.csv", row.names=F, col.names=F, sep=",", append=TRUE)
+		#write.table(matrix(c(as.character(csvFileAll[countLine,1]), (sum(strtoi(csvFileBC[countLine, ]))-1)*100/(sum(strtoi(csvFileAll[countLine,]))-1), (sum(strtoi(csvFileCC[countLine, ]))-1)*100/(sum(strtoi(csvFileAll[countLine,]))-1)), ncol=3), file="BuildConflictsPercentageGeneral.csv", row.names=F, col.names=F, sep=",", append=TRUE)
 		countLine = countLine + 1
 	}
+	setwd(file.path(pathFoldersMergeScenarios[count], rq11))
+	csvFileCCPercent = read.csv("ConflictingContributionAnalysis.csv", header=T)
+	csvFileBCPercent = read.csv("BuildConflictsAnalysis.csv", header=T)	
+	unavailableSymbolBCPercent = sum(csvFileBCPercent$unavailableSymbol)
+	updateSymbolBCPercent = sum(csvFileBCPercent$methodUpdate)
+	unimplementedSymbolBCPercent = sum(csvFileBCPercent$unimplementedMethod)
+	statementSymbolBCPercent = sum(csvFileBCPercent$statementDuplication)
+	totalBCPercent = unavailableSymbolBCPercent + updateSymbolBCPercent + unimplementedSymbolBCPercent + statementSymbolBCPercent
+
+	sink("causes-frequency-BC.txt")
+	cat("What are the Causes of Build Conflicts?")
+	cat("\n")
+	print("No Found Symbol")
+	print(unavailableSymbolBCPercent*100/totalBCPercent)
+	print("Unimplemented Method")
+	print(unimplementedSymbolBCPercent*100/totalBCPercent)
+	print("Method Update")
+	print(updateSymbolBCPercent*100/totalBCPercent)
+	print("Duplicate Statement")
+	print(statementSymbolBCPercent*100/totalBCPercent)
+	cat("\n")
+	sink()
+
+	#png(paste("percentage-CC", sep="-"), width=600, height=550)
+	#boxplot(csvFileCCPercent$unavailableSymbol, csvFileCCPercent$methodUpdate, csvFileCCPercent$unimplementedMethod, csvFileCCPercent$statementDuplication, col="gray", ylab="Percentage(%)", names=c("UnavSymbol", "MethodUpda", "Unimplemented", "StatDuplication"))
+	#dev.off()
+
+	unavailableSymbolCCPercent = sum(csvFileCCPercent$unavailableSymbol)
+	updateSymbolCCPercent = sum(csvFileCCPercent$methodUpdate)
+	unimplementedSymbolCCPercent = sum(csvFileCCPercent$unimplementedMethod)
+	statementSymbolCCPercent = sum(csvFileCCPercent$statementDuplication)
+	totalCCPercent = unavailableSymbolCCPercent + updateSymbolCCPercent + unimplementedSymbolCCPercent + statementSymbolCCPercent
+
+	sink("causes-frequency-CC.txt")
+	cat("What are the Causes of Conflicting Contributions?")
+	cat("\n")
+	print("No Found Symbol")
+	print(unavailableSymbolCCPercent*100/totalCCPercent)
+	print("Unimplemented Method")
+	print(unimplementedSymbolCCPercent*100/totalCCPercent)
+	print("Method Update")
+	print(updateSymbolCCPercent*100/totalCCPercent)
+	print("Duplicate Statement")
+	print(statementSymbolCCPercent*100/totalCCPercent)
+	cat("\n")
+	sink()
+
+	#png(paste("percentage-BC", sep="-"), width=600, height=550)
+	#boxplot(csvFileBCPercent$unavailableSymbol, csvFileBCPercent$methodUpdate, csvFileBCPercent$unimplementedMethod, csvFileBCPercent$statementDuplication, col="gray", ylab="Percentage(%)", names=c("UnavSymbol", "MethodUpda", "Unimplemented", "StatDuplication"))
+	#dev.off()
 
 	count = count + 1
 }
 
 setwd(file.path(rAnalysisPath, frequencyAnalysis))
+
 png(paste("frequency-build-conflicts-BC.png", sep="-"), width=600, height=550)
-boxplot(frequencyBuildConflicts, col="gray", ylab="Percentage(%)", xlab=foldersMergeScenarios[count], names=c("BuiltMergeScenarios", "AllMergeScenarios", "IntervalMergeScenarios"))
+beanplot(frequencyBuildConflicts[,1],frequencyBuildConflicts[,2],frequencyBuildConflicts[,3], col="gray", ylab="Percentage(%)", xlab=foldersMergeScenarios[count], names=c("BuiltMergeScenarios", "AllMergeScenarios", "IntervalMergeScenarios"))
 dev.off()
+print (mean(frequencyBuildConflicts[,1]))
+print (mean(frequencyBuildConflicts[,2]))
+print (mean(frequencyBuildConflicts[,3]))
 
 png(paste("frequency-conflicting-contribution-CC.png", sep="-"), width=600, height=550)
-boxplot(frequencyConflictingContributions, col="gray", ylab="Percentage(%)", xlab=foldersMergeScenarios[count], names=c("BuiltMergeScenarios", "AllMergeScenarios", "IntervalMergeScenarios"))
+beanplot(frequencyConflictingContributions[,1], frequencyConflictingContributions[,2], frequencyConflictingContributions[,3], col="gray", ylab="Percentage(%)", xlab=foldersMergeScenarios[count], names=c("BuiltMergeScenarios", "AllMergeScenarios", "IntervalMergeScenarios"))
 dev.off()
 
+print (mean(frequencyConflictingContributions[,1]))
+print (mean(frequencyConflictingContributions[,2]))
+print (mean(frequencyConflictingContributions[,3]))

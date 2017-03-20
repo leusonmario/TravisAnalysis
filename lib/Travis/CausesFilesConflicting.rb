@@ -13,6 +13,15 @@ class CausesFilesConflicting
 		@filesConflict
 	end
 
+	def getCausesNumber()
+		causesNumber = []
+		@filesConflict.each do |fileConflict|
+			causesNumber.push(fileConflict.size)
+		end
+		print causesNumber
+		return causesNumber
+	end
+
 	def insertNewCauseOne(cause, filesRelated)
 		if (filesRelated.size > 0)
 			@causesConflict.push(cause)

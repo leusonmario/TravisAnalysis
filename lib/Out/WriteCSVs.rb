@@ -135,12 +135,12 @@ class WriteCSVs
 		Dir.chdir getPathErroredCases()
 		if (File.exists?("Errored"+projectName+".csv"))
 			CSV.open("Errored"+projectName+".csv", "a+") do |csv|
-				csv << [build.id, buildOne, buildTwo, state[0], state[1][0], state[1][1]]
+				csv << [build.id, buildOne, buildTwo, state[0], state[2], state[1][0], state[1][1]]
 			end
 		else
 			CSV.open("Errored"+projectName+".csv", "w") do |csv|
-				csv << ["BuildID", "BuildParentOne", "BuildParentTwo", "MessageState", "BuildConflict", "AllColaborationsIntgrated"]
-				csv << [build.id, buildOne, buildTwo, state[0], state[1][0], state[1][1]]
+				csv << ["BuildID", "BuildParentOne", "BuildParentTwo", "MessageState", "NumberOccurrences", "ConflictingContributions", "AllColaborationsIntgrated"]
+				csv << [build.id, buildOne, buildTwo, state[0], state[2], state[1][0], state[1][1]]
 			end			
 		end
 	end
@@ -153,7 +153,7 @@ class WriteCSVs
 			end
 		else
 			CSV.open("Failed"+projectName+".csv", "w") do |csv|
-				csv << ["BuildID", "BuildParentOne", "BuildParentTwo", "MessageState", "AllColaborationsIntgrated"]
+				csv << ["BuildID", "BuildParentOne", "BuildParentTwo", "MessageState", "ConflictingContributions"]
 				csv << [build.id, buildOne, buildTwo, state]
 			end			
 		end

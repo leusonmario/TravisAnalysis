@@ -2,6 +2,9 @@ require 'nokogiri'
 require 'open-uri'
 require 'rest-client'
 require 'require_all'
+require 'net/http'
+require 'json'
+require 'uri'
 require_all './Repository'
 
 class GTAnalysis
@@ -125,56 +128,80 @@ class GTAnalysis
 		statusAdded = verifyAddedDeletedFile(baseLeft[1], leftResult[1], baseRight[1], rightResult[1])
 		statusDeleted = verifyAddedDeletedFile(baseLeft[2], leftResult[2], baseRight[2], rightResult[2])
 		
+		conflictingContributions = []
+		allIntegratedContributions = false
 		if (statusModified and statusAdded and statusDeleted)
 			#IT WAS LOVE (COMMIT WITHOUT MERGE CONFLICTS), IT WAS NOT A PERFECT ILLUSION
+			allIntegratedContributions = true
 			indexValue = 0
 			conflictCauses.getCausesConflict().each do |conflictCause|
 				if(conflictCause == "unimplementedMethod")
 					if (verifyBuildConflictByUnimplementedMethod(baseLeft[0], leftResult[0], baseRight[0], rightResult[0], conflictCauses.getFilesConflict()[indexValue]) == false)
-						return false, true
+						conflictingContributions[indexValue] = false
+						#return false, true
 					end
 				elsif (conflictCause == "unavailableSymbol")
 					if (verifyBuildConflictByUnavailableSymbol(baseLeft, leftResult, baseRight, rightResult, conflictCauses.getFilesConflict()[indexValue], leftPath, rightPath) == false)
-						return false, true
+						conflictingContributions[indexValue] = false
+						#return false, true
 					end
 				elsif (conflictCause == "statementDuplication")
 					if (verifyBuildConflictByStatementDuplication(baseLeft, leftResult, baseRight, rightResult, conflictCauses.getFilesConflict()[indexValue]) == false)
-						return false, true
+						conflictingContributions[indexValue] = false
+						#return false, true
 					end
 				elsif (conflictCause == "methodUpdate")
 					if (verifyBuildConflictByMethodUpdate(leftPath, rightPath, conflictCauses.getFilesConflict()[indexValue]) == false)
-						return false, true
+						conflictingContributions[indexValue] = false
+						#return false, true
+					end
+				elsif (conflictCause == "dependencyProblem")
+					if ((verifyBuildConflictByDependency(baseLeft[0], leftResult[0], baseRight[0], rightResult[0], conflictCauses.getFilesConflict()[indexValue]) == true))
+						conflictingContributions[indexValue] = false
+						#return false, true
 					end
 				end
+				conflictingContributions[indexValue] = true
 				indexValue += 1
 			end
-			return true, true
+			#return true, true
 		else 
 			#IT WAS NOT LOVE (COMMIT WITH MERGE CONFLICTS), IT WAS A PERFECT ILLUSION
 			indexValue = 0
 			conflictCauses.getCausesConflict().each do |conflictCause|
 				if(conflictCause == "unimplementedMethod")
 					if (verifyBuildConflictByUnimplementedMethod(baseLeft[0], leftResult[0], baseRight[0], rightResult[0], conflictCauses.getFilesConflict()[indexValue]) == false)
-						return false, false
+						conflictingContributions[indexValue] = false
+						#return false, false
 					end
 				elsif (conflictCause == "unavailableSymbol")
 					if (verifyBuildConflictByUnavailableSymbol(baseLeft, leftResult, baseRight, rightResult, conflictCauses.getFilesConflict()[indexValue], leftPath, rightPath) == false)
-						return false, false
+						conflictingContributions[indexValue] = false
+						#return false, false
 					end
 				elsif (conflictCause == "statementDuplication")
 					if (verifyBuildConflictByStatementDuplication(baseLeft, leftResult, baseRight, rightResult, conflictCauses.getFilesConflict()[indexValue]) == false)
-						return false, false
+						conflictingContributions[indexValue] = false
+						#return false, false
 					end
 				elsif (conflictCause == "methodUpdate")
 					if (verifyBuildConflictByMethodUpdate(leftPath, rightPath, conflictCauses.getFilesConflict()[indexValue]) == false)
-						return false, false
+						conflictingContributions[indexValue] = false
+						#return false, false
+					end
+				elsif (conflictCause == "dependencyProblem")
+					if ((verifyBuildConflictByDependency(baseLeft[0], leftResult[0], baseRight[0], rightResult[0], conflictCauses.getFilesConflict()[indexValue]) == true))
+						conflictingContributions[indexValue] = false
+						#return false, false
 					end
 				end
+				conflictingContributions[indexValue] = true
 				indexValue += 1
 			end
-			return true, false
+			#return true, false
 		end
-		return false, nil
+		return conflictingContributions, allIntegratedContributions
+		#return false, nil
 	end
 
 	def verifyBuildConflictByMethodUpdate (leftPath, rightPath, filesConflicting)
@@ -294,19 +321,53 @@ class GTAnalysis
 	def verifyBuildConflictByUnimplementedMethod(baseLeft, leftResult, baseRight, rightResult, filesConflicting)
 		count = 0
 		while (count < filesConflicting.size)
-			if(baseLeft[filesConflicting[count][1]] != nil and baseLeft[filesConflicting[count][1].to_s].to_s.match(/Insert SimpleName: #{filesConflicting[count][2].gsub(/\(.*/, '').gsub('(', '')}[\(\)0-9]* into MethodDeclaration[\(\)0-9]* at [0-9]*/) or baseLeft[filesConflicting[count][1].to_s].to_s.match(/Update SimpleName: [\s\S]* to #{filesConflicting[count][2].gsub(/\(.*/, '').gsub('(', '')}/))
-				if ((rightResult[filesConflicting[count][1]].to_s.match(/Insert SimpleName: #{filesConflicting[count][2].gsub(/\(.*/, '').gsub('(', '')}[\(\)0-9]* into MethodDeclaration[\(\)0-9]* at [0-9]*/) or rightResult[filesConflicting[count][1].to_s].to_s.match(/Update SimpleName: [\s\S]* to #{filesConflicting[count][2].gsub(/\(.*/, '').gsub('(', '')}/)) and (!rightResult[filesConflicting[count][0].to_s].to_s.match(/Insert SimpleName: #{filesConflicting[count][2].gsub(/\(.*/, '').gsub('(', '')}[\(\)0-9]* into MethodDeclaration[\(\)0-9]* at [0-9]*/) or !rightResult[filesConflicting[count][0].to_s].to_s.match(/Update SimpleName: [\s\S]* to #{filesConflicting[count][2].gsub(/\(.*/, '').gsub('(', '')}/)))
+			if(baseLeft[filesConflicting[count][1]] != nil and baseLeft[filesConflicting[count][1].to_s].to_s.match(/Insert SimpleName: #{filesConflicting[count][2].to_s.gsub(/\(.*/, '').gsub('(', '')}[\(\)0-9]* into MethodDeclaration[\(\)0-9]* at [0-9]*/) or baseLeft[filesConflicting[count][1].to_s].to_s.match(/Update SimpleName: [\s\S]* to #{filesConflicting[count][2].gsub(/\(.*/, '').gsub('(', '')}/))
+				if ((rightResult[filesConflicting[count][1]].to_s.match(/Insert SimpleName: #{filesConflicting[count][2].to_s.gsub(/\(.*/, '').gsub('(', '')}[\(\)0-9]* into MethodDeclaration[\(\)0-9]* at [0-9]*/) or rightResult[filesConflicting[count][1].to_s].to_s.match(/Update SimpleName: [\s\S]* to #{filesConflicting[count][2].gsub(/\(.*/, '').gsub('(', '')}/)) and (rightResult[filesConflicting[count][0].to_s].to_s.match(/Insert SimpleType: #{filesConflicting[count][1].gsub(/\(.*/, '').gsub('(', '')}[0-9\(\)]* into TypeDeclaration[0-9\(\)]*/)) and (!rightResult[filesConflicting[count][0].to_s].to_s.match(/Insert SimpleName: #{filesConflicting[count][2].gsub(/\(.*/, '').gsub('(', '')}[\(\)0-9]* into MethodDeclaration[\(\)0-9]* at [0-9]*/) or !rightResult[filesConflicting[count][0].to_s].to_s.match(/Update SimpleName: [\s\S]* to #{filesConflicting[count][2].gsub(/\(.*/, '').gsub('(', '')}/)))
 					#BUILD CONFLICT DETECTED
 					return true
 				end
 			end
-			if(baseRight[filesConflicting[count][1]] != nil and baseRight[filesConflicting[count][1]].to_s.match(/Insert SimpleName: #{filesConflicting[count][2].gsub(/\(.*/, '').gsub('(', '')}[\(\)0-9]* into MethodDeclaration[\(\)0-9]* at [0-9]*/) or baseRight[filesConflicting[count][1].to_s].to_s.match(/Update SimpleName: [\s\S]* to #{filesConflicting[count][2].gsub(/\(.*/, '').gsub('(', '')}/))
-				if ((leftResult[filesConflicting[count][1]].to_s.match(/Insert SimpleName: #{filesConflicting[count][2].gsub(/\(.*/, '').gsub('(', '')}[\(\)0-9]* into MethodDeclaration[\(\)0-9]* at [0-9]*/) or leftResult[filesConflicting[count][1].to_s].to_s.match(/Update SimpleName: [\s\S]* to #{filesConflicting[count][2].gsub(/\(.*/, '').gsub('(', '')}/)) and (!leftResult[filesConflicting[count][0].to_s].to_s.match(/Insert SimpleName: #{filesConflicting[count][2].gsub(/\(.*/, '').gsub('(', '')}[\(\)0-9]* into MethodDeclaration[\(\)0-9]* at [0-9]*/) or !leftResult[filesConflicting[count][0].to_s].to_s.match(/Update SimpleName: [\s\S]* to #{filesConflicting[count][2].gsub(/\(.*/, '').gsub('(', '')}/)))
+			if(baseRight[filesConflicting[count][1]] != nil and baseRight[filesConflicting[count][1]].to_s.match(/Insert SimpleName: #{filesConflicting[count][2].to_s.gsub(/\(.*/, '').gsub('(', '')}[\(\)0-9]* into MethodDeclaration[\(\)0-9]* at [0-9]*/) or baseRight[filesConflicting[count][1].to_s].to_s.match(/Update SimpleName: [\s\S]* to #{filesConflicting[count][2].gsub(/\(.*/, '').gsub('(', '')}/))
+				if ((leftResult[filesConflicting[count][1]].to_s.match(/Insert SimpleName: #{filesConflicting[count][2].to_s.gsub(/\(.*/, '').gsub('(', '')}[\(\)0-9]* into MethodDeclaration[\(\)0-9]* at [0-9]*/) or leftResult[filesConflicting[count][1].to_s].to_s.match(/Update SimpleName: [\s\S]* to #{filesConflicting[count][2].gsub(/\(.*/, '').gsub('(', '')}/)) and (leftResult[filesConflicting[count][0].to_s].to_s.match(/Insert SimpleType: #{filesConflicting[count][1].gsub(/\(.*/, '').gsub('(', '')}[0-9\(\)]* into TypeDeclaration[0-9\(\)]*/)) and (!leftResult[filesConflicting[count][0].to_s].to_s.match(/Insert SimpleName: #{filesConflicting[count][2].gsub(/\(.*/, '').gsub('(', '')}[\(\)0-9]* into MethodDeclaration[\(\)0-9]* at [0-9]*/) or !leftResult[filesConflicting[count][0].to_s].to_s.match(/Update SimpleName: [\s\S]* to #{filesConflicting[count][2].gsub(/\(.*/, '').gsub('(', '')}/)))
 					#BUILD CONFLICT DETECTED"
 					return true
 				end
 			end
 			count += 1
+		end
+		return false
+	end
+
+	def verifyBuildConflictByDependency (baseLeft, leftResult, baseRight, rightResult, filesConflicting)
+		begin
+			version = filesConflicting[3].to_s.match(/[0-9\.]*/)
+			if ((baseLeft["pom.xml"] == rightResult["pom.xml"] and baseRight["pom.xml"] == leftResult["pom.xml"]) or (baseLeft["pom.xml"] != nil and baseRight["pom.xml"] != nil))
+				urlMavenRep = "http://search.maven.org/solrsearch/select?q=g:#{filesConflicting[0]}%20AND%20a:#{filesConflicting[1]}%20AND%20v:#{version}%20AND%20p:#{filesConflicting[2]}&rows=20&wt=json"
+				uriMavenRep = URI.parse(URI.encode(urlMavenRep.strip))
+				req = Net::HTTP::Get.new(urlMavenRep.to_s)
+				res = Net::HTTP.start(uriMavenRep.host, uriMavenRep.port) {|http|
+				  http.request(req)
+				}
+
+				conflicting = false
+				jsonResultReq = JSON.parse(res.body)
+				aux = 1
+				jsonResultReq.each do |result|
+					if (aux == 2)
+						if (result[1]["numFound"] > 0)
+							result[1]["docs"].each do |algo|
+								if (algo["a"]==artifactID and algo["v"]==version)
+									conflicting = true
+								end
+							end
+						end
+					end
+					aux += 1
+				end
+				return conflicting
+			end
+		rescue
+			return false
 		end
 		return false
 	end

@@ -249,12 +249,24 @@ class ConflictCategoryErrored
 									causesFilesConflicts.insertNewCauseOne("unimplementedMethod",[""])
 								end
 							end
-							if (body[/\[ERROR\][ \t\r\n\f]*Failed to execute goal [a-zA-Z0-9\/\-\.\:\[\]\,\(\) ]*Some Enforcer rules have failed/] || body[/#{stringBuildFail}[\s\S]*#{stringUndefinedExt}/] || body[/\[#{stringErro}\][\s\S]*#{stringDependency}/] || body[/\[#{stringErro}\][\s\S]*#{stringNonParseable}[\s\S]*(#{stringUnexpected}[\s\S]*\[#{stringErro}\])?/] || body[/#{stringScript}[\s\S]*#{stringGradle}[\s\S]*#{stringProblemScript}[\s\S]*#{stringAddTask}[\s\S]*#{stringTaskExists}[\s\S]*#{stringBuildFail}/])
+							if (body[/Could not transfer artifact/] || body[/\[ERROR\][ \t\r\n\f]*Failed to execute goal [a-zA-Z0-9\/\-\.\:\[\]\,\(\) ]*Some Enforcer rules have failed/] || body[/#{stringBuildFail}[\s\S]*#{stringUndefinedExt}/] || body[/\[#{stringErro}\][\s\S]*#{stringDependency}/] || body[/\[#{stringErro}\][\s\S]*#{stringNonParseable}[\s\S]*(#{stringUnexpected}[\s\S]*\[#{stringErro}\])?/] || body[/#{stringScript}[\s\S]*#{stringGradle}[\s\S]*#{stringProblemScript}[\s\S]*#{stringAddTask}[\s\S]*#{stringTaskExists}[\s\S]*#{stringBuildFail}/])
 								aux = body.scan(/#{stringBuildFail}[\s\S]*#{stringUndefinedExt}|\[#{stringErro}\][\s\S]*#{stringDependency}|\[#{stringErro}\][\s\S]*#{stringNonParseable}[\s\S]*(#{stringUnexpected}[\s\S]*\[#{stringErro}\])?|#{stringScript}[\s\S]*#{stringGradle}[\s\S]*#{stringProblemScript}[\s\S]*#{stringAddTask}[\s\S]*#{stringTaskExists}[\s\S]*#{stringBuildFail}/).size
-								if (type=="Config" || type=="All-Config")
-									causesFilesConflicts.insertNewCauseOne("dependencyProblem",[])
-									localDependencyProblem = aux
-									@dependencyProblem += aux
+								filesInformation = []
+								bodyAux = bodyJob[/BUILD FAILURE[\s\S]*/]
+								
+								if (body[/Could not transfer artifact/] and (type=="Config" || type=="All-Config"))
+									begin
+										if (bodyAux.match(/Could not transfer artifact/))
+											filesInformation = bodyAux.match(/Could not transfer artifact [a-zA-Z\:\-0-9\.]*/).to_s.gsub("Could not transfer artifact ", "").split("\:")
+										end
+										causesFilesConflicts.insertNewCauseOne("dependencyProblem",filesInformation)
+										localDependencyProblem = aux
+										@dependencyProblem += aux
+									rescue
+										causesFilesConflicts.insertNewCauseOne("dependencyProblem",[])
+										localDependencyProblem = aux
+										@dependencyProblem += aux
+									end
 								else
 									causesFilesConflicts.insertNewCauseOne("compilerError",[])
 									@compilerError += aux
@@ -323,16 +335,16 @@ class ConflictCategoryErrored
 			indexJob += 1
 		end
 		if (mergeScenario)
-			return causesFilesConflicts.getCausesConflict(), getFinalStatus(pathGumTree, pathProject, build, causesFilesConflicts, localMethodUpdate, localUnavailableSymbol, localDuplicateStatement, localUnimplementedMethod)
+			return causesFilesConflicts.getCausesConflict(), getFinalStatus(pathGumTree, pathProject, build, causesFilesConflicts, localMethodUpdate, localUnavailableSymbol, localDuplicateStatement, localUnimplementedMethod, localDependencyProblem), causesFilesConflicts.getCausesNumber()
 		else
 			return causesFilesConflicts.getCausesConflict()
 		end
 	end
 
-	def getFinalStatus(pathGumTree, pathProject, build, conflictCauses, localMethodUpdate, localUnavailableSymbol, localDuplicateStatement, localUnimplementedMethod)
+	def getFinalStatus(pathGumTree, pathProject, build, conflictCauses, localMethodUpdate, localUnavailableSymbol, localDuplicateStatement, localUnimplementedMethod, localDependencyProblem)
 		gtAnalysis = GTAnalysis.new(pathGumTree)
-		if(localMethodUpdate > 0 || localUnavailableSymbol > 0 || localDuplicateStatement > 0 || localUnimplementedMethod > 0)
-			if(localUnimplementedMethod > 0 or localUnavailableSymbol > 0 or localDuplicateStatement > 0 or localMethodUpdate > 0)
+		if(localMethodUpdate > 0 || localUnavailableSymbol > 0 || localDuplicateStatement > 0 || localUnimplementedMethod > 0 || localDependencyProblem > 0)
+			if(localUnimplementedMethod > 0 or localUnavailableSymbol > 0 or localDuplicateStatement > 0 or localMethodUpdate > 0 or localDependencyProblem > 0)
 				if (conflictCauses.getFilesConflict().size < 1)
 					return false, nil
 				else
