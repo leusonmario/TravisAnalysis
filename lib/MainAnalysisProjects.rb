@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 
 require 'require_all'
-require_all './Repository'
+require_all './MiningRepositories'
 require_all './Out'
 require_all './CausesExtractor'
 

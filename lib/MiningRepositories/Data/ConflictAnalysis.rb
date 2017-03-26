@@ -1,5 +1,5 @@
 require 'require_all'
-require_all './Repository'
+require_all '././MiningRepositories/Repository'
 
 class ConflictAnalysis
 

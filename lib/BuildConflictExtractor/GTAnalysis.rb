@@ -5,7 +5,7 @@ require 'require_all'
 require 'net/http'
 require 'json'
 require 'uri'
-require_all './Repository'
+require_all '././MiningRepositories/Repository'
 require_rel 'BadlyMergeScenarioExtractor'
 require_rel 'BCTypes/'
 

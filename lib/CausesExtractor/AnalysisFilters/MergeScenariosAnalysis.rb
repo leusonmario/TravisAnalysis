@@ -3,8 +3,8 @@ require 'travis'
 require_rel '../ConflictCategoryErrored'
 require_rel '../ConflictCategoryFailed'
 require_rel '../ConflictBuild'
-require_all '././Repository'
-require_all '././Data'
+require_all '././MiningRepositories/Repository'
+require_all '././MiningRepositories/Data'
 
 class MergeScenariosAnalysis
 	def initialize(projectName, gitProject, localClone)

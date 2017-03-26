@@ -2,12 +2,12 @@
 
 require 'require_all'
 require 'travis'
-require './Repository/MergeCommit.rb'
 require './CausesExtractor/ConflictCategoryErrored.rb'
 require './CausesExtractor/ConflictCategoryFailed.rb'
-require './Data/ConflictAnalysis.rb'
+require './MiningRepositories/Data/ConflictAnalysis.rb'
 require_rel 'ConflictBuild.rb'
 require_rel 'AnalysisFilters/'
+require_all '././MiningRepositories/Repository'
 
 class BuildTravis
 
