@@ -1,7 +1,7 @@
 require 'fileutils'
 require 'csv'
 require 'require_all'
-require_all './Travis'
+require_all './CausesExtractor'
 
 class WriteCSVs
 

@@ -1,22 +1,20 @@
 #!/usr/bin/env ruby
 
+require 'require_all'
 require 'travis'
 require './Repository/MergeCommit.rb'
-require './Travis/ConflictCategoryErrored.rb'
-require './Travis/ConflictCategoryFailed.rb'
+require './CausesExtractor/ConflictCategoryErrored.rb'
+require './CausesExtractor/ConflictCategoryFailed.rb'
 require './Data/ConflictAnalysis.rb'
-require_relative 'ConflictBuild.rb'
-require_relative 'BuiltMergeScenariosAnalysis.rb'
-require_relative 'MergeScenariosAnalysis.rb'
-require_relative 'AllMergeScenariosAnalysis.rb'
-require_relative 'IntervalMergeScenariosAnalysis.rb'
+require_rel 'ConflictBuild.rb'
+require_rel 'AnalysisFilters/'
 
 class BuildTravis
 
-	def initialize(projectName, gitProject)
-		@builtMergeScenariosAnalysis = BuiltMergeScenariosAnalysis.new(projectName, gitProject)
-		@allMergeScenariosAnalysis = AllMergeScenariosAnalysis.new(projectName, gitProject)
-		@intervalMergeScenariosAnalysis = IntervalMergeScenariosAnalysis.new(projectName, gitProject)
+	def initialize(projectName, gitProject, localClone)
+		@builtMergeScenariosAnalysis = BuiltMergeScenariosAnalysis.new(projectName, gitProject, localClone)
+		@allMergeScenariosAnalysis = AllMergeScenariosAnalysis.new(projectName, gitProject, localClone)
+		@intervalMergeScenariosAnalysis = IntervalMergeScenariosAnalysis.new(projectName, gitProject, localClone)
 	end
 
 	def getBuiltMergeScenariosAnalysis()

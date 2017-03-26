@@ -3,7 +3,7 @@
 require 'require_all'
 require_all './Repository'
 require_all './Out'
-require_all './Travis'
+require_all './CausesExtractor'
 
 class MainAnalysisProjects
 
@@ -97,7 +97,7 @@ class MainAnalysisProjects
 			mainGitProject = GitProject.new(project, getLocalCLone(), getLoginUser(), getPasswordUser())
 			if(mainGitProject.getProjectAvailable())
 				projectName = mainGitProject.getProjectName()
-				buildTravis = BuildTravis.new(projectName, mainGitProject)
+				buildTravis = BuildTravis.new(projectName, mainGitProject, getLocalCLone())
 				#mainProjectAnalysisBuilt = buildTravis.runAllAnalysis(projectName, getWriteCSVForkBuilt(), getWriteCSVAllErroredBuilds(),getPathGumTree(), true)
 				mainProjectAnalysisBuilt = buildTravis.runAllAnalysisBuilt(projectName, getWriteCSVAllErroredBuilds(), getWriteCSVForkBuilt(), getWriteCSVForkAll(), getWriteCSVForkInterval(), getPathGumTree(), true)
 				#mainProjectAnalysisAll = buildTravis.runAllAnalysisAll(projectName, getWriteCSVForkAll(), getPathGumTree(), true)

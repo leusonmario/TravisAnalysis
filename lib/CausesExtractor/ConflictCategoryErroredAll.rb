@@ -1,5 +1,4 @@
 require 'require_all'
-require_all './GumTree' 
 require_rel 'ConflictCategories'
 require_rel 'CausesFilesConflicting'
 

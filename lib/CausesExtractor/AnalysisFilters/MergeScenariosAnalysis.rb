@@ -1,22 +1,27 @@
 require 'require_all'
 require 'travis'
-require_all './Repository'
-require_rel 'ConflictCategoryErrored'
-require_rel 'ConflictCategoryFailed'
-require_all './Data'
-require_rel 'ConflictBuild'
+require_rel '../ConflictCategoryErrored'
+require_rel '../ConflictCategoryFailed'
+require_rel '../ConflictBuild'
+require_all '././Repository'
+require_all '././Data'
 
 class MergeScenariosAnalysis
-	def initialize(projectName, gitProject)
+	def initialize(projectName, gitProject, localClone)
 		@projectName = projectName
 		@pathProject = gitProject.getPath()
 		@gitProject = gitProject
 		@projectMergeScenarios = @gitProject.getMergeScenarios()
 		@repositoryTravisProject = nil
+		@pathLocalClone = localClone
 	end
 
 	def getProjectName()
 		@projectName
+	end
+
+	def getPathLocalClone()
+		@localClone
 	end
 
 	def getPathProject()
