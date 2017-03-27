@@ -54,11 +54,3 @@ class BadlyMergeScenarioExtractor
 		end
 	end
 end
-
-#HEAD branch: [\s\S]*\\n
-#aux = %x(git remote show origin).match(/HEAD branch: [\s\S]*  Remote branches/).gsub(': ', '')
-
-#remoteOrigin = %x(git remote show origin)
-#aux = remoteOringin.match(/HEAD branch: [\s\S]*\\n  Remote branches/)
-#branch = aux.gsub(': ', '')
-#%x(git checkout -f #{branch})

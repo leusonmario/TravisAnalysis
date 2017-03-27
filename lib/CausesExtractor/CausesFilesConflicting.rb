@@ -18,7 +18,6 @@ class CausesFilesConflicting
 		@filesConflict.each do |fileConflict|
 			causesNumber.push(fileConflict.size)
 		end
-		print causesNumber
 		return causesNumber
 	end
 

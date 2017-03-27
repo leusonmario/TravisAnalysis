@@ -230,7 +230,6 @@ class ConflictCategoryErrored
 	end
 
 	def getFinalStatus(pathGumTree, pathProject, build, conflictCauses, localMethodUpdate, localUnavailableSymbol, localDuplicateStatement, localUnimplementedMethod, localDependencyProblem)
-		puts pathGumTree
 		gtAnalysis = GTAnalysis.new(pathGumTree, @projectName, getPathLocalClone())
 		if(localMethodUpdate > 0 || localUnavailableSymbol > 0 || localDuplicateStatement > 0 || localUnimplementedMethod > 0 || localDependencyProblem > 0)
 			if(localUnimplementedMethod > 0 or localUnavailableSymbol > 0 or localDuplicateStatement > 0 or localMethodUpdate > 0 or localDependencyProblem > 0)
