@@ -8,31 +8,26 @@ class BadlyMergeScenarioExtractor
 	end
 
 	def getProjectName()
-		return @projectName
+		@projectName
 	end
 
 	def getActualPath()
-		return @actualPath
+		@actualPath
 	end
 
 	def getPathMergeScenario()
-		return @pathMergeScenario
+		@pathMergeScenario
 	end
 
 	def getPathLocalProject()
-		return @pathLocalProject
+		@pathLocalProject
 	end
 
 	def cloneProjectLocally(localClone)
-		Dir.chdir "/home/leuson/Documentos/UFPE/Mestrado/Pesquisa/TravisAnalysis/lib"
+		Dir.chdir localClone
 		clone = %x(git clone https://github.com/#{getProjectName} mergeScenarioClone)
 		Dir.chdir "mergeScenarioClone"
 		return Dir.pwd
-	end
-
-	def deleteProject()
-		Dir.chdir "/home/leuson/Documentos/UFPE/Mestrado/Pesquisa/TravisAnalysis/lib"
-		delete = %x(rm -rf mergeScenarioClone)
 	end
 
 	def simulateMergeScenario(leftParent, rightParent)
@@ -44,7 +39,7 @@ class BadlyMergeScenarioExtractor
 	end
 
 	def deleteMergeScenarioProject()
-		Dir.chdir "/home/leuson/Documentos/UFPE/Mestrado/Pesquisa/TravisAnalysis/lib"
+		Dir.chdir getActualPath()
 		%x(rm -rf mergeScenarioClone)
 	end
 

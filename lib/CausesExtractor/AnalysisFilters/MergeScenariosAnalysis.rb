@@ -21,7 +21,7 @@ class MergeScenariosAnalysis
 	end
 
 	def getPathLocalClone()
-		@localClone
+		@pathLocalClone
 	end
 
 	def getPathProject()
