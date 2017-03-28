@@ -1,15 +1,15 @@
 require 'octokit'
 require 'active_support/core_ext/numeric/time'
 require 'date'
+require_rel './CloneProjectGit'
 
 class GitProject
 
 	def initialize(project, localClone, login, password)
 		@projectAvailable = isProjectAvailable(project, login, password)
 		if(getProjectAvailable())
+			@cloneProject = CloneProjectGit.new(localClone, project, "mainProjectClone")
 			@projetcName = project
-			@localClone = localClone
-			@path = cloneProjectLocally(project, localClone)
 			@mergeScenarios = Array.new
 			getMergesScenariosByProject()
 			@forksList = []
@@ -41,8 +41,8 @@ class GitProject
 		@projectAvailable
 	end
 
-	def getLocalClone()
-		@localClone
+	def getCloneProject()
+		@cloneProject
 	end
 
 	def getProjectName()
@@ -69,18 +69,6 @@ class GitProject
 		@forksListNames
 	end
 
-	def cloneProjectLocally(project, localClone)
-		Dir.chdir localClone
-		clone = %x(git clone https://github.com/#{project} localProject)
-		Dir.chdir "localProject"
-		return Dir.pwd
-	end
-
-	def deleteProject()
-		Dir.chdir getLocalClone()
-		delete = %x(rm -rf localProject)
-	end
-
 	def findProjectName()
 		Dir.chdir getPath().gsub('.travis.yml','')
 		
@@ -94,7 +82,7 @@ class GitProject
 	end
 
 	def getMergesScenariosByProject()
-		Dir.chdir getPath()
+		Dir.chdir @cloneProject.getLocalClone()
 		@mergeScenarios = Array.new
 		commitTravisInput = getDateFirstBuild()
 		if (commitTravisInput != nil)
@@ -122,7 +110,7 @@ class GitProject
 	def getForksList()
 		@forksListNames.clear
 		result = []
-		Dir.chdir @path
+		Dir.chdir @cloneProject.getLocalClone()
 		Octokit.auto_paginate = true
 
 		client = Octokit::Client.new \
@@ -209,7 +197,7 @@ class GitProject
 	end
 
 	def getCommitCloserToBuild(allbuilds, commit)
-		Dir.chdir getPath
+		Dir.chdir @cloneProject.getLocalClone()
 		begin
 			aux = %x(git checkout #{commit})
 			#antes estava %ci

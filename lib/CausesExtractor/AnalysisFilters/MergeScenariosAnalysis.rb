@@ -9,7 +9,7 @@ require_all '././MiningRepositories/Data'
 class MergeScenariosAnalysis
 	def initialize(projectName, gitProject, localClone)
 		@projectName = projectName
-		@pathProject = gitProject.getPath()
+		@pathProject = gitProject.getCloneProject().getLocalClone()
 		@gitProject = gitProject
 		@projectMergeScenarios = @gitProject.getMergeScenarios()
 		@repositoryTravisProject = nil
