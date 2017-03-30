@@ -7,8 +7,9 @@ frequencyConflictingContributions = c()
 csvFileCCPercent = ""
 csvFileBCPercent = ""
 
-library(beanplot)
 library(vioplot)
+library(ggplot2)
+library(reshape2)
 
 allErroredBuilds = "AllErroredBuilds"
 dir.create(file.path(rAnalysisPath, allErroredBuilds), showWarnings = FALSE)
@@ -28,6 +29,11 @@ foldersMergeScenarios = c("BuiltMergeScenarios", "AllMergeScenarios", "IntervalM
 dir.create(file.path(mergeScenariosBuildsPath, foldersMergeScenarios[1]), showWarnings = FALSE)
 dir.create(file.path(mergeScenariosBuildsPath, foldersMergeScenarios[2]), showWarnings = FALSE)
 dir.create(file.path(mergeScenariosBuildsPath, foldersMergeScenarios[3]), showWarnings = FALSE)
+
+setwd(file.path(rAnalysisPath, frequencyAnalysis))
+unlink("AllScenariosAnalysis.csv", recursive = FALSE, force = FALSE)
+infoCSVFile = matrix(c("Evaluated Scenarios", "Causes", "Percentage"), ncol=3)
+write.table(infoCSVFile, file = "AllScenariosAnalysis.csv", col.names=F, row.names=F, append=TRUE, sep=",")
 
 pathFoldersMergeScenarios = c()
 count = 1
@@ -91,14 +97,24 @@ Another = allErroredAnalysis[,6]
 Compilation = allErroredAnalysis[,3] + allErroredAnalysis[,5] + allErroredAnalysis[,8] + allErroredAnalysis[,9] + allErroredAnalysis[,10] + allErroredAnalysis[,10]
 Environment = allErroredAnalysis[,2] + allErroredAnalysis[,4]
 
-png(paste("beanplot-individual-cases-all-builds.png", sep=""), width=800, height=650)
+png(paste("vioplot-individual-cases-all-builds.png", sep=""), width=800, height=650)
 #bplotIndividual = cbind(GitProblem, UnavSymbol, MethodUpdate, Malformed, Unimplemented, CompilerError, Dependency, StatDuplication, Remote, Another)
-beanplot(UnavSymbol, MethodUpdate, Unimplemented, StatDuplication, col="gray", names=c("Unavailable Symbol", "Method Update", "Unimplemented Method", "Statement Duplication"), xlab="Causes", ylab="Percentage(%)")
+vioplot(UnavSymbol, MethodUpdate, Unimplemented, StatDuplication, col="gray", names=c("Unavailable Symbol", "Method Update", "Unimplemented Method", "Statement Duplication"))
+title(x="Causes", y="Percentage(%)")
 dev.off()
 
-png(paste("beanplot-general-cases-all-builds.png", sep=""), width=500, height=450)
+setwd(file.path(rAnalysisPath, frequencyAnalysis))
+write.table(matrix(c("All Builds", "Semantic", allErroredUnavailableSymbol + allErroredUnimplemented), ncol=3), file = "AllScenariosAnalysis.csv", col.names=F, row.names=F, append=TRUE, sep=",")
+write.table(matrix(c("All Builds", "Syntax", allErroredDuplication + allErroredMalformed), ncol=3), file = "AllScenariosAnalysis.csv", col.names=F, row.names=F, append=TRUE, sep=",")
+write.table(matrix(c("All Builds", "Type Mismatch", allErroredMethodUpdate), ncol=3), file = "AllScenariosAnalysis.csv", col.names=F, row.names=F, append=TRUE, sep=",")
+write.table(matrix(c("All Builds", "Dependency", allErroredDependency), ncol=3), file = "AllScenariosAnalysis.csv", col.names=F, row.names=F, append=TRUE, sep=",")
+write.table(matrix(c("All Builds", "Others", allErroredGitProblem + allErroredCompilerError + allErroredAnother + allErroredRemote), ncol=3), file = "AllScenariosAnalysis.csv", col.names=F, row.names=F, append=TRUE, sep=",")
+setwd(file.path(allErroredBuildsPath, "AllErroredAnalysis"))
+
+png(paste("vioplot-general-cases-all-builds.png", sep=""), width=500, height=450)
 #bplotGeneral = cbind(Compilation, Environment, Remote)
-beanplot(Compilation, Environment, Remote, Another, col="gray", names=c("Compilation", "Environment", "Remote", "Another"), xlab="Causes", ylab="Percentage(%)")
+vioplot(Compilation, Environment, Remote, Another, col="gray", names=c("Compilation", "Environment", "Remote", "Another"))
+title(x="Causes", y="Percentage(%)")
 dev.off()
 
 meanInfo = c("Mean", allErroredGitProblem, allErroredUnavailableSymbol, allErroredCompilerError, allErroredMethodUpdate, allErroredAnother, allErroredRemote, allErroredMalformed, allErroredUnimplemented, allErroredDuplication, allErroredDependency)
@@ -155,24 +171,35 @@ Another = allErroredAnalysis[,6]
 Compilation = allErroredAnalysis[,3] + allErroredAnalysis[,5] + allErroredAnalysis[,8] + allErroredAnalysis[,9] + allErroredAnalysis[,10] + allErroredAnalysis[,10]
 Environment = allErroredAnalysis[,2] + allErroredAnalysis[,4]
 
-png(paste("beanplot-individual-cases-pull-requests.png", sep=""), width=800, height=650)
+png(paste("vioplot-individual-cases-pull-requests.png", sep=""), width=800, height=650)
 #bplotIndividual = cbind(GitProblem, UnavSymbol, MethodUpdate, Malformed, Unimplemented, CompilerError, Dependency, StatDuplication, Remote, Another)
-boxplot(UnavSymbol, MethodUpdate, Unimplemented, StatDuplication, col="gray", names=c("Unavailable Symbol", "Method Update", "Unimplemented Method", "Statement Duplication"), xlab="Causes", ylab="Percentage(%)")
+vioplot(UnavSymbol, MethodUpdate, Unimplemented, StatDuplication, col="gray", names=c("Unavailable Symbol", "Method Update", "Unimplemented Method", "Statement Duplication"))
+title(x="Causes", y="Percentage(%)")
 dev.off()
 
-png(paste("beanplot-general-cases-pull-requests.png", sep=""), width=500, height=450)
+setwd(file.path(rAnalysisPath, frequencyAnalysis))
+write.table(matrix(c("Pull Requests", "Semantic", allErroredUnavailableSymbol + allErroredUnimplemented), ncol=3), file = "AllScenariosAnalysis.csv", col.names=F, row.names=F, append=TRUE, sep=",")
+write.table(matrix(c("Pull Requests", "Syntax", allErroredDuplication + allErroredMalformed), ncol=3), file = "AllScenariosAnalysis.csv", col.names=F, row.names=F, append=TRUE, sep=",")
+write.table(matrix(c("Pull Requests", "Type Mismatch", allErroredMethodUpdate), ncol=3), file = "AllScenariosAnalysis.csv", col.names=F, row.names=F, append=TRUE, sep=",")
+write.table(matrix(c("Pull Requests", "Dependency", allErroredDependency), ncol=3), file = "AllScenariosAnalysis.csv", col.names=F, row.names=F, append=TRUE, sep=",")
+write.table(matrix(c("Pull Requests", "Others", allErroredGitProblem + allErroredCompilerError + allErroredAnother + allErroredRemote), ncol=3), file = "AllScenariosAnalysis.csv", col.names=F, row.names=F, append=TRUE, sep=",")
+setwd(file.path(allErroredBuildsPath, "AllErroredAnalysis"))
+
+png(paste("vioplot-general-cases-pull-requests.png", sep=""), width=500, height=450)
 #bplotGeneral = cbind(Compilation, Environment, Remote)
-boxplot(Compilation, Environment, Remote, Another, col="gray", names=c("Compilation", "Environment", "Remote", "Another"), xlab="Causes", ylab="Percentage(%)")
+vioplot(Compilation, Environment, Remote, Another, col="gray", names=c("Compilation", "Environment", "Remote", "Another"))
+title(x="Causes", y="Percentage(%)")
 dev.off()
 
 meanInfo = c("Mean", allErroredGitProblem, allErroredUnavailableSymbol, allErroredCompilerError, allErroredMethodUpdate, allErroredAnother, allErroredRemote, allErroredMalformed, allErroredUnimplemented, allErroredDuplication, allErroredDependency)
 write.table(matrix(c(meanInfo), ncol=11), file = "AllBuildErroredAnalysisPullRequests.csv", row.names=F, col.names=F, sep=",", append=TRUE)
 
-library(beanplot)
+library(vioplot)
 mainDir = getwd()
 
 count = 1
-while (count <= length(pathFoldersMergeScenarios)){
+#while (count <= length(pathFoldersMergeScenarios)){
+while (count <= 1){
 	setwd(rootPathProject)
 	pathCausesFailed = c(rootPathProject, paste("/FinalResults/MergeScenarios",foldersMergeScenarios[count],"ConflictsCauses/TestConflictsCauses.csv", sep="/"))
 	causesFailedBuilds = read.csv(paste(pathCausesFailed, collapse=""), header=T)
@@ -267,12 +294,14 @@ while (count <= length(pathFoldersMergeScenarios)){
 		print(averagePRBrokenBuilds)
 		sink()
 
-		png(paste("beanplot-broken-build.png", sep=""), width=300, height=350)
-		beanplot(averagePushesErrored+averagePushesFailed, col="gray", ylab="Percentage(%)")
+		png(paste("vioplot-broken-build.png", sep=""), width=300, height=350)
+		vioplot(averagePushesErrored+averagePushesFailed, col="gray")
+		title(y="Percentage(%)")
 		dev.off()
 
-		png(paste("beanplot-broken-pull-request.png", sep=""), width=300, height=350)
-		beanplot(averagePRErrored+averagePRFailed, col="gray", ylab="Percentage(%)")
+		png(paste("vioplot-broken-pull-request.png", sep=""), width=300, height=350)
+		vioplot(averagePRErrored+averagePRFailed, col="gray")
+		title(y="Percentage(%)")
 		dev.off()
 
 		png(paste("broken-build.png", sep=""), width=425, height=350)
@@ -281,6 +310,17 @@ while (count <= length(pathFoldersMergeScenarios)){
 		text(x, mydata$NotBrokenBuild-10, labels=round(mydata$NotBrokenBuild), col="black")
 		text(x, mydata$NotBrokenBuild+10, labels=round(mydata$BrokenBuild))
 		dev.off()
+
+		#DF1 <- melt(mydata, id.var="Rank")
+		DF <- read.table(text="Rank F1     F2     F3 1    500    250    50 2    400    100    30 3    300    155    100 4    200    90     10", header=TRUE)
+		DF1 <- melt(DF, id.var="Rank")
+		png(paste("broken-build-alguma.png", sep=""), width=425, height=350)
+		#ggplot(DF1, aes(x = Rank, y = value, fill = variable)) +   geom_bar(stat = "identity") + theme_minimal()
+		dev.off()
+		#png(paste("broken-build.png", sep=""), width=425, height=350)
+		#p4 <- ggplot() + geom_bar(aes(y = Percentage, x = Evaluated.Scenarios, fill = Causes), data = charts.data, stat="identity") + coord_flip()
+		#p4 <- p4 + geom_text(data=charts.data, aes(x = Evaluated.Scenarios, y = Percentage, label = paste0("")), size=4) + theme_minimal() +  ggtitle("Distribution of Errored Build Causes") + theme(axis.text=element_text(size=12), axis.title=element_text(size=14,face="bold")) + theme(plot.title = element_text(family = "Trebuchet MS", color="#666666", face="bold", size=22, hjust=0))
+		#p4
 
 		png(paste("broken-pull-request.png", sep=""), width=425, height=350)
 		mydataPR <- data.frame(row.names =c("Aggregated", "Average"), NotBrokenBuilds =c(AggregatedPRNotBrokenBuilds, averagePRNotBrokenBuilds), BrokenBuilds =c(AggregatedPRBrokenBuilds, averagePRBrokenBuilds))
@@ -341,12 +381,14 @@ while (count <= length(pathFoldersMergeScenarios)){
 		print(averagePRErroredBuilds)
 		sink()
 
-		png(paste("beanplot-errored-build.png", sep=""), width=300, height=350)
-		beanplot(averagePushesErrored, col="gray", ylab="Percentage(%)")
+		png(paste("vioplot-errored-build.png", sep=""), width=300, height=350)
+		vioplot(averagePushesErrored, col="gray")
+		title(ylab="Percentage(%)")
 		dev.off()
 
-		png(paste("beanplot-errored-pull-request.png", sep=""), width=300, height=350)
-		beanplot(averagePRErrored, col="gray", ylab="Percentage(%)")
+		png(paste("vioplot-errored-pull-request.png", sep=""), width=300, height=350)
+		vioplot(averagePRErrored, col="gray")
+		title(ylab="Percentage(%)")
 		dev.off()
 
 		png(paste("errored-build.png", sep=""), width=425, height=350)
@@ -415,13 +457,15 @@ while (count <= length(pathFoldersMergeScenarios)){
 		print(averagePRFailedBuilds)
 		sink()
 
-		png(paste("beanplot-failed-build.png", sep=""), width=300, height=350)
-		beanplot(averagePushesFailed, col="gray", ylab="Percentage(%)")
-		dev.off()
+		#png(paste("vioplot-failed-build.png", sep=""), width=300, height=350)
+		#vioplot(averagePushesFailed, col="gray")
+		#title(ylab="Percentage(%)")
+		#dev.off()
 
-		png(paste("beanplot-failed-pull-request.png", sep=""), width=300, height=350)
-		beanplot(averagePRFailed, col="gray", ylab="Percentage(%)")
-		dev.off()
+		#png(paste("vioplot-failed-pull-request.png", sep=""), width=300, height=350)
+		#vioplot(averagePRFailed, col="gray", ylab="Percentage(%)")
+		#title(ylab="Percentage(%)")
+		#dev.off()
 
 		png(paste("failed-build.png", sep=""), width=425, height=350)
 		mydataFailed <- data.frame(row.names =c("Aggregated", "Average"), NotFailedBuilds =c(AggregatedPushNotFailedBuilds, averagePushNotFailedBuilds), FailedBuilds =c(AggregatedPushFailedBuilds, averagePushFailedBuilds))
@@ -476,8 +520,9 @@ while (count <= length(pathFoldersMergeScenarios)){
 		cat("\n")
 		sink()
 
-		png(paste("beanplot-merge-scenario.png", sep=""), width=300, height=350)
-		beanplot(averageMergeScenarios, col="gray", ylab="Percentage(%)")
+		png(paste("vioplot-merge-scenario.png", sep=""), width=300, height=350)
+		vioplot(averageMergeScenarios, col="gray")
+		title(ylab="Percentage(%)")
 		dev.off()
 
 		png(paste("merge-scenario.png", sep=""), width=425, height=350)
@@ -487,8 +532,9 @@ while (count <= length(pathFoldersMergeScenarios)){
 		text(x, mydataMergeScenario$NotBuilt+10, labels=round(mydataMergeScenario$Built))
 		dev.off()
 
-		png(paste("beanplot-merge-scenario-valid.png", sep=""), width=300, height=350)
-		beanplot(averageMergeScenariosValid, col="gray", ylab="Percentage(%)")
+		png(paste("vioplot-merge-scenario-valid.png", sep=""), width=300, height=350)
+		vioplot(averageMergeScenariosValid, col="gray")
+		title(ylab="Percentage(%)")
 		dev.off()
 
 		png(paste("merge-scenario-valid.png", sep=""), width=425, height=350)
@@ -525,9 +571,10 @@ while (count <= length(pathFoldersMergeScenarios)){
 		averageErroredPushConfigAllPerc = mean(erroredPushConfigAll, na=TRUE)
 		averageErroredPushSourceAllPerc = mean(erroredPushSourceAll, na=TRUE)
 		averageErroredPushAllTogetherPerc = mean(erroredPushAllTogether, na=TRUE)
-		print (median(averageMergeScenariosErrored))
-		png(paste("beanplot-errored-build-errored-ms.png", sep=""), width=300, height=350)
-		beanplot(averageMergeScenariosErrored, col="gray", ylab="Percentage(%)")
+
+		png(paste("vioplot-errored-build-errored-ms.png", sep=""), width=300, height=350)
+		vioplot(averageMergeScenariosErrored, col="gray")
+		title(xlab="", ylab="Percentage(%)")
 		dev.off()
 
 		png(paste("errored-build-frequency-ms.png", sep=""), width=425, height=350)
@@ -850,7 +897,7 @@ while (count <= length(pathFoldersMergeScenarios)){
 	unlink("BuildConflictsAnalysis.csv", recursive = FALSE, force = FALSE)
 	unlink("ConflictingContributionAnalysis.csv", recursive = FALSE, force = FALSE)
 	unlink("FrequencyBuildsContributionsConflict.csv", recursive = FALSE, force = FALSE)
-	infoCSVFile = matrix(c("ProjectName", "gitProblem", "unavailableSymbol", "compilerError", "methodUpdate", "AnotherError", "remoteError", "malformedExpression", "unimplementedMethod", "statementDuplication", "dependencyProblem"), ncol=11)
+	infoCSVFile = matrix(c("ProjectName", "gitProblem", "unavailableSymbol", "compilerError", "MethodParameterListSize", "AnotherError", "remoteError", "malformedExpression", "unimplementedMethod", "statementDuplication", "dependencyProblem"), ncol=11)
 	write.table(infoCSVFile, file = "AllBuiltMergeAnalysis.csv", col.names=F, row.names=F, append=TRUE, sep=",")
 	write.table(infoCSVFile, file = "BuildConflictsAnalysis.csv", col.names=F, row.names=F, append=TRUE, sep=",")
 	write.table(infoCSVFile, file = "ConflictingContributionAnalysis.csv", col.names=F, row.names=F, append=TRUE, sep=",")
@@ -862,9 +909,9 @@ while (count <= length(pathFoldersMergeScenarios)){
 		setwd(file.path(rootPathProject, paste("FinalResults/MergeScenarios",foldersMergeScenarios[count],"ErroredCases", sep="/")))
 		projectInfo = read.csv(listFiles[indexFiles], header=T)
 		projectName = strsplit(strsplit(listFiles[indexFiles], "Errored")[[1]], ".csv")[[2]][1]
-		infoValues = matrix(c("gitProblem", 0, "unavailableSymbol", 0, "compilerError", 0, "methodUpdate", 0, " ", 0, "remoteError", 0, "malformedExpression", 0, "unimplementedMethod", 0, "statementDuplication", 0, "dependencyProblem", 0), ncol=10, nrow=2)
-		buildConflicts = matrix(c("gitProblem", 0, "unavailableSymbol", 0, "compilerError", 0, "methodUpdate", 0, " ", 0, "remoteError", 0, "malformedExpression", 0, "unimplementedMethod", 0, "statementDuplication", 0, "dependencyProblem", 0), ncol=10, nrow=2)
-		conflictingContribution = matrix(c("gitProblem", 0, "unavailableSymbol", 0, "compilerError", 0, "methodUpdate", 0, " ", 0, "remoteError", 0, "malformedExpression", 0, "unimplementedMethod", 0, "statementDuplication", 0, "dependencyProblem", 0), ncol=10, nrow=2)
+		infoValues = matrix(c("gitProblem", 0, "unavailableSymbol", 0, "compilerError", 0, "MethodParameterListSize", 0, " ", 0, "remoteError", 0, "malformedExpression", 0, "unimplementedMethod", 0, "statementDuplication", 0, "dependencyProblem", 0), ncol=10, nrow=2)
+		buildConflicts = matrix(c("gitProblem", 0, "unavailableSymbol", 0, "compilerError", 0, "MethodParameterListSize", 0, " ", 0, "remoteError", 0, "malformedExpression", 0, "unimplementedMethod", 0, "statementDuplication", 0, "dependencyProblem", 0), ncol=10, nrow=2)
+		conflictingContribution = matrix(c("gitProblem", 0, "unavailableSymbol", 0, "compilerError", 0, "MethodParameterListSize", 0, " ", 0, "remoteError", 0, "malformedExpression", 0, "unimplementedMethod", 0, "statementDuplication", 0, "dependencyProblem", 0), ncol=10, nrow=2)
 		countLines = 1
 		numberLines = length(projectInfo$MessageState)
 		while (countLines <= numberLines){
@@ -887,7 +934,24 @@ while (count <= length(pathFoldersMergeScenarios)){
 				while (countMatchLine <= length(matchLine)){
 					if (matchLine[countMatchLine] == TRUE){
 						infoValues[countMessage+2] = strtoi(infoValues[countMessage+2]) + 1
-						if (projectInfo$BuildConflict[countLines] == "true"){
+						cc = projectInfo$ConflictingContributions[countLines]
+						if (projectInfo$MessageState[countLines] != "[]"){
+							cc = gsub("\\[", "", cc)
+							cc = gsub("\\]", "", cc)
+							cc = gsub("\"", "", cc)
+							cc = gsub(" ", "", cc)
+							cc = strsplit(cc, ",")[[1]]
+						}
+						status = 1
+						statusFinal = TRUE
+						while (status <= length(cc)) {
+							if (cc[status] == "false"){
+								statusFinal = FALSE
+							}
+							status = status + 1
+						}
+
+						if (statusFinal == TRUE){
 							if (projectInfo$AllColaborationsIntgrated[countLines] == "true"){
 								buildConflicts[countMessage+2] = strtoi(buildConflicts[countMessage+2]) + 1
 							}else{
@@ -934,7 +998,7 @@ while (count <= length(pathFoldersMergeScenarios)){
 		allErroredGitProblem = mean(allErroredAnalysis$gitProblem)
 		allErroredUnavailableSymbol = mean(allErroredAnalysis$unavailableSymbol)
 		allErroredCompilerError = mean(allErroredAnalysis$compilerError)
-		allErroredMethodUpdate = mean(allErroredAnalysis$methodUpdate)
+		allErroredMethodUpdate = mean(allErroredAnalysis$MethodParameterListSize)
 		allErroredAnother = mean(allErroredAnalysis$AnotherError)
 		allErroredRemote = mean(allErroredAnalysis$remoteError)
 		allErroredMalformed = mean(allErroredAnalysis$malformedExpression)
@@ -952,18 +1016,20 @@ while (count <= length(pathFoldersMergeScenarios)){
 
 		Compilation = allErroredAnalysis[,3] + allErroredAnalysis[,5] + allErroredAnalysis[,8] + allErroredAnalysis[,9] + allErroredAnalysis[,10]
 		Environment = allErroredAnalysis[,2] + allErroredAnalysis[,4]
-
-		png(paste("beanplot-individual-cases", namesConflictingPics[countFilesConflicting],".png", sep="-"), width=1200, height=650)
-		#beanplot(UnavSymbol, MethodUpdate, Unimplemented, StatDuplication, names=c("Unavailable Symbol", "Method Update", "Unimplemented Method", "Statement Duplication"), col="gray", ylab="Percentage(%)")
+		#png(paste("vioplot-individual-cases", namesConflictingPics[countFilesConflicting],".png", sep="-"), width=1200, height=650)
+		#vioplot(UnavSymbol, MethodUpdate, Unimplemented, StatDuplication, names=c("Unavailable Symbol", "Method Update", "Unimplemented Method", "Statement Duplication"), col="gray", ylab="Percentage(%)")
 		bplotIndividual = cbind(UnavSymbol, MethodUpdate, Unimplemented, StatDuplication)
-		boxplot(bplotIndividual, col="gray", ylab="Number of Occurences", xlab=c(paste("Causes", foldersMergeScenarios[count], sep=" - ")), names=c("Unavailable Symbol", "Method Update", "Unimplemented Method", "Statement Duplication"))
-		dev.off()
+		
+		#vioplot(bplotIndividual, col="gray", names=c("Unavailable Symbol", "Method Update", "Unimplemented Method", "Statement Duplication"))
+		#title(ylab="Number of Occurences", xlab=c(paste("Causes", foldersMergeScenarios[count], sep=" - ")))
+		#dev.off()
 
-		png(paste("beanplot-general-cases", namesConflictingPics[countFilesConflicting], ".png", sep="-"), width=400, height=550, title="Teste")
-		#beanplot(Compilation, Environment, Remote, Another, names=c("Compilation", "Environment", "Remote", "Another"), col="gray", ylab="Percentage(%)")
-		bplotGeneral = cbind(Compilation, Environment, Remote, Another)
-		boxplot(bplotGeneral, col="gray", ylab="Number of Occurences", xlab=c(paste("Causes", foldersMergeScenarios[count], sep=" - ")), names=c("Compilation", "Environment", "Remote", "Another"))
-		dev.off()
+		#png(paste("vioplot-general-cases", namesConflictingPics[countFilesConflicting], ".png", sep="-"), width=400, height=550, title="Teste")
+		#vioplot(Compilation, Environment, Remote, Another, names=c("Compilation", "Environment", "Remote", "Another"), col="gray", ylab="Percentage(%)")
+		#bplotGeneral = cbind(Compilation, Environment, Remote, Another)
+		#vioplot(bplotGeneral, col="gray", names=c("Compilation", "Environment", "Remote", "Another"))
+		#title(ylab="Number of Occurences", xlab=c(paste("Causes", foldersMergeScenarios[count], sep=" - ")))
+		#dev.off()
 
 		countFilesConflicting = countFilesConflicting + 1
 	}
@@ -974,8 +1040,8 @@ while (count <= length(pathFoldersMergeScenarios)){
 	csvFileCC = read.csv("ConflictingContributionAnalysis.csv", header=T)
 	unlink("BuildConflictsPercentage.csv", recursive = FALSE, force = FALSE)
 	unlink("ConflictingContributionsPercentage.csv", recursive = FALSE, force = FALSE)
-	#unlink("BuildConflictsPercentageGeneral.csv", recursive = FALSE, force = FALSE)
-	infoCSVFile = matrix(c("ProjectName", "unavailableSymbol", "methodUpdate", "malformedExpression", "unimplementedMethod", "statementDuplication", "dependencyProblem", "General"), ncol=8)
+	unlink("BuildConflictsPercentageGeneral.csv", recursive = FALSE, force = FALSE)
+	infoCSVFile = matrix(c("ProjectName", "unavailableSymbol", "MethodParameterListSize", "malformedExpression", "unimplementedMethod", "statementDuplication", "dependencyProblem", "General"), ncol=8)
 	infoCSVBCGeneral = matrix(c("ProjectName", "BC", "CC"), ncol=3)
 	write.table(infoCSVFile, file = "BuildConflictsPercentage.csv", col.names=F, row.names=F, append=TRUE, sep=",")
 	write.table(infoCSVFile, file = "ConflictingContributionsPercentage.csv", col.names=F, row.names=F, append=TRUE, sep=",")
@@ -998,16 +1064,17 @@ while (count <= length(pathFoldersMergeScenarios)){
 							sum(strtoi(csvFileCC[countLine,9]))*100/(sum(strtoi(csvFileCC[countLine,]))-countLine),
 							sum(strtoi(csvFileCC[countLine,10]))*100/(sum(strtoi(csvFileCC[countLine,]))-countLine),
 							sum(strtoi(csvFileCC[countLine,11]))*100/(sum(strtoi(csvFileCC[countLine,]))-countLine),
-							sum(sum(strtoi(csvFileCC[countLine,3]), strtoi(csvFileBC[countLine,5]), strtoi(csvFileBC[countLine,8]), strtoi(csvFileBC[countLine,9]), strtoi(csvFileBC[countLine,10])))*100/sum(sum(strtoi(csvFileAll[countLine,3]),strtoi(csvFileAll[countLine,5]),strtoi(csvFileAll[countLine,8]),strtoi(csvFileAll[countLine,9]), strtoi(csvFileAll[countLine,10])))
+							sum(sum(strtoi(csvFileCC[countLine,3]), strtoi(csvFileCC[countLine,5]), strtoi(csvFileCC[countLine,8]), strtoi(csvFileCC[countLine,9]), strtoi(csvFileCC[countLine,10])))*100/sum(sum(strtoi(csvFileAll[countLine,3]),strtoi(csvFileAll[countLine,5]),strtoi(csvFileAll[countLine,8]),strtoi(csvFileAll[countLine,9]), strtoi(csvFileAll[countLine,10])))
 		), ncol=8), file = "ConflictingContributionsPercentage.csv", row.names=F, col.names=F, sep=",", append=TRUE)
 		#write.table(matrix(c(as.character(csvFileAll[countLine,1]), (sum(strtoi(csvFileBC[countLine, ]))-1)*100/(sum(strtoi(csvFileAll[countLine,]))-1), (sum(strtoi(csvFileCC[countLine, ]))-1)*100/(sum(strtoi(csvFileAll[countLine,]))-1)), ncol=3), file="BuildConflictsPercentageGeneral.csv", row.names=F, col.names=F, sep=",", append=TRUE)
 		countLine = countLine + 1
 	}
+
 	setwd(file.path(pathFoldersMergeScenarios[count], rq11))
 	csvFileCCPercent = read.csv("ConflictingContributionAnalysis.csv", header=T)
 	csvFileBCPercent = read.csv("BuildConflictsAnalysis.csv", header=T)	
 	unavailableSymbolBCPercent = sum(csvFileBCPercent$unavailableSymbol)
-	updateSymbolBCPercent = sum(csvFileBCPercent$methodUpdate)
+	updateSymbolBCPercent = sum(csvFileBCPercent$MethodParameterListSize)
 	unimplementedSymbolBCPercent = sum(csvFileBCPercent$unimplementedMethod)
 	statementSymbolBCPercent = sum(csvFileBCPercent$statementDuplication)
 	totalBCPercent = unavailableSymbolBCPercent + updateSymbolBCPercent + unimplementedSymbolBCPercent + statementSymbolBCPercent
@@ -1026,16 +1093,26 @@ while (count <= length(pathFoldersMergeScenarios)){
 	cat("\n")
 	sink()
 
-	#png(paste("percentage-CC", sep="-"), width=600, height=550)
-	#boxplot(csvFileCCPercent$unavailableSymbol, csvFileCCPercent$methodUpdate, csvFileCCPercent$unimplementedMethod, csvFileCCPercent$statementDuplication, col="gray", ylab="Percentage(%)", names=c("UnavSymbol", "MethodUpda", "Unimplemented", "StatDuplication"))
-	#dev.off()
+	setwd(file.path(rAnalysisPath, frequencyAnalysis))
+	write.table(matrix(c("Build Conflicts", "Semantic", unavailableSymbolBCPercent*100/totalBCPercent + unimplementedSymbolBCPercent*100/totalBCPercent), ncol=3), file = "AllScenariosAnalysis.csv", col.names=F, row.names=F, append=TRUE, sep=",")
+	write.table(matrix(c("Build Conflicts", "Syntax", statementSymbolBCPercent*100/totalBCPercent), ncol=3), file = "AllScenariosAnalysis.csv", col.names=F, row.names=F, append=TRUE, sep=",")
+	write.table(matrix(c("Build Conflicts", "Type Mismatch", updateSymbolBCPercent*100/totalBCPercent), ncol=3), file = "AllScenariosAnalysis.csv", col.names=F, row.names=F, append=TRUE, sep=",")
+	write.table(matrix(c("Build Conflicts", "Dependency", 0), ncol=3), file = "AllScenariosAnalysis.csv", col.names=F, row.names=F, append=TRUE, sep=",")
+	setwd(file.path(pathFoldersMergeScenarios[count], rq11))
 
 	unavailableSymbolCCPercent = sum(csvFileCCPercent$unavailableSymbol)
-	updateSymbolCCPercent = sum(csvFileCCPercent$methodUpdate)
+	updateSymbolCCPercent = sum(csvFileCCPercent$MethodParameterListSize)
 	unimplementedSymbolCCPercent = sum(csvFileCCPercent$unimplementedMethod)
 	statementSymbolCCPercent = sum(csvFileCCPercent$statementDuplication)
 	totalCCPercent = unavailableSymbolCCPercent + updateSymbolCCPercent + unimplementedSymbolCCPercent + statementSymbolCCPercent
 
+	setwd(file.path(rAnalysisPath, frequencyAnalysis))
+	write.table(matrix(c("Badly-Solved Scenarios", "Semantic", unavailableSymbolCCPercent*100/totalCCPercent + unimplementedSymbolCCPercent*100/totalCCPercent), ncol=3), file = "AllScenariosAnalysis.csv", col.names=F, row.names=F, append=TRUE, sep=",")
+	write.table(matrix(c("Badly-Solved Scenarios", "Syntax", statementSymbolCCPercent*100/totalCCPercent), ncol=3), file = "AllScenariosAnalysis.csv", col.names=F, row.names=F, append=TRUE, sep=",")
+	write.table(matrix(c("Badly-Solved Scenarios", "Type Mismatch", updateSymbolCCPercent*100/totalCCPercent), ncol=3), file = "AllScenariosAnalysis.csv", col.names=F, row.names=F, append=TRUE, sep=",")
+	write.table(matrix(c("Badly-Solved Scenarios", "Dependency", 0), ncol=3), file = "AllScenariosAnalysis.csv", col.names=F, row.names=F, append=TRUE, sep=",")
+	setwd(file.path(pathFoldersMergeScenarios[count], rq11))
+	
 	sink("causes-frequency-CC.txt")
 	cat("What are the Causes of Conflicting Contributions?")
 	cat("\n")
@@ -1050,26 +1127,44 @@ while (count <= length(pathFoldersMergeScenarios)){
 	cat("\n")
 	sink()
 
-	#png(paste("percentage-BC", sep="-"), width=600, height=550)
-	#boxplot(csvFileBCPercent$unavailableSymbol, csvFileBCPercent$methodUpdate, csvFileBCPercent$unimplementedMethod, csvFileBCPercent$statementDuplication, col="gray", ylab="Percentage(%)", names=c("UnavSymbol", "MethodUpda", "Unimplemented", "StatDuplication"))
-	#dev.off()
+	csvFileCCPercent = read.csv("ConflictingContributionsPercentage.csv", header=T)
+	png(paste("percentage-CC", sep="-"), width=600, height=550)
+	boxplot(csvFileCCPercent$unavailableSymbol, csvFileCCPercent$MethodParameterListSize, csvFileCCPercent$unimplementedMethod, csvFileCCPercent$statementDuplication, col="gray", names=c("UnavSymbol", "MethodUpda", "Unimplemented", "StatDuplication"))
+	title(ylab="Percentage(%)")
+	dev.off()
+
+	csvFileBCPercent = read.csv("BuildConflictsPercentage.csv", header=T)	
+	png(paste("percentage-BC", sep="-"), width=600, height=550)
+	boxplot(csvFileBCPercent$unavailableSymbol, csvFileBCPercent$MethodParameterListSize, csvFileBCPercent$unimplementedMethod, csvFileBCPercent$statementDuplication, col="gray", names=c("UnavSymbol", "MethodUpda", "Unimplemented", "StatDuplication"))
+	title(ylab="Percentage(%)")
+	dev.off()
 
 	count = count + 1
 }
 
 setwd(file.path(rAnalysisPath, frequencyAnalysis))
+charts.data <- read.csv("AllScenariosAnalysis.csv")
+png(paste("distribution-problems", sep="-"), width=700, height=650)
+p4 <- ggplot() + geom_bar(aes(y = Percentage, x = Evaluated.Scenarios, fill = Causes), data = charts.data, stat="identity") + coord_flip()
+p4 <- p4 + geom_text(data=charts.data, aes(x = Evaluated.Scenarios, y = Percentage, label = paste0("")), size=4) + theme_minimal() +  ggtitle("Distribution of Errored Build Causes") + theme(axis.text=element_text(size=12), axis.title=element_text(size=14,face="bold")) + theme(plot.title = element_text(family = "Trebuchet MS", color="#666666", face="bold", size=22, hjust=0))
+p4
+dev.off()
 
 png(paste("frequency-build-conflicts-BC.png", sep="-"), width=600, height=550)
-beanplot(frequencyBuildConflicts[,1],frequencyBuildConflicts[,2],frequencyBuildConflicts[,3], col="gray", ylab="Percentage(%)", xlab=foldersMergeScenarios[count], names=c("BuiltMergeScenarios", "AllMergeScenarios", "IntervalMergeScenarios"))
+#vioplot(frequencyBuildConflicts[,1],frequencyBuildConflicts[,2],frequencyBuildConflicts[,3], col="gray", names=c("BuiltMergeScenarios", "AllMergeScenarios", "IntervalMergeScenarios"))
+vioplot(frequencyBuildConflicts[,1], col="gray", names=c("BuiltMergeScenarios"))
+title(ylab="Percentage(%)", xlab=foldersMergeScenarios[count])
 dev.off()
 print (mean(frequencyBuildConflicts[,1]))
-print (mean(frequencyBuildConflicts[,2]))
-print (mean(frequencyBuildConflicts[,3]))
+#print (mean(frequencyBuildConflicts[,2]))
+#print (mean(frequencyBuildConflicts[,3]))
 
 png(paste("frequency-conflicting-contribution-CC.png", sep="-"), width=600, height=550)
-beanplot(frequencyConflictingContributions[,1], frequencyConflictingContributions[,2], frequencyConflictingContributions[,3], col="gray", ylab="Percentage(%)", xlab=foldersMergeScenarios[count], names=c("BuiltMergeScenarios", "AllMergeScenarios", "IntervalMergeScenarios"))
+#vioplot(frequencyConflictingContributions[,1], frequencyConflictingContributions[,2], frequencyConflictingContributions[,3], col="gray", names=c("BuiltMergeScenarios", "AllMergeScenarios", "IntervalMergeScenarios"))
+vioplot(frequencyConflictingContributions[,1], col="gray", names=c("BuiltMergeScenarios"))
+title(ylab="Percentage(%)", xlab=foldersMergeScenarios[count])
 dev.off()
 
 print (mean(frequencyConflictingContributions[,1]))
-print (mean(frequencyConflictingContributions[,2]))
-print (mean(frequencyConflictingContributions[,3]))
+#print (mean(frequencyConflictingContributions[,2]))
+#print (mean(frequencyConflictingContributions[,3]))
