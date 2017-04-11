@@ -8,7 +8,7 @@ class CausesErroredBuild
 		@expectedSymbol = 0
 		@unavailableVariable = 0
 		@unavailableMethod = 0
-		@unavailablePackage = 0
+		@unavailableFile = 0
 		@unimplementedMethod = 0
 		@deniedAccess = 0
 		@remoteError = 0
@@ -42,8 +42,8 @@ class CausesErroredBuild
 		@unavailableVariable
 	end
 
-	def getUnavailablePackage()
-		@unavailablePackage
+	def getUnavailableFile()
+		@unavailableFile
 	end
 
 	def getUnavailableMethod()
@@ -102,7 +102,7 @@ class CausesErroredBuild
 		@unavailableVariable += value
 	end
 
-	def setUnavailablePackage(value)
+	def setUnavailableFile(value)
 		@unavailablePackage += value
 	end
 
@@ -139,8 +139,8 @@ class CausesErroredBuild
 	end
 
 	def getTotal()
-		return getGitProblem() + getRemoteError() + getCompilerError() + getOtherError() + getDependencyProblem() + getDeniedAccess() + getUnimplementedMethod() + 
-			getUnavailableVariable() + getUnimplementedMethod() + getUnavailablePackage() + getExpectedSymbol() + getMissingReturn() + getStatementDuplication() + 
-			getMethodParameterListSize() + getMethodParameterType()
+		return @methodParameterListSize + @methodParameterType + @statementDuplication + @missingReturn + @expectedSymbol + 
+			@unavailableVariable + @unavailableMethod + @unavailableFile + @unimplementedMethod + @deniedAccess + @remoteError + 
+			@compilerError + @dependencyProblem + @otherError + @gitProblem
 	end
 end

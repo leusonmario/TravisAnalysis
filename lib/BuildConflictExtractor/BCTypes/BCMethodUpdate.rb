@@ -1,8 +1,12 @@
 class BCMethodUpdate
 
-	def initialize()
-		
+	def initialize(gumTreePath)
+		@gumTreePath = gumTreePath
 	end
+
+    def getGumTreePath()
+        @gumTreePath
+    end
 
 	def verifyBuildConflict(leftPath, rightPath, filesConflicting)
 		count = 0

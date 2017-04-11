@@ -21,7 +21,7 @@ class CloneProjectGit
 		return Dir.pwd
 	end
 
-	def deleteMergeScenarioProject()
+	def deleteProject()
 		Dir.chdir @mainLocalClonePath
 		%x(rm -rf #{@nameFolder})
 	end

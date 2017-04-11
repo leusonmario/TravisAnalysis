@@ -18,6 +18,7 @@ class GTAnalysis
 		@copyDirectories = CopyProjectDirectories.new()
 		@projectName = projectName
 		@pathLocalClone = localClone
+		@gumTreePath = gumTreePath
 	end
 
 	def getProjectName()
@@ -47,19 +48,19 @@ class GTAnalysis
 		pathCopies = @copyDirectories.createCopyProject(build.commit.sha, parents, pathProject)
 
 		#  		   					result 		  left 			right 			MergeCommit 	parent1 		parent2 	problemas
-		out = gumTreeDiffByBranch(pathCopies[1], pathCopies[2], pathCopies[3], pathCopies[4], conflictCauses, pathProject, parents)
+		out = gumTreeDiffByBranch(build.commit.sha, pathCopies[1], pathCopies[2], pathCopies[3], pathCopies[4], conflictCauses, pathProject, parents)
 		@copyDirectories.deleteProjectCopies(pathCopies)
 		Dir.chdir actualPath
 		return out
 	end
 
-	def gumTreeDiffByBranch(result, left, right, base, conflictCauses, pathProject, parents)
+	def gumTreeDiffByBranch(mergeCommit, result, left, right, base, conflictCauses, pathProject, parents)
 		baseLeft = @parentMSDiff.runAllDiff(base, left)
 		baseRight = @parentMSDiff.runAllDiff(base, right)
 		leftResult = @parentMSDiff.runAllDiff(left, result)
 		rightResult = @parentMSDiff.runAllDiff(right, result)
 		# passar como parametro o caminho dos diretorios (base, left, right, result). Por enquanto apenas o left e right
-		return verifyModificationStatus(baseLeft, leftResult, baseRight, rightResult, conflictCauses, left, right, pathProject, parents)
+		return verifyModificationStatus(mergeCommit, baseLeft, leftResult, baseRight, rightResult, conflictCauses, left, right, pathProject, parents)
 	end
 
 	def deleteProjectCopies(pathCopies)
@@ -70,10 +71,12 @@ class GTAnalysis
 		end
 	end
 
-	def verifyModificationStatus(baseLeft, leftResult, baseRight, rightResult, conflictCauses, leftPath, rightPath, pathProject, parents)
-		#statusModified = verifyModifiedFile(baseLeft[0], leftResult[0], baseRight[0], rightResult[0])
+	def verifyModificationStatus(mergeCommit, baseLeft, leftResult, baseRight, rightResult, conflictCauses, leftPath, rightPath, pathProject, parents)
 		badlyMergeScenariosExtractor = BadlyMergeScenarioExtractor.new(getProjectName(), pathProject, getPathLocalClone())
-		statusModified = badlyMergeScenariosExtractor.verifyBadlyMergeScenario(parents[0], parents[1])
+		statusModified = badlyMergeScenariosExtractor.verifyBadlyMergeScenario(parents[0], parents[1], mergeCommit)
+		if (statusModified == false)
+			statusModified = verifyModifiedFile(baseLeft[0], leftResult[0], baseRight[0], rightResult[0])
+		end
 		statusAdded = verifyAddedDeletedFile(baseLeft[1], leftResult[1], baseRight[1], rightResult[1])
 		statusDeleted = verifyAddedDeletedFile(baseLeft[2], leftResult[2], baseRight[2], rightResult[2])
 		
@@ -86,7 +89,7 @@ class GTAnalysis
 				if (bcUnimplementedMethod.verifyBuildConflict(baseLeft[0], leftResult[0], baseRight[0], rightResult[0], conflictCauses.getFilesConflict()[indexValue]) == false)
 					conflictingContributions[indexValue] = false
 				end
-			elsif (conflictCause == "unavailableSymbol")
+			elsif (conflictCause == "unavailableSymbolMethod" || conflictCause == "unavailableSymbolVariable" || conflictCause == "unavailableSymbolFile")
 				bcUnavailableSymbol = BCUnavailableSymbol.new()
 				if (bcUnavailableSymbol.verifyBuildConflict(baseLeft, leftResult, baseRight, rightResult, conflictCauses.getFilesConflict()[indexValue], leftPath, rightPath) == false)
 					conflictingContributions[indexValue] = false
@@ -96,8 +99,8 @@ class GTAnalysis
 				if (bcStatementDuplication.verifyBuildConflict(baseLeft, leftResult, baseRight, rightResult, conflictCauses.getFilesConflict()[indexValue]) == false)
 					conflictingContributions[indexValue] = false
 				end
-			elsif (conflictCause == "methodUpdate")
-				bcMethodUpdate = BCMethodUpdate.new()
+			elsif (conflictCause == "methodParameterListSize")
+				bcMethodUpdate = BCMethodUpdate.new(getGumTreePath())
 				if (bcMethodUpdate.verifyBuildConflict(leftPath, rightPath, conflictCauses.getFilesConflict()[indexValue]) == false)
 					conflictingContributions[indexValue] = false
 				end
@@ -129,6 +132,26 @@ class GTAnalysis
 		if (baseRightInitial.size > 0)
 			baseRightInitial.each do |fileLeft|
 				if (!leftResultFinal.include?(fileLeft))
+					return false
+				end
+			end
+		end
+		return true
+	end
+
+	def verifyModifiedFile(baseLeftInitial, leftResultFinal, baseRightInitial, rightResultFinal)
+		if(baseLeftInitial.size > 0)
+			baseLeftInitial.each do |keyFile, fileLeft|
+				fileRight = rightResultFinal[keyFile]
+				if (fileRight == nil or fileLeft != fileRight)
+					return false
+				end
+			end
+		end
+		if(baseRightInitial.size > 0) 
+			baseRightInitial.each do |keyFile, fileRight|
+				fileLeft = leftResultFinal[keyFile]
+				if (fileLeft == nil or fileRight != fileLeft)
 					return false
 				end
 			end

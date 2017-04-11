@@ -22,11 +22,11 @@ class DependencyExtractor
 			if (buildLogExtra.match(/Could not transfer artifact/))
 				filesInformation = buildLogExtra.match(/Could not transfer artifact [a-zA-Z\:\-0-9\.]*/).to_s.gsub("Could not transfer artifact ", "").split("\:")
 			end
-			return "dependencyProblem", filesInformation, numberOccurrences
+			return "dependencyProblem", filesInformation, filesInformation.size
 		rescue
-			return "dependencyProblem", [], numberOccurrences
+			return "dependencyProblem", [], 0
 		end
-		return "dependencyProblem", [], numberOccurrences
+		return "dependencyProblem", [], 0
 	end
 	
 end

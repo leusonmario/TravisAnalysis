@@ -102,7 +102,7 @@ class MainAnalysisProjects
 				mainProjectAnalysisBuilt = buildTravis.runAllAnalysisBuilt(projectName, getWriteCSVAllErroredBuilds(), getWriteCSVForkBuilt(), getWriteCSVForkAll(), getWriteCSVForkInterval(), getPathGumTree(), true)
 				#mainProjectAnalysisAll = buildTravis.runAllAnalysisAll(projectName, getWriteCSVForkAll(), getPathGumTree(), true)
 				#mainProjectAnalysisInterval = buildTravis.runAllAnalysisInterval(projectName, getWriteCSVForkInterval(), getPathGumTree(), true)
-				mainGitProject.deleteProject()
+				mainGitProject.getCloneProject().deleteProject()
 
 				if (mainProjectAnalysisBuilt != nil)
 					getWriteCSVForkBuilt().writeResultsAll(mainProjectAnalysisBuilt)

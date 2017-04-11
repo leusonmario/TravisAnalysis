@@ -171,24 +171,35 @@ class ConflictCategoryErrored
 								otherCase = false
 								localUnavailableSymbol = body.scan(/\[ERROR\] [a-zA-Z0-9\/\-\.\:\[\]\,]* cannot find symbol[\n\r]+\[ERROR\]?[ \t\r\n\f]*symbol[ \t\r\n\f]*:[ \t\r\n\f]*method [a-zA-Z0-9\/\-\.\:\[\]\,\(\)]*[\n\r]+\[ERROR\]?[ \t\r\n\f]*location[ \t\r\n\f]*:[ \t\r\n\f]*class[ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,\(\)]*[\n\r]?|\[#{stringErro}\][\s\S]*#{stringNotFindType}|\[#{stringErro}\][\s\S]*#{stringNotMember}|\[ERROR\]?[\s\S]*cannot find symbol/).size
 								extraction = getUnavailableSymbolExtractor().extractionFilesInfo(body, bodyJob)
-								getCausesErroredBuild.setUnavailableVariable(extraction[2])
+								if (extraction[0] == "unavailableSymbolMethod")
+									getCausesErroredBuild.setUnavailableMethod(extraction[2])
+								elsif (extraction[0] == "unavailableSymbolVariable")
+									getCausesErroredBuild.setUnavailableVariable(extraction[2])
+								else
+									getCausesErroredBuild.setUnavailableFile(extraction[2])
+								end
+								print extraction[0]
+								sleep 60
 								causesFilesConflicts.insertNewCauseOne(extraction[0], extraction[1])
 							end
 
 							if (body[/Could not transfer artifact/] || body[/\[ERROR\][ \t\r\n\f]*Failed to execute goal [a-zA-Z0-9\/\-\.\:\[\]\,\(\) ]*Some Enforcer rules have failed/] || body[/#{stringBuildFail}[\s\S]*#{stringUndefinedExt}/] || body[/\[#{stringErro}\][\s\S]*#{stringDependency}/] || body[/\[#{stringErro}\][\s\S]*#{stringNonParseable}[\s\S]*(#{stringUnexpected}[\s\S]*\[#{stringErro}\])?/] || body[/#{stringScript}[\s\S]*#{stringGradle}[\s\S]*#{stringProblemScript}[\s\S]*#{stringAddTask}[\s\S]*#{stringTaskExists}[\s\S]*#{stringBuildFail}/])
 								otherCase = false
-								aux = body.scan(/#{stringBuildFail}[\s\S]*#{stringUndefinedExt}|\[#{stringErro}\][\s\S]*#{stringDependency}|\[#{stringErro}\][\s\S]*#{stringNonParseable}[\s\S]*(#{stringUnexpected}[\s\S]*\[#{stringErro}\])?|#{stringScript}[\s\S]*#{stringGradle}[\s\S]*#{stringProblemScript}[\s\S]*#{stringAddTask}[\s\S]*#{stringTaskExists}[\s\S]*#{stringBuildFail}/).size
-								if (body[/Could not transfer artifact/] and (type=="Config" || type=="All-Config"))
-									bodyAux = bodyJob[/BUILD FAILURE[\s\S]*/]
-									extraction = getDependencyExtractor().extractionFilesInfo(body, bodyAux)
-									getCausesErroredBuild.setDependencyProblem(extraction[2])
-									causesFilesConflicts.insertNewCauseOne(extraction[0], extraction[1])
-								else
-									causesFilesConflicts.insertNewCauseOne("compilerError",[])
-									getCausesErroredBuild.setCompilerError(extraction[2])
-									@compilerError += aux
+								begin
+									aux = body.scan(/#{stringBuildFail}[\s\S]*#{stringUndefinedExt}|\[#{stringErro}\][\s\S]*#{stringDependency}|\[#{stringErro}\][\s\S]*#{stringNonParseable}[\s\S]*(#{stringUnexpected}[\s\S]*\[#{stringErro}\])?|#{stringScript}[\s\S]*#{stringGradle}[\s\S]*#{stringProblemScript}[\s\S]*#{stringAddTask}[\s\S]*#{stringTaskExists}[\s\S]*#{stringBuildFail}/).size
+									if (body[/Could not transfer artifact/] and (type=="Config" || type=="All-Config"))
+										bodyAux = bodyJob[/BUILD FAILURE[\s\S]*/]
+										extraction = getDependencyExtractor().extractionFilesInfo(body, bodyAux)
+										getCausesErroredBuild.setDependencyProblem(extraction[2])
+										causesFilesConflicts.insertNewCauseOne(extraction[0], extraction[1])
+									else
+										causesFilesConflicts.insertNewCauseOne("compilerError",[])
+										getCausesErroredBuild.setCompilerError(extraction[2])
+										@compilerError += aux
+									end
+								rescue
+									causesFilesConflicts.insertNewCauseOne("compilerError", [])
 								end
-								causesFilesConflicts.insertNewCauseOne("compilerError", [])
 							end
 
 							if (body[/\[ERROR\][ \t\r\n\f]Failed to execute goal[\/\-\.\:a-zA-Z\[\]0-9\,\(\) ]*\n\[ERROR\][ \t\r\n\f][\/\-\.\:a-zA-Z\[\]0-9\,\(\) ]*illegal (character)/] || body[/\[ERROR\]?[ \t\r\n\f]*Failed to execute goal[\/\-\.\:a-zA-Z\[\]0-9\,\(\) ]* Some files do not have the expected license header/] || body[/\[ERROR\][ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,]* missing return statement/] || body[/\[ERROR\][ \t\r\n\f]* [a-zA-Z0-9\/\-\.\:\[\]\,\(\)\; ]* \'[a-zA-Z0-9\/\-\.\:\[\]\,\(\)\; ]*\' expected/] || body[/#{stringUnexpectedToken}/]  || body[/\[#{stringErro}\](.*)?#{stringError}\: #{stringMalformed}/] or body[/\[ERROR\](.*)?#{stringError}\:\'(.*)?\'#{stringExpected}/])

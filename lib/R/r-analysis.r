@@ -1078,7 +1078,7 @@ while (count <= 1){
 	unimplementedSymbolBCPercent = sum(csvFileBCPercent$unimplementedMethod)
 	statementSymbolBCPercent = sum(csvFileBCPercent$statementDuplication)
 	totalBCPercent = unavailableSymbolBCPercent + updateSymbolBCPercent + unimplementedSymbolBCPercent + statementSymbolBCPercent
-
+	print (totalBCPercent)
 	sink("causes-frequency-BC.txt")
 	cat("What are the Causes of Build Conflicts?")
 	cat("\n")

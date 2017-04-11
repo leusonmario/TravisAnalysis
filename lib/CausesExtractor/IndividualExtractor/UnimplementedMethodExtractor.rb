@@ -31,9 +31,9 @@ class UnimplementedMethodExtractor
 				filesInformation.push([classFile, interfaceFile, methodInterface])
 				count += 1
 			end
-			return "unimplementedMethod", filesInformation, numberOccurrences
+			return "unimplementedMethod", filesInformation, interfaceFiles.size
 		rescue
-			return "unimplementedMethod", [], numberOccurrences
+			return "unimplementedMethod", [], 0
 		end
 	end
 	

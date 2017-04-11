@@ -56,8 +56,9 @@ class WriteCSVAllErrored
  	def createErroredCausesFile()
  		Dir.chdir getPathErroredCauses
 		CSV.open("BuildConflictsCauses.csv", "wb") do |csv|
-			csv << ["ProjectName",	"Total", "NO FOUND SYMBOL", "MALFORMED EXPRESSION", "METHOD UPDATE", "DUPLICATE STATEMENT", "DEPENDENCY", "UNIMPLEMENTED METHOD", 
-					"GIT PROBLEM", "REMOTE ERROR", "COMPILER ERROR", "ANOTHER ERROR"]
+			csv << ["ProjectName",	"Total", "UNAVAILABLE VARIABLE", "UNAVAILABLE METHOD", "UNAVAILABLE FILE", "MALFORMED EXPRESSION", 
+				"METHOD UPDATE", "DUPLICATE STATEMENT", "DEPENDENCY", "UNIMPLEMENTED METHOD", "GIT PROBLEM", "REMOTE ERROR", "COMPILER ERROR",
+				"ANOTHER ERROR"]
 		end
 
  		CSV.open("TestConflictsCauses.csv", "wb") do |csv|

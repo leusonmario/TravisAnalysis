@@ -45,9 +45,9 @@ class MethodUpdateExtractor
 					count += 1
 				end
 			end
-			return "MethodParameterListSize", filesInformation, numberOccurrences
+			return "methodParameterListSize", filesInformation, changedClasses.size
 		rescue
-			return "MethodParameterListSize", [], numberOccurrences
+			return "methodParameterListSize", [], 0
 		end
 	end
 	

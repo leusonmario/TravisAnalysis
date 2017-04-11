@@ -17,9 +17,9 @@ class StatementDuplicationExtractor
 				count += 1
 				filesInformation.push([classFile, variableName, methodName])
 			end
-			return "statementDuplication", filesInformation, numberOccurrences
+			return "statementDuplication", filesInformation, information.size
 		rescue
-			return "statementDuplication", [], numberOccurrences
+			return "statementDuplication", [], 0
 		end
 	end
 	
