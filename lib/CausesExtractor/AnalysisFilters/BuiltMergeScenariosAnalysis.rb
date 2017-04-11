@@ -4,7 +4,7 @@ require_rel 'MergeScenariosAnalysis'
 
 class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 
-	def getStatusBuildsProject(projectName, writeCSVAllBuilds, writeCSVBuilt, writeCSVForkAll, writeCSVForkInterval, pathGumTree, withWithoutForks)
+	def getStatusBuildsProject(projectName, writeCSVAllBuilds, writeCSVBuilt, writeCSVForkAll, writeCSVForkInterval, pathGumTree, withWithoutForks, cloneProject)
 		buildTotalPush = 0
 		buildTotalPull = 0
 		buildPushPassed = 0
@@ -65,7 +65,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 						if (status == "passed")
 							buildPullPassed += 1
 						elsif (status == "errored")
-							writeCSVAllBuilds.printErroredBuildPull(projectName.split("/").last, build, confAllErroredPull.findConflictCause(build, getPathProject())[0])
+							#writeCSVAllBuilds.printErroredBuildPull(projectName.split("/").last, build, confAllErroredPull.findConflictCause(build, getPathProject())[0])
 							buildPullErrored += 1
 						elsif (status == "failed")
 							buildPullFailed += 1
@@ -78,7 +78,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 						if (status == "passed")
 							buildPushPassed += 1
 						elsif (status == "errored")
-							writeCSVAllBuilds.printErroredBuild(projectName.split("/").last, build, confAllErrored.findConflictCause(build, getPathProject())[0])
+							#writeCSVAllBuilds.printErroredBuild(projectName.split("/").last, build, confAllErrored.findConflictCause(build, getPathProject())[0])
 							buildPushErrored += 1
 						elsif (status == "failed")
 							#writeCSVAllBuilds.printFailedBuild(projectName.split("/").last, build, confFailedAllErrored.findConflictCause(build))
@@ -125,7 +125,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 										end
 										
 										if (isConflict and result[0] == true) 
-											writeCSVBuilt.printConflictBuild(build, result[1][0], result[2][0], confErroredForkBuilt.findConflictCause(build, getPathProject(), pathGumTree, type, true), projectNameFile)
+											writeCSVBuilt.printConflictBuild(build, result[1][0], result[2][0], confErroredForkBuilt.findConflictCause(build, getPathProject(), pathGumTree, type, true, cloneProject), projectNameFile)
 										end
 									elsif (status == "failed")
 										totalMSFailed += 1

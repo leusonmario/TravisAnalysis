@@ -95,14 +95,16 @@ class MainAnalysisProjects
 		@projectsList.each do |project|
 			printProjectInformation(index, project)
 			mainGitProject = GitProject.new(project, getLocalCLone(), getLoginUser(), getPasswordUser())
+			cloneProject = BadlyMergeScenarioExtractor.new(project, "", getLocalCLone())
 			if(mainGitProject.getProjectAvailable())
 				projectName = mainGitProject.getProjectName()
 				buildTravis = BuildTravis.new(projectName, mainGitProject, getLocalCLone())
 				#mainProjectAnalysisBuilt = buildTravis.runAllAnalysis(projectName, getWriteCSVForkBuilt(), getWriteCSVAllErroredBuilds(),getPathGumTree(), true)
-				mainProjectAnalysisBuilt = buildTravis.runAllAnalysisBuilt(projectName, getWriteCSVAllErroredBuilds(), getWriteCSVForkBuilt(), getWriteCSVForkAll(), getWriteCSVForkInterval(), getPathGumTree(), true)
+				mainProjectAnalysisBuilt = buildTravis.runAllAnalysisBuilt(projectName, getWriteCSVAllErroredBuilds(), getWriteCSVForkBuilt(), getWriteCSVForkAll(), getWriteCSVForkInterval(), getPathGumTree(), true, cloneProject)
 				#mainProjectAnalysisAll = buildTravis.runAllAnalysisAll(projectName, getWriteCSVForkAll(), getPathGumTree(), true)
 				#mainProjectAnalysisInterval = buildTravis.runAllAnalysisInterval(projectName, getWriteCSVForkInterval(), getPathGumTree(), true)
 				mainGitProject.getCloneProject().deleteProject()
+				cloneProject.getCloneProject().deleteProject()
 
 				if (mainProjectAnalysisBuilt != nil)
 					getWriteCSVForkBuilt().writeResultsAll(mainProjectAnalysisBuilt)

@@ -29,8 +29,8 @@ class BuildTravis
 		@intervalMergeScenariosAnalysis
 	end
 
-	def runAllAnalysisBuilt(projectName, writeCSVAllBuilds, writeCSVBuilt,  writeCSVForkAll, writeCSVForkInterval, pathGumTree, withWithoutForks)
-		return getBuiltMergeScenariosAnalysis.getStatusBuildsProject(projectName, writeCSVAllBuilds, writeCSVBuilt, writeCSVForkAll, writeCSVForkInterval, pathGumTree, withWithoutForks)
+	def runAllAnalysisBuilt(projectName, writeCSVAllBuilds, writeCSVBuilt,  writeCSVForkAll, writeCSVForkInterval, pathGumTree, withWithoutForks, cloneProject)
+		return getBuiltMergeScenariosAnalysis.getStatusBuildsProject(projectName, writeCSVAllBuilds, writeCSVBuilt, writeCSVForkAll, writeCSVForkInterval, pathGumTree, withWithoutForks, cloneProject)
 	end
 
 	def runAllAnalysisAll(projectName, writeCSVs, pathGumTree, withWithoutForks)

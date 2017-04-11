@@ -39,8 +39,6 @@ class UnavailableSymbolExtractor
 					filesInformation.push([classFile, methodName, callClassFile])
 				end
 			end
-			print categoryMissingSymbol
-			sleep(20)
 			return categoryMissingSymbol, filesInformation, classFiles.size
 		rescue
 			return categoryMissingSymbol, [], 0

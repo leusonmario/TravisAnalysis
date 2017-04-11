@@ -55,7 +55,7 @@ class ConflictCategoryErrored
 		return getCausesErroredBuild.getTotal()
 	end
 
-	def findConflictCause(build, pathProject, pathGumTree, type, mergeScenario)
+	def findConflictCause(build, pathProject, pathGumTree, type, mergeScenario, cloneProject)
 		localUnavailableSymbol = 0 
 		localMethodUpdate = 0 
 		localMalformedExp = 0 
@@ -178,8 +178,6 @@ class ConflictCategoryErrored
 								else
 									getCausesErroredBuild.setUnavailableFile(extraction[2])
 								end
-								print extraction[0]
-								sleep 60
 								causesFilesConflicts.insertNewCauseOne(extraction[0], extraction[1])
 							end
 
@@ -234,20 +232,20 @@ class ConflictCategoryErrored
 			indexJob += 1
 		end
 		if (mergeScenario)
-			return causesFilesConflicts.getCausesConflict(), getFinalStatus(pathGumTree, pathProject, build, causesFilesConflicts, localMethodUpdate, localUnavailableSymbol, localDuplicateStatement, localUnimplementedMethod, localDependencyProblem), causesFilesConflicts.getCausesNumber()
+			return causesFilesConflicts.getCausesConflict(), getFinalStatus(pathGumTree, pathProject, build, causesFilesConflicts, localMethodUpdate, localUnavailableSymbol, localDuplicateStatement, localUnimplementedMethod, localDependencyProblem, cloneProject), causesFilesConflicts.getCausesNumber()
 		else
 			return causesFilesConflicts.getCausesConflict()
 		end
 	end
 
-	def getFinalStatus(pathGumTree, pathProject, build, conflictCauses, localMethodUpdate, localUnavailableSymbol, localDuplicateStatement, localUnimplementedMethod, localDependencyProblem)
+	def getFinalStatus(pathGumTree, pathProject, build, conflictCauses, localMethodUpdate, localUnavailableSymbol, localDuplicateStatement, localUnimplementedMethod, localDependencyProblem, cloneProject)
 		gtAnalysis = GTAnalysis.new(pathGumTree, @projectName, getPathLocalClone())
 		if(localMethodUpdate > 0 || localUnavailableSymbol > 0 || localDuplicateStatement > 0 || localUnimplementedMethod > 0 || localDependencyProblem > 0)
 			if(localUnimplementedMethod > 0 or localUnavailableSymbol > 0 or localDuplicateStatement > 0 or localMethodUpdate > 0 or localDependencyProblem > 0)
 				if (conflictCauses.getFilesConflict().size < 1)
 					return false, nil
 				else
-					return gtAnalysis.getGumTreeAnalysis(pathProject, build, conflictCauses)
+					return gtAnalysis.getGumTreeAnalysis(pathProject, build, conflictCauses, cloneProject)
 				end
 			end
 			return false, nil

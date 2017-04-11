@@ -103,7 +103,7 @@ class CausesErroredBuild
 	end
 
 	def setUnavailableFile(value)
-		@unavailablePackage += value
+		@unavailableFile += value
 	end
 
 	def setUnavailableMethod(value)

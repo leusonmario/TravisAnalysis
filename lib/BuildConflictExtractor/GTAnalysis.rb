@@ -41,26 +41,26 @@ class GTAnalysis
 		@copyProjectDirectories
 	end
 
-	def getGumTreeAnalysis(pathProject, build, conflictCauses)
+	def getGumTreeAnalysis(pathProject, build, conflictCauses, cloneProject)
 		parents = @mergeCommit.getParentsMergeIfTrue(pathProject, build.commit.sha)
 		actualPath = Dir.pwd
 		
 		pathCopies = @copyDirectories.createCopyProject(build.commit.sha, parents, pathProject)
 
 		#  		   					result 		  left 			right 			MergeCommit 	parent1 		parent2 	problemas
-		out = gumTreeDiffByBranch(build.commit.sha, pathCopies[1], pathCopies[2], pathCopies[3], pathCopies[4], conflictCauses, pathProject, parents)
+		out = gumTreeDiffByBranch(build.commit.sha, pathCopies[1], pathCopies[2], pathCopies[3], pathCopies[4], conflictCauses, pathProject, parents, cloneProject)
 		@copyDirectories.deleteProjectCopies(pathCopies)
 		Dir.chdir actualPath
 		return out
 	end
 
-	def gumTreeDiffByBranch(mergeCommit, result, left, right, base, conflictCauses, pathProject, parents)
+	def gumTreeDiffByBranch(mergeCommit, result, left, right, base, conflictCauses, pathProject, parents, cloneProject)
 		baseLeft = @parentMSDiff.runAllDiff(base, left)
 		baseRight = @parentMSDiff.runAllDiff(base, right)
 		leftResult = @parentMSDiff.runAllDiff(left, result)
 		rightResult = @parentMSDiff.runAllDiff(right, result)
 		# passar como parametro o caminho dos diretorios (base, left, right, result). Por enquanto apenas o left e right
-		return verifyModificationStatus(mergeCommit, baseLeft, leftResult, baseRight, rightResult, conflictCauses, left, right, pathProject, parents)
+		return verifyModificationStatus(mergeCommit, baseLeft, leftResult, baseRight, rightResult, conflictCauses, left, right, pathProject, parents, cloneProject)
 	end
 
 	def deleteProjectCopies(pathCopies)
@@ -71,9 +71,10 @@ class GTAnalysis
 		end
 	end
 
-	def verifyModificationStatus(mergeCommit, baseLeft, leftResult, baseRight, rightResult, conflictCauses, leftPath, rightPath, pathProject, parents)
-		badlyMergeScenariosExtractor = BadlyMergeScenarioExtractor.new(getProjectName(), pathProject, getPathLocalClone())
-		statusModified = badlyMergeScenariosExtractor.verifyBadlyMergeScenario(parents[0], parents[1], mergeCommit)
+	def verifyModificationStatus(mergeCommit, baseLeft, leftResult, baseRight, rightResult, conflictCauses, leftPath, rightPath, pathProject, parents, cloneProject)
+		#badlyMergeScenariosExtractor = BadlyMergeScenarioExtractor.new(getProjectName(), pathProject, getPathLocalClone())
+		#statusModified = badlyMergeScenariosExtractor.verifyBadlyMergeScenario(parents[0], parents[1], mergeCommit)
+		statusModified = cloneProject.verifyBadlyMergeScenario(parents[0], parents[1], mergeCommit)
 		if (statusModified == false)
 			statusModified = verifyModifiedFile(baseLeft[0], leftResult[0], baseRight[0], rightResult[0])
 		end
