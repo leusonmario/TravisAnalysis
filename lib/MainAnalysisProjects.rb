@@ -7,10 +7,11 @@ require_all './CausesExtractor'
 
 class MainAnalysisProjects
 
-	def initialize(loginUser, passwordUser, pathGumTree, projectsList)
+	def initialize(loginUser, passwordUser, travisToken, pathGumTree, projectsList)
 		@loginUser = loginUser
 		@passwordUser = passwordUser
 		@pathGumTree = pathGumTree
+		@token = travisToken
 		@localClone = Dir.pwd
 		delete = %x(rm -rf FinalResults)
 		FileUtils::mkdir_p 'FinalResults/AllErroredBuilds'
@@ -30,6 +31,10 @@ class MainAnalysisProjects
 		@writeCSVAllErroredBuilds = WriteCSVAllErrored.new(Dir.pwd)
 		Dir.chdir getLocalCLone
 		@projectsList = projectsList
+	end
+
+	def getTravisToken()
+		@token
 	end
 
 	def getLocalCLone()
@@ -96,6 +101,7 @@ class MainAnalysisProjects
 			printProjectInformation(index, project)
 			mainGitProject = GitProject.new(project, getLocalCLone(), getLoginUser(), getPasswordUser())
 			cloneProject = BadlyMergeScenarioExtractor.new(project, "", getLocalCLone())
+			extractorCLI = ExtractorCLI.new(getLoginUser(), getPasswordUser(), getTravisToken(), "travis", getLocalCLone(), project)
 			if(mainGitProject.getProjectAvailable())
 				projectName = mainGitProject.getProjectName()
 				buildTravis = BuildTravis.new(projectName, mainGitProject, getLocalCLone())
@@ -144,7 +150,8 @@ File.open("projectsList", "r") do |text|
 end
 
 actualPath = Dir.pwd
-project = MainAnalysisProjects.new(parameters[0], parameters[1], parameters[2], projectsList)
+print parameters
+project = MainAnalysisProjects.new(parameters[0], parameters[1], parameters[2], parameters[3], projectsList)
 project.runAnalysis()
 
 Dir.chdir actualPath
