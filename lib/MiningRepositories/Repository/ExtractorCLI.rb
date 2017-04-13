@@ -108,6 +108,11 @@ class ExtractorCLI
 		end
 	end
 
+	def deleteProject()
+		Dir.chdir getDownloadDir
+		%x(rm -rf #{getName()})
+	end
+
 	def activateTravis()
 		cmd = "travis" + " login --github-token " + @token
 		cmd2 = "travis" + " enable -r " + @username + "/" + @name

@@ -111,6 +111,7 @@ class MainAnalysisProjects
 				#mainProjectAnalysisInterval = buildTravis.runAllAnalysisInterval(projectName, getWriteCSVForkInterval(), getPathGumTree(), true)
 				mainGitProject.getCloneProject().deleteProject()
 				cloneProject.getCloneProject().deleteProject()
+				extractorCLI.deleteProject()
 
 				if (mainProjectAnalysisBuilt != nil)
 					getWriteCSVForkBuilt().writeResultsAll(mainProjectAnalysisBuilt)
@@ -150,7 +151,6 @@ File.open("projectsList", "r") do |text|
 end
 
 actualPath = Dir.pwd
-print parameters
 project = MainAnalysisProjects.new(parameters[0], parameters[1], parameters[2], parameters[3], projectsList)
 project.runAnalysis()
 
