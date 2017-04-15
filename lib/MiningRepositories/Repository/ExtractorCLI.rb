@@ -16,73 +16,27 @@ class ExtractorCLI
 		cloneForkLocally()
 		createBranches()
 		originalToReplayedMerge = Hash.new
-		#File d = new File(this.downloadDir);
-		#d.mkdir();
 	end
 
-	def replayBuildsOnTravis(leftParent, rightParent, mergeCommit, mergeDir)
-		#print "Reseting to parent 1 and pushing to master"
-		resetToOldCommitAndPush(leftParent)
-		mergeBranches("origHist")
-		#print "Reseting to parent 2 and pushing to master"
-		resetToOldCommitAndPush(rightParent)
-		mergeBranches("origHist")
-		#print "Reseting to merge commit and pushing to master"
-		resetToOldCommitAndPush(mergeCommit)
-		#print "Replacing files from original merge to replayed merge and pushing to merges"
-		commitEditedMergeAndPush(mc, mergeDir)
-		mergeBranches("origHist")
+	def replayBuildOnTravis(commit, branch)
+		commitAndPush(commit, branch)
 	end
 
-	def commitEditedMergeAndPush(leftParent, rightParent, mergeCommit, mergeDir)
-		checkoutBranch("merges")
-		commitAndPushMerge(mc)
-		checkoutBranch("master")
-	end
-
-	def commitAndPushMerge(mergeCommit)
-		add = "git add ."
-		commit = "git commit -m \"merge\" "
-		push = "git push origin merges"
+	def commitAndPush(commit, branch)
+		Dir.chdir getDownloadDir()
+		Dir.chdir getName()
+		checkout = "git checkout " + branch
+		reset = "git reset --hard " + commit
+		forcePush = "git push -f origin " + branch
 		
 		begin
-			%x(#{add})
-			%x(#{commit})
-			%x(#{push})
-			newSha = getHead()
-			@originalToReplayedMerge.put(newSha, mergeCommit)
-		rescue 
-			print "IT DID NOT WORK"
-		end
-	end
-
-	def getHead()
-		sha = ""
-		
-		return sha
-	end
-
-	def mergeBranches(branchName)
-		pull = "git merge " + branchName
-		
-		begin
-			%x(#{pull})
-		rescue 
-			print "IT DID NOT WORK"
-		end
-	end
-
-	def resetToOldCommitAndPush(sha)
-		reset = "git reset --hard " + sha
-		forcePush = "git push -f origin HEAD:master"
-		
-		begin
+			%x(#{checkout})
 			%x(#{reset})
 			%x(#{forcePush})
 		rescue
 			print "IT DID NOT WORK"	
 		end
-		
+		Dir.chdir getDownloadDir()
 	end
 
 	def setName()
@@ -135,15 +89,18 @@ class ExtractorCLI
 	end
 
 	def createBranches()
-		createbranch("origHist")
+		createbranch("children")
 		checkoutBranch("master")
 		createbranch("merges")
 		pushBranchToRemote("merges")
+		pushBranchToRemote("children")
 		checkoutBranch("master")
 	end
 
 	def createbranch(branchName)
+		Dir.chdir getDownloadDir()
 		Dir.chdir getName()
+		
 		createBranchCMD = "git checkout -b " + branchName
 		print createBranchCMD
 		begin
@@ -155,6 +112,7 @@ class ExtractorCLI
 	end
 
 	def checkoutBranch(branch)
+		Dir.chdir getDownloadDir()
 		Dir.chdir getName()
 		checkout = "git checkout " + branch
 		begin
@@ -176,6 +134,21 @@ class ExtractorCLI
 		Dir.chdir getDownloadDir()
 	end
 
+	def checkStatusBuild()
+		Dir.chdir getDownloadDir()
+		Dir.chdir getName()
+		checkout = "travis show"
+		status = ""
+		begin
+			historyBuild = %x(#{checkout})
+			status = historyBuild.match(/State:[\s\S]*Type/).to_s.match(/State:[\s\S]*\n/).to_s.match(/ [\s\S]*/).to_s.gsub(" ","")
+		rescue 
+			print "NOT CHECKOUT EXECUTED"
+		end
+		return status
+		Dir.chdir getDownloadDir()
+	end
+
 	def getUsername()
 		@username
 	end
@@ -190,6 +163,10 @@ class ExtractorCLI
 
 	def getDownloadDir()
 		@downloadDir
+	end
+
+	def getPathProject()
+		return getDownloadDir() + "/" + getName()
 	end
 
 end

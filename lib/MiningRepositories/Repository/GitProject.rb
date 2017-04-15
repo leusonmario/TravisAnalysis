@@ -168,32 +168,64 @@ class GitProject
 		update = %x(git pull origin)
 	end
 
-	def conflictScenario(parentsMerge, projectBuilds, build)		
-		parentOne = ""
-		buildOne = ""
-		parentTwo = ""
-		buildTwo = ""
+	def conflictScenario(parentsMerge, projectBuilds)		
+		parentOne = nil
+		buildOne = nil
+		parentTwo = nil
+		buildTwo = nil
 		
 		if (projectBuilds[parentsMerge[0]] != nil and projectBuilds[parentsMerge[1]] != nil)
 			if (projectBuilds[parentsMerge[0]][0]==["passed"])
-					parentOne = true
-					buildOne = projectBuilds[parentsMerge[0]][1]
-			else
-				return false, nil, nil
+				parentOne = true
+				buildOne = projectBuilds[parentsMerge[0]][1]
 			end
 			
 			if (projectBuilds[parentsMerge[1]][0]==["passed"])
-					parentTwo = true
-					buildTwo = projectBuilds[parentsMerge[1]][1]
-			else
-				return false, nil, nil
+				parentTwo = true
+				buildTwo = projectBuilds[parentsMerge[1]][1]
 			end
 			
 			if (parentOne==true and parentTwo==true)
 				return true, buildOne, buildTwo
 			end
 		end
-		return nil, nil, nil
+		return false, buildOne, buildTwo
+	end
+
+	def conflictScenarioAll(parentsMerge, projectBuilds, projectBuildsFork)		
+		parentOne = nil
+		buildOne = nil
+		parentTwo = nil
+		buildTwo = nil
+		
+		if ((projectBuilds[parentsMerge[0]] != nil or projectBuildsFork[parentsMerge[0]] != nil) and (projectBuilds[parentsMerge[1]] != nil or projectBuildsFork[parentsMerge[1]] != nil))
+			begin
+				if (projectBuilds[parentsMerge[0]][0]==["passed"] or projectBuildsFork[parentsMerge[0]][0]==["passed"])
+					parentOne = true
+					if (projectBuilds[parentsMerge[0]][0]==["passed"])
+						buildOne = projectBuilds[parentsMerge[0]][1]
+					else
+						buildOne = projectBuildsFork[parentsMerge[0]][1]
+					end
+				end
+				
+				if (projectBuilds[parentsMerge[1]][0]==["passed"] or projectBuildsFork[parentsMerge[1]][0]==["passed"])
+					parentTwo = true
+					if (projectBuilds[parentsMerge[1]][0]==["passed"])
+						buildTwo = projectBuilds[parentsMerge[1]][1]
+					else
+						buildTwo = projectBuildsFork[parentsMerge[1]][1]
+					end
+				end
+
+				if (parentOne==true and parentTwo==true)
+					return true, buildOne, buildTwo
+				end
+			rescue
+
+			end
+		end
+		return false, buildOne, buildTwo
 	end
 
 	def getCommitCloserToBuild(allbuilds, commit)

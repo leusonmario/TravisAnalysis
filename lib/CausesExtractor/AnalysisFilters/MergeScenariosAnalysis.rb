@@ -46,6 +46,11 @@ class MergeScenariosAnalysis
 		return resultMergeCommit
 	end
 
+	def mergeScenariosAnalysisCommit(sha)
+		resultMergeCommit = mergeCommit.getParentsMergeIfTrue(@pathProject, sha)
+		return resultMergeCommit
+	end
+
 	def loadAllBuilds(projectBuild, confBuild, withWithoutForks)
 		allBuilds = Hash.new()
 		loadAllBuildsProject(projectBuild, confBuild, allBuilds)
