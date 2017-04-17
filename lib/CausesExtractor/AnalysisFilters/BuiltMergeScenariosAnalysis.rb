@@ -146,7 +146,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 				end
 				
 				status = extractorCLI.checkStatusBuild()
-				while (status == "started\n" and idNewLastBuild == idLastBuild)
+				while (status == "started\n")
 					sleep(20)
 					status = extractorCLI.checkStatusBuild()
 				end

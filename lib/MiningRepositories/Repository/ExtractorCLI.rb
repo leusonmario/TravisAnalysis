@@ -72,7 +72,12 @@ class ExtractorCLI
 		cmd2 = "travis" + " enable -r " + @username + "/" + @name
 		begin
 			%x(#{cmd})
-			%x(#{cmd2})
+			answer = %x(#{cmd2})
+			while (answer == "409: {\"message\":\"Sync already in progress. Try again later.\"}")
+				sleep(10)
+				answer = %x(#{cmd2})
+			end
+			
 		rescue
 			print "NOT ALLOWED"
 		end
@@ -156,7 +161,7 @@ class ExtractorCLI
 		idBuild = ""
 		begin
 			historyBuild = %x(#{travisShow})
-			idBuild = historyBuild.match(/Build[\s\S]*State/).to_s.match(/Build[\s\S]*:/).to_s.match(/#[\s\S]*:/).to_s.gsub(":","")
+			idBuild = historyBuild.match(/(Build|Job)[\s\S]*State/).to_s.match(/(Build|Job)[\s\S]*:/).to_s.match(/#[\s\S]*:/).to_s.gsub(":","")
 		rescue 
 			print "NOT CHECKOUT EXECUTED"
 		end
