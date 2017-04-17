@@ -149,6 +149,33 @@ class ExtractorCLI
 		Dir.chdir getDownloadDir()
 	end
 
+	def checkIdLastBuild()
+		Dir.chdir getDownloadDir()
+		Dir.chdir getName()
+		travisShow = "travis show"
+		idBuild = ""
+		begin
+			historyBuild = %x(#{travisShow})
+			idBuild = historyBuild.match(/Build[\s\S]*State/).to_s.match(/Build[\s\S]*:/).to_s.match(/#[\s\S]*:/).to_s.gsub(":","")
+		rescue 
+			print "NOT CHECKOUT EXECUTED"
+		end
+		return idBuild
+		Dir.chdir getDownloadDir()
+	end
+
+	def gitPull()
+		Dir.chdir getDownloadDir()
+		Dir.chdir getName()
+		pull = "git pull"
+		begin
+			%x(#{pull})
+		rescue
+			print "NOT PULL IS POSSIBLE"
+		end
+	end
+
+
 	def getUsername()
 		@username
 	end

@@ -47,6 +47,7 @@ class MergeScenariosAnalysis
 	end
 
 	def mergeScenariosAnalysisCommit(sha)
+		mergeCommit = MergeCommit.new()
 		resultMergeCommit = mergeCommit.getParentsMergeIfTrue(@pathProject, sha)
 		return resultMergeCommit
 	end

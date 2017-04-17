@@ -45,7 +45,6 @@ class BCMethodUpdate
 	def getParametersListSizeForMethod(pathBranch, fileName, methodName)
 		actualPath = Dir.pwd
         Dir.chdir pathBranch
-
         pathFile = %x(find -name #{fileName+".java"})
         newPathFile = %x(readlink -f #{pathFile})
         Dir.chdir getGumTreePath()

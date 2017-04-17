@@ -31,7 +31,7 @@ class MethodUpdateExtractor
 				    aux = changedClasses[count].to_s.match(/\[ERROR\][ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,]*[ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,\(\) ]* cannot be applied to/)[0].split("method").last
 				    callClassFile = aux.split('.').last.gsub(' cannot be applied to', '')
 				    methodName = aux.split('] ').last.match(/[a-zA-Z]*/)
-					filesInformation.push([changedClass, methodName, callClassFile, "method"])
+					filesInformation.push([changedClass, methodName, changedClass, "method"])
 					count += 1
 				end
 			end
