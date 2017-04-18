@@ -14,7 +14,7 @@ class ExtractorCLI
 		createFork()
 		activateTravis()
 		cloneForkLocally()
-		createBranches()
+		#createBranches()
 		originalToReplayedMerge = Hash.new
 	end
 
@@ -72,12 +72,13 @@ class ExtractorCLI
 		cmd2 = "travis" + " enable -r " + @username + "/" + @name
 		begin
 			%x(#{cmd})
+			sleep(20)
 			answer = %x(#{cmd2})
 			while (answer == "409: {\"message\":\"Sync already in progress. Try again later.\"}")
 				sleep(10)
 				answer = %x(#{cmd2})
 			end
-			
+			sleep(20)
 		rescue
 			print "NOT ALLOWED"
 		end
@@ -161,7 +162,7 @@ class ExtractorCLI
 		idBuild = ""
 		begin
 			historyBuild = %x(#{travisShow})
-			idBuild = historyBuild.match(/(Build|Job)[\s\S]*State/).to_s.match(/(Build|Job)[\s\S]*:/).to_s.match(/#[\s\S]*:/).to_s.gsub(":","")
+			idBuild = historyBuild.match(/(Build|Job)[\s\S]*State/).to_s.match(/(Build|Job)[ 0-9\.\#]*:/).to_s.match(/#[\s\S]*:/).to_s.gsub(":","")
 		rescue 
 			print "NOT CHECKOUT EXECUTED"
 		end
