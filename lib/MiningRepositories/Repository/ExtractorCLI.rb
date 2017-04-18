@@ -19,24 +19,31 @@ class ExtractorCLI
 	end
 
 	def replayBuildOnTravis(commit, branch)
-		commitAndPush(commit, branch)
+		return commitAndPush(commit, branch)
 	end
 
 	def commitAndPush(commit, branch)
 		Dir.chdir getDownloadDir()
 		Dir.chdir getName()
 		checkout = "git checkout " + branch
+		head = "git rev-parse HEAD"
 		reset = "git reset --hard " + commit
 		forcePush = "git push -f origin " + branch
-		
+		changeOnHead = false
 		begin
 			%x(#{checkout})
+			previousHead = %x(#{head})
 			%x(#{reset})
+			currentHead = %x(#{head})
 			%x(#{forcePush})
+			if (previousHead != currentHead)
+				changeOnHead = true
+			end
 		rescue
 			print "IT DID NOT WORK"	
 		end
 		Dir.chdir getDownloadDir()
+		return changeOnHead
 	end
 
 	def setName()

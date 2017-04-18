@@ -140,8 +140,8 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 			end
 			notBuiltParents.each do |notBuiltParent|
 				idLastBuild = extractorCLI.checkIdLastBuild()
-				extractorCLI.replayBuildOnTravis(notBuiltParent, "master")
-				while (idLastBuild == extractorCLI.checkIdLastBuild())
+				state = extractorCLI.replayBuildOnTravis(notBuiltParent, "master")
+				while (idLastBuild == extractorCLI.checkIdLastBuild() and state == true)
 					sleep(20)
 				end
 				
@@ -167,8 +167,8 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 			@projectMergeScenarios.each do |mergeScenario|
 				if (!builtMergeScenarios.include? mergeScenario)
 					idLastBuild = extractorCLI.checkIdLastBuild()
-					extractorCLI.replayBuildOnTravis(mergeScenario, "master")
-					while (idLastBuild == extractorCLI.checkIdLastBuild())
+					state = extractorCLI.replayBuildOnTravis(mergeScenario, "master")
+					while (idLastBuild == extractorCLI.checkIdLastBuild() and state == true)
 						sleep(20)
 					end
 					status = extractorCLI.checkStatusBuild()
@@ -184,8 +184,8 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 						firstParentStatus = ""
 						if (result[1] == nil)
 							idLastBuild = extractorCLI.checkIdLastBuild()
-							extractorCLI.replayBuildOnTravis(mergeCommit[0], "master")
-							while (idLastBuild == extractorCLI.checkIdLastBuild())
+							state = extractorCLI.replayBuildOnTravis(mergeCommit[0], "master")
+							while (idLastBuild == extractorCLI.checkIdLastBuild() and state == true)
 								sleep(20)
 							end	
 							status = extractorCLI.checkStatusBuild()
@@ -197,8 +197,8 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 						end
 						if (result[2] == nil and firstParentStatus == "passed\n")
 							idLastBuild = extractorCLI.checkIdLastBuild()
-							extractorCLI.replayBuildOnTravis(mergeCommit[1], "master")
-							while (idLastBuild == extractorCLI.checkIdLastBuild())
+							state = extractorCLI.replayBuildOnTravis(mergeCommit[1], "master")
+							while (idLastBuild == extractorCLI.checkIdLastBuild() and state == true)
 								sleep(20)
 							end
 							status = extractorCLI.checkStatusBuild()
