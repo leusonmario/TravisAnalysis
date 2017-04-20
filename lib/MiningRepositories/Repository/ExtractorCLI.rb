@@ -25,13 +25,14 @@ class ExtractorCLI
 	def commitAndPush(commit, branch)
 		Dir.chdir getDownloadDir()
 		Dir.chdir getName()
-		checkout = "git checkout " + branch
+		#checkout = "git checkout " + branch
 		head = "git rev-parse HEAD"
 		reset = "git reset --hard " + commit
-		forcePush = "git push -f origin " + branch
+		#forcePush = "git push -f origin " + branch
+		forcePush = "git push -f origin "
 		changeOnHead = false
 		begin
-			%x(#{checkout})
+			#{}%x(#{checkout})
 			previousHead = %x(#{head})
 			%x(#{reset})
 			currentHead = %x(#{head})
@@ -184,7 +185,7 @@ class ExtractorCLI
 		begin
 			%x(#{pull})
 		rescue
-			print "NOT PULL IS POSSIBLE"
+			print "PULL IS NOT POSSIBLE"
 		end
 	end
 

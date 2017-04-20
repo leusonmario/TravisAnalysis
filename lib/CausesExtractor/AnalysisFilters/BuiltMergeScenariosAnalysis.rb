@@ -138,6 +138,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 					writeCSVBuilt.writeResultByProject(projectName.gsub('/','-'), typeBuild, build)
 				end
 			end
+
 			notBuiltParents.each do |notBuiltParent|
 				idLastBuild = extractorCLI.checkIdLastBuild()
 				state = extractorCLI.replayBuildOnTravis(notBuiltParent, "master")
@@ -150,64 +151,70 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 					sleep(20)
 					status = extractorCLI.checkStatusBuild()
 				end
-#				extractorCLI.replayBuildOnTravis(notBuiltParent, "master")
-#				idLastBuild = extractorCLI.checkIdLastBuild()
-#				status = extractorCLI.checkStatusBuild()
-#				idNewLastBuild = idLastBuild
-#				while (idNewLastBuild == idLastBuild)
-#					sleep(20)
-#					idNewLastBuild = extractorCLI.checkIdLastBuild()
-#				end
-#				while (status == "started\n")
-#					sleep(20)
-#					status = extractorCLI.checkStatusBuild()
-#				end
 			end
+
 			extractorCLI.gitPull()
+			validScenarioProject = 0
 			@projectMergeScenarios.each do |mergeScenario|
 				if (!builtMergeScenarios.include? mergeScenario)
 					idLastBuild = extractorCLI.checkIdLastBuild()
 					state = extractorCLI.replayBuildOnTravis(mergeScenario, "master")
-					while (idLastBuild == extractorCLI.checkIdLastBuild() and state == true)
-						sleep(20)
-					end
-					status = extractorCLI.checkStatusBuild()
-					while (status == "started\n")
-						sleep(20)
+					if (state == true)
+						while (idLastBuild == extractorCLI.checkIdLastBuild() and state == true)
+							sleep(20)
+						end
 						status = extractorCLI.checkStatusBuild()
-					end
-					#all not built merge scenarios should be built.
-					#Depending on its build process result, the parents commits should also be built
-					if (status == "errored\n")
-						mergeCommit = mergeScenariosAnalysisCommit(mergeScenario)
-						result = @gitProject.conflictScenario(mergeCommit, allBuilds)
-						firstParentStatus = ""
-						if (result[1] == nil)
-							idLastBuild = extractorCLI.checkIdLastBuild()
-							state = extractorCLI.replayBuildOnTravis(mergeCommit[0], "master")
-							while (idLastBuild == extractorCLI.checkIdLastBuild() and state == true)
-								sleep(20)
-							end	
+						while (status == "started\n")
+							sleep(20)
 							status = extractorCLI.checkStatusBuild()
-							while (status == "started\n")
-								sleep(30)
-								status = extractorCLI.checkStatusBuild()
-							end
-							firstParentStatus = extractorCLI.checkStatusBuild()
 						end
-						if (result[2] == nil and firstParentStatus == "passed\n")
-							idLastBuild = extractorCLI.checkIdLastBuild()
-							state = extractorCLI.replayBuildOnTravis(mergeCommit[1], "master")
-							while (idLastBuild == extractorCLI.checkIdLastBuild() and state == true)
-								sleep(20)
-							end
-							status = extractorCLI.checkStatusBuild()
-							while (status == "started\n")
-								sleep(30)
+						#all not built merge scenarios should be built.
+						#Depending on its build process result, the parents commits should also be built
+						if (status == "errored\n")
+							totalMSCanceled += 1
+							mergeCommit = mergeScenariosAnalysisCommit(mergeScenario)
+							result = @gitProject.conflictScenario(mergeCommit, allBuilds)
+							firstParentStatus = ""
+							if (result[1] == nil)
+								idLastBuild = extractorCLI.checkIdLastBuild()
+								state = extractorCLI.replayBuildOnTravis(mergeCommit[0], "master")
+								while (idLastBuild == extractorCLI.checkIdLastBuild() and state == true)
+									sleep(20)
+								end	
 								status = extractorCLI.checkStatusBuild()
+								while (status == "started\n")
+									sleep(30)
+									status = extractorCLI.checkStatusBuild()
+								end
+								firstParentStatus = extractorCLI.checkStatusBuild()
 							end
+							if (result[2] == nil and (firstParentStatus == "passed\n" or firstParentStatus == "failed\n"))
+								idLastBuild = extractorCLI.checkIdLastBuild()
+								state = extractorCLI.replayBuildOnTravis(mergeCommit[1], "master")
+								while (idLastBuild == extractorCLI.checkIdLastBuild() and state == true)
+									sleep(20)
+								end
+								status = extractorCLI.checkStatusBuild()
+								while (status == "started\n")
+									sleep(30)
+									status = extractorCLI.checkStatusBuild()
+								end
+								secondParentStatus = extractorCLI.checkStatusBuild()
+								if (secondParentStatus == "passed\n" or secondParentStatus == "failed\n")
+									validScenarioProject += 1
+								end
+							end
+						elsif (status == "passed\n")
+							totalMSPassed += 1
+						elsif (status == "failed\n")
+							totalMSFailed += 1
+						elsif (status == "canceled\n")
+							totalMSCanceled += 1
 						end
 					end
+				end
+				if (validScenarioProject > 2)
+					break
 				end
 			end
 

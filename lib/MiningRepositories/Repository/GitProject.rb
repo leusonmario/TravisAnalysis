@@ -175,12 +175,12 @@ class GitProject
 		buildTwo = nil
 		
 		if (projectBuilds[parentsMerge[0]] != nil and projectBuilds[parentsMerge[1]] != nil)
-			if (projectBuilds[parentsMerge[0]][0]==["passed"])
+			if (projectBuilds[parentsMerge[0]][0]==["passed"] or projectBuilds[parentsMerge[0]][0]==["failed"])
 				parentOne = true
 				buildOne = projectBuilds[parentsMerge[0]][1]
 			end
 			
-			if (projectBuilds[parentsMerge[1]][0]==["passed"])
+			if (projectBuilds[parentsMerge[1]][0]==["passed"] or projectBuilds[parentsMerge[0]][0]==["failed"])
 				parentTwo = true
 				buildTwo = projectBuilds[parentsMerge[1]][1]
 			end
