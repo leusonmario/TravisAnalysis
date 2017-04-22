@@ -23,7 +23,6 @@ class BadlyMergeScenarioExtractor
 
 	def verifyBadlyMergeScenario(leftParent, rightParent, mergeCommit)
 		result = simulateMergeScenario(leftParent, rightParent, mergeCommit)
-		#@cloneProject.deleteProject()
 		if (result == "")
 			return true
 		else
@@ -44,7 +43,7 @@ class BadlyMergeScenarioExtractor
 		%x(git checkout -b mergeCommit #{mergeCommit})
 		diff = %x(git diff rightParent)
 		%x(git checkout -f #{mainBranch})
-		%x(git pull)
+		#%x(git pull)
 		%x(git branch -D rightParent)
 		%x(git branch -D leftParent)
 		%x(git branch -D mergeCommit)

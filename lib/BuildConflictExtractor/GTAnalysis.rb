@@ -41,14 +41,14 @@ class GTAnalysis
 		@copyProjectDirectories
 	end
 
-	def getGumTreeAnalysis(pathProject, build, conflictCauses, cloneProject)
-		parents = @mergeCommit.getParentsMergeIfTrue(pathProject, build.commit.sha)
+	def getGumTreeAnalysis(pathProject, sha, conflictCauses, cloneProject)
+		parents = @mergeCommit.getParentsMergeIfTrue(pathProject, sha)
 		actualPath = Dir.pwd
 		
-		pathCopies = @copyDirectories.createCopyProject(build.commit.sha, parents, pathProject)
+		pathCopies = @copyDirectories.createCopyProject(sha, parents, pathProject)
 
 		#  		   					result 		  left 			right 			MergeCommit 	parent1 		parent2 	problemas
-		out = gumTreeDiffByBranch(build.commit.sha, pathCopies[1], pathCopies[2], pathCopies[3], pathCopies[4], conflictCauses, pathProject, parents, cloneProject)
+		out = gumTreeDiffByBranch(sha, pathCopies[1], pathCopies[2], pathCopies[3], pathCopies[4], conflictCauses, pathProject, parents, cloneProject)
 		@copyDirectories.deleteProjectCopies(pathCopies)
 		Dir.chdir actualPath
 		return out
@@ -72,8 +72,6 @@ class GTAnalysis
 	end
 
 	def verifyModificationStatus(mergeCommit, baseLeft, leftResult, baseRight, rightResult, conflictCauses, leftPath, rightPath, pathProject, parents, cloneProject)
-		#badlyMergeScenariosExtractor = BadlyMergeScenarioExtractor.new(getProjectName(), pathProject, getPathLocalClone())
-		#statusModified = badlyMergeScenariosExtractor.verifyBadlyMergeScenario(parents[0], parents[1], mergeCommit)
 		statusModified = cloneProject.verifyBadlyMergeScenario(parents[0], parents[1], mergeCommit)
 		if (statusModified == false)
 			statusModified = verifyModifiedFile(baseLeft[0], leftResult[0], baseRight[0], rightResult[0])

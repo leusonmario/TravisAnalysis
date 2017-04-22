@@ -200,21 +200,21 @@ class GitProject
 		
 		if ((projectBuilds[parentsMerge[0]] != nil or projectBuildsFork[parentsMerge[0]] != nil) and (projectBuilds[parentsMerge[1]] != nil or projectBuildsFork[parentsMerge[1]] != nil))
 			begin
-				if (projectBuilds[parentsMerge[0]][0]==["passed"] or projectBuildsFork[parentsMerge[0]][0]==["passed"])
+				if ((projectBuilds[parentsMerge[0]][0]==["passed"] or projectBuilds[parentsMerge[0]][0]==["failed"]) or (projectBuildsFork[parentsMerge[0]][0]==["passed"] or projectBuildsFork[parentsMerge[0]][0]==["failed"]))
 					parentOne = true
-					if (projectBuilds[parentsMerge[0]][0]==["passed"])
+					if (projectBuilds[parentsMerge[0]][0]==["passed"] or projectBuilds[parentsMerge[0]][0]==["failed"])
 						buildOne = projectBuilds[parentsMerge[0]][1]
 					else
-						buildOne = projectBuildsFork[parentsMerge[0]][1]
+						buildOne = projectBuildsFork[parentsMerge[0]][0]
 					end
 				end
 				
-				if (projectBuilds[parentsMerge[1]][0]==["passed"] or projectBuildsFork[parentsMerge[1]][0]==["passed"])
+				if ((projectBuilds[parentsMerge[1]][0]==["passed"] or projectBuilds[parentsMerge[1]][0]==["failed"]) or (projectBuildsFork[parentsMerge[1]][0]==["passed"] or projectBuildsFork[parentsMerge[1]][0]==["failed"]))
 					parentTwo = true
-					if (projectBuilds[parentsMerge[1]][0]==["passed"])
+					if (projectBuilds[parentsMerge[1]][0]==["passed"] or projectBuilds[parentsMerge[1]][0]==["failed"])
 						buildTwo = projectBuilds[parentsMerge[1]][1]
 					else
-						buildTwo = projectBuildsFork[parentsMerge[1]][1]
+						buildTwo = projectBuildsFork[parentsMerge[1]][0]
 					end
 				end
 

@@ -8,14 +8,26 @@ class ExtractorCLI
 		@travisLocation = travis
 		@downloadDir = download
 		@originalRepo = originalRepo
+		@repositoryTravis = nil
 		setName()
 		setFork()
 		setForkDir()
 		createFork()
 		activateTravis()
 		cloneForkLocally()
-		#createBranches()
-		originalToReplayedMerge = Hash.new
+		getTravisRepositoryFork()
+	end
+
+	def getTravisRepositoryFork()
+		begin
+			@repositoryTravis = Travis::Repository.find(getFork())
+		rescue Exception => e  
+			print e
+		end
+	end
+
+	def getRepositoryTravis()
+		@repositoryTravis
 	end
 
 	def replayBuildOnTravis(commit, branch)
@@ -25,14 +37,11 @@ class ExtractorCLI
 	def commitAndPush(commit, branch)
 		Dir.chdir getDownloadDir()
 		Dir.chdir getName()
-		#checkout = "git checkout " + branch
 		head = "git rev-parse HEAD"
 		reset = "git reset --hard " + commit
-		#forcePush = "git push -f origin " + branch
 		forcePush = "git push -f origin "
 		changeOnHead = false
 		begin
-			#{}%x(#{checkout})
 			previousHead = %x(#{head})
 			%x(#{reset})
 			currentHead = %x(#{head})
@@ -55,6 +64,10 @@ class ExtractorCLI
 
 	def setFork()
 		@fork = getUsername() + "/" + getName()
+	end
+
+	def getFork()
+		@fork
 	end
 
 	def setForkDir()
@@ -102,52 +115,6 @@ class ExtractorCLI
 		end
 	end
 
-	def createBranches()
-		createbranch("children")
-		checkoutBranch("master")
-		createbranch("merges")
-		pushBranchToRemote("merges")
-		pushBranchToRemote("children")
-		checkoutBranch("master")
-	end
-
-	def createbranch(branchName)
-		Dir.chdir getDownloadDir()
-		Dir.chdir getName()
-		
-		createBranchCMD = "git checkout -b " + branchName
-		print createBranchCMD
-		begin
-			%x(#{createBranchCMD})
-		rescue 
-			print "NOT CREATED BRANCH"
-		end
-		Dir.chdir getDownloadDir()
-	end
-
-	def checkoutBranch(branch)
-		Dir.chdir getDownloadDir()
-		Dir.chdir getName()
-		checkout = "git checkout " + branch
-		begin
-			%x(#{checkout})
-		rescue 
-			print "NOT CHECKOUT EXECUTED"
-		end
-		Dir.chdir getDownloadDir()
-	end
-
-	def pushBranchToRemote(branchName)
-		Dir.chdir getName()
-		pushBranch = "git push origin " + branchName
-		begin
-			%x(#{pushBranch})
-		rescue 
-			print "NOT CHECKOUT EXECUTED"
-		end
-		Dir.chdir getDownloadDir()
-	end
-
 	def checkStatusBuild()
 		Dir.chdir getDownloadDir()
 		Dir.chdir getName()
@@ -189,6 +156,36 @@ class ExtractorCLI
 		end
 	end
 
+	def getInfoLastBuild()
+		Dir.chdir getDownloadDir()
+		Dir.chdir getName()
+		logs = []
+		status = ""
+		#buildId
+		begin
+			infoBuild = %x(travis show)
+			if (infoBuild.match(/Build #[0-9\.]*:/))
+				status = infoBuild.match(/State:[\s\S]*Type/).to_s.match(/State:[\s\S]*\n/).to_s.match(/ [\s\S]*/).to_s.gsub(" ","").gsub("\n","")
+				#buildId = infoBuild.match(/Build #[0-9\.]*:/).to_s.match(/#[0-9]*/).gsub("\#","")
+				numberJobs = infoBuild.scan(/\#[0-9\.]* #{status}/).size
+				print "FOI AQUI"
+				count = 1
+				while(count <= numberJobs)
+					logs.push(%x(travis logs .#{count}))
+					print "FOI AQUI2"
+					count += 1
+				end
+				
+			elsif (infoBuild.match(/Job #[0-9\.]*:/))
+				#buildId = infoBuild.match(/Job #[0-9\.]*:/).to_s.match(/#[0-9]*/).gsub("\#","")
+				status = infoBuild.match(/State:[\s\S]*Type/).to_s.match(/State:[\s\S]*\n/).to_s.match(/ [\s\S]*/).to_s.gsub(" ","").gsub("\n","")
+				logs.push(%x(travis logs))
+			end
+		rescue
+			print "IT DID NOT WORK - GET INFO LAST BUILD"
+		end
+		return status, logs
+	end
 
 	def getUsername()
 		@username

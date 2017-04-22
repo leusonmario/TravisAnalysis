@@ -8,10 +8,10 @@ class ConflictBuild
 		@projectPath
 	end
 
-	def typeConflict(build)
+	def typeConflict(sha)
 		statusConfig = true
 		Dir.chdir @projectPath
-		filesConflict = %x(git diff --name-only #{build.commit.sha}^!)
+		filesConflict = %x(git diff --name-only #{sha}^!)
 		if (filesConflict == ".travis.yml\n")
 			return "Travis"
 		else
