@@ -161,30 +161,28 @@ class ExtractorCLI
 		Dir.chdir getName()
 		logs = []
 		status = ""
-		#buildId
+		buildId = ""
 		begin
 			infoBuild = %x(travis show)
 			if (infoBuild.match(/Build #[0-9\.]*:/))
 				status = infoBuild.match(/State:[\s\S]*Type/).to_s.match(/State:[\s\S]*\n/).to_s.match(/ [\s\S]*/).to_s.gsub(" ","").gsub("\n","")
-				#buildId = infoBuild.match(/Build #[0-9\.]*:/).to_s.match(/#[0-9]*/).gsub("\#","")
-				numberJobs = infoBuild.scan(/\#[0-9\.]* #{status}/).size
-				print "FOI AQUI"
-				count = 1
-				while(count <= numberJobs)
-					logs.push(%x(travis logs .#{count}))
-					print "FOI AQUI2"
-					count += 1
+				buildId = infoBuild.match(/Build #[0-9\.]*:/).to_s.match(/#[0-9]*/).to_s.gsub("#","")
+				numberJobs = infoBuild.scan(/\#[0-9\.]* #{status}/)
+				
+				numberJobs.each do |job|
+					jobId = job.to_s.match(/\.[0-9]*/).to_s.gsub(".","")
+					logs.push(%x(travis logs .#{jobId}))
 				end
 				
 			elsif (infoBuild.match(/Job #[0-9\.]*:/))
-				#buildId = infoBuild.match(/Job #[0-9\.]*:/).to_s.match(/#[0-9]*/).gsub("\#","")
+				buildId = infoBuild.match(/Job #[0-9\.]*:/).to_s.match(/#[0-9]*/).to_s.gsub("#","")
 				status = infoBuild.match(/State:[\s\S]*Type/).to_s.match(/State:[\s\S]*\n/).to_s.match(/ [\s\S]*/).to_s.gsub(" ","").gsub("\n","")
 				logs.push(%x(travis logs))
 			end
 		rescue
 			print "IT DID NOT WORK - GET INFO LAST BUILD"
 		end
-		return status, logs
+		return status, logs, buildId
 	end
 
 	def getUsername()

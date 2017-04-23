@@ -205,7 +205,7 @@ class GitProject
 					if (projectBuilds[parentsMerge[0]][0]==["passed"] or projectBuilds[parentsMerge[0]][0]==["failed"])
 						buildOne = projectBuilds[parentsMerge[0]][1]
 					else
-						buildOne = projectBuildsFork[parentsMerge[0]][0]
+						buildOne = projectBuildsFork[parentsMerge[0]][2]
 					end
 				end
 				
@@ -214,7 +214,7 @@ class GitProject
 					if (projectBuilds[parentsMerge[1]][0]==["passed"] or projectBuilds[parentsMerge[1]][0]==["failed"])
 						buildTwo = projectBuilds[parentsMerge[1]][1]
 					else
-						buildTwo = projectBuildsFork[parentsMerge[1]][0]
+						buildTwo = projectBuildsFork[parentsMerge[1]][2]
 					end
 				end
 
