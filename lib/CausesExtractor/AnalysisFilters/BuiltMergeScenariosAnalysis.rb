@@ -140,91 +140,71 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 
 			forkAllBuilds = Hash.new()
 			notBuiltParents.each do |notBuiltParent|
-				idLastBuild = extractorCLI.checkIdLastBuild()
-				state = extractorCLI.replayBuildOnTravis(notBuiltParent, "master")
-				while (idLastBuild == extractorCLI.checkIdLastBuild() and state == true)
-					sleep(20)
+				resultBuildProcess = verifyBuildCurrentState(extractorCLI, notBuiltParent)
+				if (resultBuildProcess != nil)
+					forkAllBuilds[notBuiltParent] = [resultBuildProcess[0], resultBuildProcess[1], resultBuildProcess[2]]
+				else
+					break
 				end
-				
-				status = extractorCLI.checkStatusBuild()
-				while (status == "started\n")
-					sleep(20)
-					print "Merge Scenario Parents not built yet\n"
-					status = extractorCLI.checkStatusBuild()
-				end
-				result = extractorCLI.getInfoLastBuild()
-				forkAllBuilds[notBuiltParent] = [result[0], result[1]]
 			end
 
 			extractorCLI.gitPull()
 			validScenarioProject = 0
+			intervalTime = false
+			countIntervalCommits = 0
 			@projectMergeScenarios.each do |mergeScenario|
 				if (!builtMergeScenarios.include? mergeScenario)
-					idLastBuild = extractorCLI.checkIdLastBuild()
-					state = extractorCLI.replayBuildOnTravis(mergeScenario, "master")
-					if (state == true)
-						while (idLastBuild == extractorCLI.checkIdLastBuild() and state == true)
-							sleep(20)
+					if (intervalTime == false)
+						resultBuildProcess = verifyBuildCurrentState(extractorCLI, mergeScenario)
+						if (resultBuildProcess != nil)
+							forkAllBuilds[mergeScenario] = [resultBuildProcess[0], resultBuildProcess[1], resultBuildProcess[2]]
+						else
+							break
 						end
-						status = extractorCLI.checkStatusBuild()
-						while (status == "started\n")
-							sleep(20)
-							print "Merge Scenario not built yet\n"
-							status = extractorCLI.checkStatusBuild()
-						end
-						result = extractorCLI.getInfoLastBuild()
-						forkAllBuilds[mergeScenario] = [result[0], result[1]]
-						if (status == "errored\n")
+						if (extractorCLI.checkStatusBuild() == "errored\n")
 							totalMSCanceled += 1
 							mergeCommit = mergeScenariosAnalysisCommit(mergeScenario)
 							result = @gitProject.conflictScenario(mergeCommit, allBuilds)
 							firstParentStatus = ""
 							secondParentStatus = ""
 							if (result[1] != nil and result[2] != nil)
+								intervalTime = true
 								validScenarioProject += 1
 							else
 								if (result[1] == nil)
-									idLastBuild = extractorCLI.checkIdLastBuild()
-									state = extractorCLI.replayBuildOnTravis(mergeCommit[0], "master")
-									while (idLastBuild == extractorCLI.checkIdLastBuild() and state == true)
-										sleep(20)
-									end	
-									status = extractorCLI.checkStatusBuild()
-									while (status == "started\n")
-										sleep(30)
-										print "Left Parent not built yet\n"
-										status = extractorCLI.checkStatusBuild()
+									resultBuildProcess = verifyBuildCurrentState(extractorCLI, mergeCommit[0])
+									if (resultBuildProcess != nil)
+										forkAllBuilds[mergeCommit[0]] = [resultBuildProcess[0], resultBuildProcess[1], resultBuildProcess[2]]
+									else
+										break
 									end
-									result = extractorCLI.getInfoLastBuild()
-									forkAllBuilds[mergeCommit[0]] = [result[0], result[1]]
 									firstParentStatus = extractorCLI.checkStatusBuild()
 								end
 								if (result[2] == nil and (firstParentStatus == "passed\n" or firstParentStatus == "failed\n"))
-									idLastBuild = extractorCLI.checkIdLastBuild()
-									state = extractorCLI.replayBuildOnTravis(mergeCommit[1], "master")
-									while (idLastBuild == extractorCLI.checkIdLastBuild() and state == true)
-										sleep(20)
+									resultBuildProcess = verifyBuildCurrentState(extractorCLI, mergeCommit[1])
+									if (resultBuildProcess != nil)
+										forkAllBuilds[mergeCommit[1]] = [resultBuildProcess[0], resultBuildProcess[1], resultBuildProcess[2]]
+									else
+										break
 									end
-									status = extractorCLI.checkStatusBuild()
-									while (status == "started\n")
-										sleep(30)
-										print "Right Parent not built yet\n"
-										status = extractorCLI.checkStatusBuild()
-									end
-									result = extractorCLI.getInfoLastBuild()
-									forkAllBuilds[mergeCommit[1]] = [result[0], result[1]]
 									secondParentStatus = extractorCLI.checkStatusBuild()
 								end
 								if ((result[1] != nil or firstParentStatus == "passed\n" or firstParentStatus == "failed\n") and (result[2] != nil or secondParentStatus == "passed\n" or secondParentStatus == "failed\n"))
 									validScenarioProject += 1
+									intervalTime = true
 								end
 							end
-						elsif (status == "passed\n")
+						elsif (extractorCLI.checkStatusBuild() == "passed\n")
 							totalMSPassed += 1
-						elsif (status == "failed\n")
+						elsif (extractorCLI.checkStatusBuild() == "failed\n")
 							totalMSFailed += 1
-						elsif (status == "canceled\n")
+						elsif (extractorCLI.checkStatusBuild() == "canceled\n")
 							totalMSCanceled += 1
+						end
+					else
+						countIntervalCommits += 1
+						if (countIntervalCommits == 10)
+							intervalTime = false
 						end
 					end
 				end
@@ -268,7 +248,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 								totalMSErrored += 1
 								isConflict = confBuild.conflictAnalysisCategories(erroredConflicts, type, result[0])
 								if (isConflict and result[0] == true)
-									writeCSVBuilt.printConflictBuild(key, result[1][0], result[2][0], confErroredForkBuilt.findConflictCauseFork(array[1], key, getPathProject(), pathGumTree, type, true, cloneProject), projectNameFile)
+									writeCSVBuilt.printConflictBuild(array[2], result[1][0], result[2][0], confErroredForkBuilt.findConflictCauseFork(array[1], key, getPathProject(), pathGumTree, type, true, cloneProject), projectNameFile)
 								end
 							end
 						end
@@ -306,6 +286,29 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 		else
 			return nil
 		end
+	end
+
+	def verifyBuildCurrentState(extractorCLI, sha)
+		indexCount = 0
+		idLastBuild = extractorCLI.checkIdLastBuild()
+		state = extractorCLI.replayBuildOnTravis(sha, "master")
+		while (idLastBuild == extractorCLI.checkIdLastBuild() and state == true)
+			sleep(20)
+			indexCount += 1
+			if (indexCount == 10)
+				return nil
+			end
+		end
+		
+		status = extractorCLI.checkStatusBuild()
+		while (status == "started\n" and indexCount < 10)
+			sleep(20)
+			print "Merge Scenario Parents not built yet\n"
+			status = extractorCLI.checkStatusBuild()
+		end
+
+		return extractorCLI.getInfoLastBuild()
+
 	end
 
 end

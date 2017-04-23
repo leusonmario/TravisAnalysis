@@ -11,24 +11,15 @@ library(vioplot)
 library(ggplot2)
 library(reshape2)
 
-allErroredBuilds = "AllErroredBuilds"
-dir.create(file.path(rAnalysisPath, allErroredBuilds), showWarnings = FALSE)
 mergeScenariosBuilds = "MergeScenariosBuilds"
 dir.create(file.path(rAnalysisPath, mergeScenariosBuilds), showWarnings = FALSE)
 frequencyAnalysis = "FrequencyAnalysis"
 dir.create(file.path(rAnalysisPath, frequencyAnalysis), showWarnings = FALSE)
 
-setwd(file.path(rAnalysisPath, allErroredBuilds))
-allErroredBuildsPath = getwd()
 setwd(file.path(rAnalysisPath, mergeScenariosBuilds))
 mergeScenariosBuildsPath = getwd()
 setwd(file.path(rAnalysisPath, frequencyAnalysis))
 frequencyAnalysisPath = getwd()
-
-foldersMergeScenarios = c("BuiltMergeScenarios", "AllMergeScenarios", "IntervalMergeScenarios")
-dir.create(file.path(mergeScenariosBuildsPath, foldersMergeScenarios[1]), showWarnings = FALSE)
-dir.create(file.path(mergeScenariosBuildsPath, foldersMergeScenarios[2]), showWarnings = FALSE)
-dir.create(file.path(mergeScenariosBuildsPath, foldersMergeScenarios[3]), showWarnings = FALSE)
 
 setwd(file.path(rAnalysisPath, frequencyAnalysis))
 unlink("AllScenariosAnalysis.csv", recursive = FALSE, force = FALSE)
@@ -37,162 +28,6 @@ write.table(infoCSVFile, file = "AllScenariosAnalysis.csv", col.names=F, row.nam
 
 pathFoldersMergeScenarios = c()
 count = 1
-while(count <= length(foldersMergeScenarios)){
-	setwd(file.path(mergeScenariosBuildsPath, foldersMergeScenarios[count]))	
-	pathFoldersMergeScenarios = c(pathFoldersMergeScenarios, getwd())
-	count = count + 1
-}
- 
-allErrored = "AllErroredAnalysis"
-dir.create(file.path(allErroredBuildsPath, allErrored), showWarnings = FALSE)
-
-setwd(file.path(rAnalysisPath))
-
-setwd(file.path(rootPathProject, "FinalResults/AllErroredBuilds/ErroredCases/AllBuilds"))
-listFiles = list.files(path = ".", pattern = "*.csv", all.files = FALSE, full.names = FALSE, recursive = FALSE)
-infoCSVFile = matrix(c("ProjectName", "gitProblem", "unavailableSymbol", "compilerError", "methodUpdate", "", "remoteError", "malformedExpression", "unimplementedMethod", "statementDuplication", "dependencyProblem"), ncol=11)
-setwd(file.path(allErroredBuildsPath, "AllErroredAnalysis"))
-unlink("AllBuildErroredAnalysis.csv", recursive = FALSE, force = FALSE)
-write.table(infoCSVFile, file = "AllBuildErroredAnalysis.csv", col.names=F, row.names=F, append=TRUE, sep=",")
-indexFiles = 1
-while(indexFiles <= length(listFiles)){
-	setwd(file.path(rootPathProject, "FinalResults/AllErroredBuilds/ErroredCases/AllBuilds"))
-	projectInfo = read.csv(listFiles[indexFiles], header=T)
-	index = 2
-	total = length(projectInfo[projectInfo$Message,]$BuildID)
-	projectName = strsplit(strsplit(listFiles[indexFiles], "Errored")[[1]], ".csv")[[2]][1]
-	relatedValue = cbind(projectName)
-	while(index <= length(infoCSVFile)) {
-		relatedValue = c(relatedValue, length(projectInfo[projectInfo$Message==infoCSVFile[index],]$BuildID)*100/total)
-		index = index + 1; 
-	}
-	indexFiles = indexFiles + 1
-	setwd(file.path(allErroredBuildsPath, "AllErroredAnalysis"))
-	write.table(matrix(c(relatedValue), ncol=11), file = "AllBuildErroredAnalysis.csv", row.names=F, col.names=F, sep=",", append=TRUE)
-}
-setwd(file.path(allErroredBuildsPath, "AllErroredAnalysis"))
-allErroredAnalysis = read.csv("AllBuildErroredAnalysis.csv", header=T)
-allErroredGitProblem = mean(allErroredAnalysis$gitProblem)
-allErroredUnavailableSymbol = mean(allErroredAnalysis$unavailableSymbol)
-allErroredCompilerError = mean(allErroredAnalysis$compilerError)
-allErroredMethodUpdate = mean(allErroredAnalysis$methodUpdate)
-allErroredAnother = mean(allErroredAnalysis$X)
-allErroredRemote = mean(allErroredAnalysis$remoteError)
-allErroredMalformed = mean(allErroredAnalysis$malformedExpression)
-allErroredDependency = mean(allErroredAnalysis$dependencyProblem)
-allErroredDuplication = mean(allErroredAnalysis$statementDuplication)
-allErroredUnimplemented = mean(allErroredAnalysis$unimplementedMethod)
-
-GitProblem = allErroredAnalysis[,2]
-UnavSymbol = allErroredAnalysis[,3]
-CompilerError = allErroredAnalysis[,4]
-MethodUpdate = allErroredAnalysis[,5]
-Remote = allErroredAnalysis[,7]
-Malformed = allErroredAnalysis[,8]
-Unimplemented = allErroredAnalysis[,9]
-StatDuplication = allErroredAnalysis[,10]
-Dependency = allErroredAnalysis[,11]
-Another = allErroredAnalysis[,6]
-
-Compilation = allErroredAnalysis[,3] + allErroredAnalysis[,5] + allErroredAnalysis[,8] + allErroredAnalysis[,9] + allErroredAnalysis[,10] + allErroredAnalysis[,10]
-Environment = allErroredAnalysis[,2] + allErroredAnalysis[,4]
-
-png(paste("vioplot-individual-cases-all-builds.png", sep=""), width=800, height=650)
-#bplotIndividual = cbind(GitProblem, UnavSymbol, MethodUpdate, Malformed, Unimplemented, CompilerError, Dependency, StatDuplication, Remote, Another)
-vioplot(UnavSymbol, MethodUpdate, Unimplemented, StatDuplication, col="gray", names=c("Unavailable Symbol", "Method Update", "Unimplemented Method", "Statement Duplication"))
-title(x="Causes", y="Percentage(%)")
-dev.off()
-
-setwd(file.path(rAnalysisPath, frequencyAnalysis))
-write.table(matrix(c("All Builds", "Semantic", allErroredUnavailableSymbol + allErroredUnimplemented), ncol=3), file = "AllScenariosAnalysis.csv", col.names=F, row.names=F, append=TRUE, sep=",")
-write.table(matrix(c("All Builds", "Syntax", allErroredDuplication + allErroredMalformed), ncol=3), file = "AllScenariosAnalysis.csv", col.names=F, row.names=F, append=TRUE, sep=",")
-write.table(matrix(c("All Builds", "Type Mismatch", allErroredMethodUpdate), ncol=3), file = "AllScenariosAnalysis.csv", col.names=F, row.names=F, append=TRUE, sep=",")
-write.table(matrix(c("All Builds", "Dependency", allErroredDependency), ncol=3), file = "AllScenariosAnalysis.csv", col.names=F, row.names=F, append=TRUE, sep=",")
-write.table(matrix(c("All Builds", "Others", allErroredGitProblem + allErroredCompilerError + allErroredAnother + allErroredRemote), ncol=3), file = "AllScenariosAnalysis.csv", col.names=F, row.names=F, append=TRUE, sep=",")
-setwd(file.path(allErroredBuildsPath, "AllErroredAnalysis"))
-
-png(paste("vioplot-general-cases-all-builds.png", sep=""), width=500, height=450)
-#bplotGeneral = cbind(Compilation, Environment, Remote)
-vioplot(Compilation, Environment, Remote, Another, col="gray", names=c("Compilation", "Environment", "Remote", "Another"))
-title(x="Causes", y="Percentage(%)")
-dev.off()
-
-meanInfo = c("Mean", allErroredGitProblem, allErroredUnavailableSymbol, allErroredCompilerError, allErroredMethodUpdate, allErroredAnother, allErroredRemote, allErroredMalformed, allErroredUnimplemented, allErroredDuplication, allErroredDependency)
-write.table(matrix(c(meanInfo), ncol=11), file = "AllBuildErroredAnalysis.csv", row.names=F, col.names=F, sep=",", append=TRUE)
-
-setwd(file.path(rAnalysisPath))
-
-setwd(file.path(rootPathProject, "FinalResults/AllErroredBuilds/ErroredCases/PullRequests"))
-listFiles = list.files(path = ".", pattern = "*.csv", all.files = FALSE, full.names = FALSE, recursive = FALSE)
-infoCSVFile = matrix(c("ProjectName", "gitProblem", "unavailableSymbol", "compilerError", "methodUpdate", "", "remoteError", "malformedExpression", "unimplementedMethod", "statementDuplication", "dependencyProblem"), ncol=11)
-setwd(file.path(allErroredBuildsPath, "AllErroredAnalysis"))
-unlink("AllBuildErroredAnalysisPullRequests.csv", recursive = FALSE, force = FALSE)
-write.table(infoCSVFile, file = "AllBuildErroredAnalysisPullRequests.csv", col.names=F, row.names=F, append=TRUE, sep=",")
-indexFiles = 1
-while(indexFiles <= length(listFiles)){
-	setwd(file.path(rootPathProject, "FinalResults/AllErroredBuilds/ErroredCases/PullRequests"))
-	projectInfo = read.csv(listFiles[indexFiles], header=T)
-	index = 2
-	total = length(projectInfo[projectInfo$Message,]$BuildID)
-	projectName = strsplit(strsplit(listFiles[indexFiles], "Errored")[[1]], ".csv")[[2]][1]
-	relatedValue = cbind(projectName)
-	while(index <= length(infoCSVFile)) {
-		relatedValue = c(relatedValue, length(projectInfo[projectInfo$Message==infoCSVFile[index],]$BuildID)*100/total)
-		index = index + 1; 
-	}
-	indexFiles = indexFiles + 1
-	setwd(file.path(allErroredBuildsPath, "AllErroredAnalysis"))
-	write.table(matrix(c(relatedValue), ncol=11), file = "AllBuildErroredAnalysisPullRequests.csv", row.names=F, col.names=F, sep=",", append=TRUE)
-}
-setwd(file.path(allErroredBuildsPath, "AllErroredAnalysis"))
-allErroredAnalysis = read.csv("AllBuildErroredAnalysisPullRequests.csv", header=T)
-allErroredGitProblem = mean(allErroredAnalysis$gitProblem)
-allErroredUnavailableSymbol = mean(allErroredAnalysis$unavailableSymbol)
-allErroredCompilerError = mean(allErroredAnalysis$compilerError)
-allErroredMethodUpdate = mean(allErroredAnalysis$methodUpdate)
-allErroredAnother = mean(allErroredAnalysis$X)
-allErroredRemote = mean(allErroredAnalysis$remoteError)
-allErroredMalformed = mean(allErroredAnalysis$malformedExpression)
-allErroredDependency = mean(allErroredAnalysis$dependencyProblem)
-allErroredDuplication = mean(allErroredAnalysis$statementDuplication)
-allErroredUnimplemented = mean(allErroredAnalysis$unimplementedMethod)
-
-GitProblem = allErroredAnalysis[,2]
-UnavSymbol = allErroredAnalysis[,3]
-CompilerError = allErroredAnalysis[,4]
-MethodUpdate = allErroredAnalysis[,5]
-Remote = allErroredAnalysis[,7]
-Malformed = allErroredAnalysis[,8]
-Unimplemented = allErroredAnalysis[,9]
-StatDuplication = allErroredAnalysis[,10]
-Dependency = allErroredAnalysis[,11]
-Another = allErroredAnalysis[,6]
-
-Compilation = allErroredAnalysis[,3] + allErroredAnalysis[,5] + allErroredAnalysis[,8] + allErroredAnalysis[,9] + allErroredAnalysis[,10] + allErroredAnalysis[,10]
-Environment = allErroredAnalysis[,2] + allErroredAnalysis[,4]
-
-png(paste("vioplot-individual-cases-pull-requests.png", sep=""), width=800, height=650)
-#bplotIndividual = cbind(GitProblem, UnavSymbol, MethodUpdate, Malformed, Unimplemented, CompilerError, Dependency, StatDuplication, Remote, Another)
-vioplot(UnavSymbol, MethodUpdate, Unimplemented, StatDuplication, col="gray", names=c("Unavailable Symbol", "Method Update", "Unimplemented Method", "Statement Duplication"))
-title(x="Causes", y="Percentage(%)")
-dev.off()
-
-setwd(file.path(rAnalysisPath, frequencyAnalysis))
-write.table(matrix(c("Pull Requests", "Semantic", allErroredUnavailableSymbol + allErroredUnimplemented), ncol=3), file = "AllScenariosAnalysis.csv", col.names=F, row.names=F, append=TRUE, sep=",")
-write.table(matrix(c("Pull Requests", "Syntax", allErroredDuplication + allErroredMalformed), ncol=3), file = "AllScenariosAnalysis.csv", col.names=F, row.names=F, append=TRUE, sep=",")
-write.table(matrix(c("Pull Requests", "Type Mismatch", allErroredMethodUpdate), ncol=3), file = "AllScenariosAnalysis.csv", col.names=F, row.names=F, append=TRUE, sep=",")
-write.table(matrix(c("Pull Requests", "Dependency", allErroredDependency), ncol=3), file = "AllScenariosAnalysis.csv", col.names=F, row.names=F, append=TRUE, sep=",")
-write.table(matrix(c("Pull Requests", "Others", allErroredGitProblem + allErroredCompilerError + allErroredAnother + allErroredRemote), ncol=3), file = "AllScenariosAnalysis.csv", col.names=F, row.names=F, append=TRUE, sep=",")
-setwd(file.path(allErroredBuildsPath, "AllErroredAnalysis"))
-
-png(paste("vioplot-general-cases-pull-requests.png", sep=""), width=500, height=450)
-#bplotGeneral = cbind(Compilation, Environment, Remote)
-vioplot(Compilation, Environment, Remote, Another, col="gray", names=c("Compilation", "Environment", "Remote", "Another"))
-title(x="Causes", y="Percentage(%)")
-dev.off()
-
-meanInfo = c("Mean", allErroredGitProblem, allErroredUnavailableSymbol, allErroredCompilerError, allErroredMethodUpdate, allErroredAnother, allErroredRemote, allErroredMalformed, allErroredUnimplemented, allErroredDuplication, allErroredDependency)
-write.table(matrix(c(meanInfo), ncol=11), file = "AllBuildErroredAnalysisPullRequests.csv", row.names=F, col.names=F, sep=",", append=TRUE)
 
 library(vioplot)
 mainDir = getwd()
@@ -201,15 +36,15 @@ count = 1
 #while (count <= length(pathFoldersMergeScenarios)){
 while (count <= 1){
 	setwd(rootPathProject)
-	pathCausesFailed = c(rootPathProject, paste("/FinalResults/MergeScenarios",foldersMergeScenarios[count],"ConflictsCauses/TestConflictsCauses.csv", sep="/"))
+	pathCausesFailed = c(rootPathProject, paste("/FinalResults/MergeScenarios/BuiltMergeScenarios/ConflictsCauses/TestConflictsCauses.csv", sep="/"))
 	causesFailedBuilds = read.csv(paste(pathCausesFailed, collapse=""), header=T)
 
 	setwd(rootPathProject)
-	pathCausesErrored = c(rootPathProject, paste("/FinalResults/MergeScenarios",foldersMergeScenarios[count],"ConflictsCauses/BuildConflictsCauses.csv", sep="/"))
+	pathCausesErrored = c(rootPathProject, paste("/FinalResults/MergeScenarios/BuiltMergeScenarios/ConflictsCauses/BuildConflictsCauses.csv", sep="/"))
 	causesErroredBuilds = read.csv(paste(pathCausesErrored, collapse=""), header=T)
 
 	setwd(rootPathProject)
-	pathMergeScenarios = c(rootPathProject, paste("/FinalResults/MergeScenarios", foldersMergeScenarios[count],"ConflictsAnalysis/ConflictsAnalysisFinal.csv", sep="/"))
+	pathMergeScenarios = c(rootPathProject, paste("/FinalResults/MergeScenarios/BuiltMergeScenarios/ConflictsAnalysis/ConflictsAnalysisFinal.csv", sep="/"))
 	mergeScenarios = read.csv(paste(pathMergeScenarios, collapse=""), header=T)
 
 	if (count == 1) 
@@ -227,8 +62,8 @@ while (count <= 1){
 		setwd(rAnalysisPath)
 
 		rq1 = "RQ1"
-		dir.create(file.path(pathFoldersMergeScenarios[count], rq1), showWarnings = FALSE)
-		setwd(file.path(pathFoldersMergeScenarios[count], rq1))
+		dir.create(file.path(mergeScenariosBuildsPath, rq1), showWarnings = FALSE)
+		setwd(file.path(mergeScenariosBuildsPath, rq1))
 
 		#Slide - How frequently do Broken Builds happen?
 		#Pushes
@@ -333,8 +168,8 @@ while (count <= 1){
 
 		#Slide - How frequently do Errored Builds happen?
 		rq2 = "RQ2"
-		dir.create(file.path(pathFoldersMergeScenarios[count], rq2), showWarnings = FALSE)
-		setwd(file.path(pathFoldersMergeScenarios[count], rq2))
+		dir.create(file.path(mergeScenariosBuildsPath, rq2), showWarnings = FALSE)
+		setwd(file.path(mergeScenariosBuildsPath, rq2))
 
 		#Pushes
 		#Average
@@ -409,8 +244,8 @@ while (count <= 1){
 
 		#Slide - How frequently do Errored Builds happen?
 		rq3 = "RQ3"
-		dir.create(file.path(pathFoldersMergeScenarios[count], rq3), showWarnings = FALSE)
-		setwd(file.path(pathFoldersMergeScenarios[count], rq3))
+		dir.create(file.path(mergeScenariosBuildsPath, rq3), showWarnings = FALSE)
+		setwd(file.path(mergeScenariosBuildsPath, rq3))
 
 		#Pushes
 		#Average
@@ -485,8 +320,8 @@ while (count <= 1){
 
 		#Slide - How frequently are Merge Scenario from Master Built on Travis?
 		rq4 = "RQ4"
-		dir.create(file.path(pathFoldersMergeScenarios[count], rq4), showWarnings = FALSE)
-		setwd(file.path(pathFoldersMergeScenarios[count], rq4))
+		dir.create(file.path(mergeScenariosBuildsPath, rq4), showWarnings = FALSE)
+		setwd(file.path(mergeScenariosBuildsPath, rq4))
 
 		#Merge Scenarios
 		#Average
@@ -549,8 +384,8 @@ while (count <= 1){
 		#Slide - How frequently are Errored Builds resulting from Built Merge Scenarios?
 		#What files are modified in Built Merge Scenarios of Errored Builds?
 		rq5 = "RQ5"
-		dir.create(file.path(pathFoldersMergeScenarios[count], rq5), showWarnings = FALSE)
-		setwd(file.path(pathFoldersMergeScenarios[count], rq5))
+		dir.create(file.path(mergeScenariosBuildsPath, rq5), showWarnings = FALSE)
+		setwd(file.path(mergeScenariosBuildsPath, rq5))
 		#Average
 		averageMergeScenariosErrored = mergeScenarios$PushesErrored*100/(totalMergeScenarios$TotalMS-totalMergeScenarios$TotalMSNoBuilt)
 		#averageMergeScenariosErrored = mergeScenarios$PushesErrored*100/(totalMergeScenarios$ValidBuilds)
@@ -624,8 +459,8 @@ while (count <= 1){
 	#Slide - How frequently are Failed Builds resulting from Built Merge Scenarios?
 	#What files are modified in Built Merge Scenarios of Failed Builds?
 	rq6 = "RQ6"
-	dir.create(file.path(pathFoldersMergeScenarios[count], rq6), showWarnings = FALSE)
-	setwd(file.path(pathFoldersMergeScenarios[count], rq6))
+	dir.create(file.path(mergeScenariosBuildsPath, rq6), showWarnings = FALSE)
+	setwd(file.path(mergeScenariosBuildsPath, rq6))
 
 	#Average
 	averageMergeScenariosFailed = mergeScenarios$PushesFailed*100/(totalMergeScenarios$TotalMS-totalMergeScenarios$TotalMSNoBuilt)
@@ -685,8 +520,8 @@ while (count <= 1){
 	#Slide - How frequently do Build Conflicts happen on Built Merge Scenarios of Errored Builds?
 	#What files are modified on Build Conflicts Scenarios?
 	rq7 = "RQ7"
-	dir.create(file.path(pathFoldersMergeScenarios[count], rq7), showWarnings = FALSE)
-	setwd(file.path(pathFoldersMergeScenarios[count], rq7))
+	dir.create(file.path(mergeScenariosBuildsPath, rq7), showWarnings = FALSE)
+	setwd(file.path(mergeScenariosBuildsPath, rq7))
 
 	#Build Conflicts - Errored Merge Scenarios
 	#Average
@@ -746,8 +581,8 @@ while (count <= 1){
 	#Slide - How frequently do Test Conflicts happen on Built Merge Scenarios of Failed Builds?
 	#What files are modified on Test Conflicts Scenarios?
 	rq8 = "RQ8"
-	dir.create(file.path(pathFoldersMergeScenarios[count], rq8), showWarnings = FALSE)
-	setwd(file.path(pathFoldersMergeScenarios[count], rq8))
+	dir.create(file.path(mergeScenariosBuildsPath, rq8), showWarnings = FALSE)
+	setwd(file.path(mergeScenariosBuildsPath, rq8))
 
 	#Test Conflicts - Failed Merge Scenarios
 	#Average
@@ -806,8 +641,8 @@ while (count <= 1){
 
 	#Slide - What are the Causes of Errored Builds in Build Conflicts Scenarios?
 	rq9 = "RQ9"
-	dir.create(file.path(pathFoldersMergeScenarios[count], rq9), showWarnings = FALSE)
-	setwd(file.path(pathFoldersMergeScenarios[count], rq9))
+	dir.create(file.path(mergeScenariosBuildsPath, rq9), showWarnings = FALSE)
+	setwd(file.path(mergeScenariosBuildsPath, rq9))
 
 	totalCausesErrored = sum(causesErroredBuilds$Total, na.rm=TRUE)
 	noFoundSymbolErrored = sum(causesErroredBuilds$NO.FOUND.SYMBOL, na.rm=TRUE)*100/totalCausesErrored
@@ -857,8 +692,8 @@ while (count <= 1){
 
 	#Slide - What are the Causes of Failed Builds in Test Conflicts Scenarios?
 	rq10 = "RQ10"
-	dir.create(file.path(pathFoldersMergeScenarios[count], rq10), showWarnings = FALSE)
-	setwd(file.path(pathFoldersMergeScenarios[count], rq10))
+	dir.create(file.path(mergeScenariosBuildsPath, rq10), showWarnings = FALSE)
+	setwd(file.path(mergeScenariosBuildsPath, rq10))
 
 	totalCauses = sum(causesFailedBuilds$Total, na.rm=TRUE)
 	gitProblem = sum(causesFailedBuilds$GIT.PROBLEM, na.rm=TRUE)*100/totalCauses
@@ -889,10 +724,10 @@ while (count <= 1){
 	setwd(file.path(mainDir))
 
 	rq11 = "ErroredCases"
-	dir.create(file.path(pathFoldersMergeScenarios[count], rq11), showWarnings = FALSE)
-	setwd(file.path(rootPathProject, paste("FinalResults/MergeScenarios",foldersMergeScenarios[count],"ErroredCases", sep="/")))
+	dir.create(file.path(mergeScenariosBuildsPath, rq11), showWarnings = FALSE)
+	setwd(file.path(rootPathProject, paste("FinalResults/MergeScenarios/BuiltMergeScenarios/ErroredCases", sep="/")))
 	listFiles = list.files(path = ".", pattern = "*.csv", all.files = FALSE, full.names = FALSE, recursive = FALSE)
-	setwd(file.path(pathFoldersMergeScenarios[count], rq11))
+	setwd(file.path(mergeScenariosBuildsPath, rq11))
 	unlink("AllBuiltMergeAnalysis.csv", recursive = FALSE, force = FALSE)
 	unlink("BuildConflictsAnalysis.csv", recursive = FALSE, force = FALSE)
 	unlink("ConflictingContributionAnalysis.csv", recursive = FALSE, force = FALSE)
@@ -906,7 +741,7 @@ while (count <= 1){
 	
 	indexFiles = 1
 	while(indexFiles <= length(listFiles)){
-		setwd(file.path(rootPathProject, paste("FinalResults/MergeScenarios",foldersMergeScenarios[count],"ErroredCases", sep="/")))
+		setwd(file.path(rootPathProject, paste("FinalResults/MergeScenarios/BuiltMergeScenarios/ErroredCases", sep="/")))
 		projectInfo = read.csv(listFiles[indexFiles], header=T)
 		projectName = strsplit(strsplit(listFiles[indexFiles], "Errored")[[1]], ".csv")[[2]][1]
 		infoValues = matrix(c("gitProblem", 0, "unavailableSymbol", 0, "compilerError", 0, "MethodParameterListSize", 0, " ", 0, "remoteError", 0, "malformedExpression", 0, "unimplementedMethod", 0, "statementDuplication", 0, "dependencyProblem", 0), ncol=10, nrow=2)
@@ -965,9 +800,9 @@ while (count <= 1){
 				countMessage = countMessage + 2
 			}
 			countLines = countLines + 1	
-			setwd(file.path(pathFoldersMergeScenarios[count], rq11))
+			setwd(file.path(mergeScenariosBuildsPath, rq11))
 		}
-		setwd(file.path(pathFoldersMergeScenarios[count], rq11))
+		setwd(file.path(mergeScenariosBuildsPath, rq11))
 		write.table(matrix(c(projectName, infoValues[2,]), ncol=11), file = "AllBuiltMergeAnalysis.csv", row.names=F, col.names=F, sep=",", append=TRUE)
 		write.table(matrix(c(projectName, buildConflicts[2,]), ncol=11), file = "BuildConflictsAnalysis.csv", row.names=F, col.names=F, sep=",", append=TRUE)
 		write.table(matrix(c(projectName, conflictingContribution[2,]), ncol=11), file = "ConflictingContributionAnalysis.csv", row.names=F, col.names=F, sep=",", append=TRUE)
@@ -975,7 +810,7 @@ while (count <= 1){
 		indexFiles = indexFiles + 1
 	}
 
-	setwd(file.path(pathFoldersMergeScenarios[count], rq11))
+	setwd(file.path(mergeScenariosBuildsPath, rq11))
 	frequencyBCC = read.csv("FrequencyBuildsContributionsConflict.csv", header=T)
 
 	#png(paste("frequency-build-conflicts", foldersMergeScenarios[count], ".png", sep="-"), width=400, height=550)
@@ -991,8 +826,8 @@ while (count <= 1){
 	namesConflictingPics = c("build-conflicts", "conflicting-contributions")
 	countFilesConflicting = 1
 	while (countFilesConflicting <= length(filesConflicts)){
-		setwd(file.path(pathFoldersMergeScenarios[count], rq11))
-		pathFileConflicting = c(pathFoldersMergeScenarios[count], paste("",filesConflicts[countFilesConflicting], sep="/"))
+		setwd(file.path(mergeScenariosBuildsPath, rq11))
+		pathFileConflicting = c(mergeScenariosBuildsPath, paste("",filesConflicts[countFilesConflicting], sep="/"))
 		allErroredAnalysis = read.csv(paste(pathFileConflicting, collapse=""), header=T)
 
 		allErroredGitProblem = mean(allErroredAnalysis$gitProblem)
@@ -1034,7 +869,7 @@ while (count <= 1){
 		countFilesConflicting = countFilesConflicting + 1
 	}
 
-	setwd(file.path(pathFoldersMergeScenarios[count], rq11))
+	setwd(file.path(mergeScenariosBuildsPath, rq11))
 	csvFileAll = read.csv("AllBuiltMergeAnalysis.csv", header=T)
 	csvFileBC = read.csv("BuildConflictsAnalysis.csv", header=T)
 	csvFileCC = read.csv("ConflictingContributionAnalysis.csv", header=T)
@@ -1070,7 +905,7 @@ while (count <= 1){
 		countLine = countLine + 1
 	}
 
-	setwd(file.path(pathFoldersMergeScenarios[count], rq11))
+	setwd(file.path(mergeScenariosBuildsPath, rq11))
 	csvFileCCPercent = read.csv("ConflictingContributionAnalysis.csv", header=T)
 	csvFileBCPercent = read.csv("BuildConflictsAnalysis.csv", header=T)	
 	unavailableSymbolBCPercent = sum(csvFileBCPercent$unavailableSymbol)
@@ -1098,7 +933,7 @@ while (count <= 1){
 	write.table(matrix(c("Build Conflicts", "Syntax", statementSymbolBCPercent*100/totalBCPercent), ncol=3), file = "AllScenariosAnalysis.csv", col.names=F, row.names=F, append=TRUE, sep=",")
 	write.table(matrix(c("Build Conflicts", "Type Mismatch", updateSymbolBCPercent*100/totalBCPercent), ncol=3), file = "AllScenariosAnalysis.csv", col.names=F, row.names=F, append=TRUE, sep=",")
 	write.table(matrix(c("Build Conflicts", "Dependency", 0), ncol=3), file = "AllScenariosAnalysis.csv", col.names=F, row.names=F, append=TRUE, sep=",")
-	setwd(file.path(pathFoldersMergeScenarios[count], rq11))
+	setwd(file.path(mergeScenariosBuildsPath, rq11))
 
 	unavailableSymbolCCPercent = sum(csvFileCCPercent$unavailableSymbol)
 	updateSymbolCCPercent = sum(csvFileCCPercent$MethodParameterListSize)
@@ -1111,7 +946,7 @@ while (count <= 1){
 	write.table(matrix(c("Badly-Solved Scenarios", "Syntax", statementSymbolCCPercent*100/totalCCPercent), ncol=3), file = "AllScenariosAnalysis.csv", col.names=F, row.names=F, append=TRUE, sep=",")
 	write.table(matrix(c("Badly-Solved Scenarios", "Type Mismatch", updateSymbolCCPercent*100/totalCCPercent), ncol=3), file = "AllScenariosAnalysis.csv", col.names=F, row.names=F, append=TRUE, sep=",")
 	write.table(matrix(c("Badly-Solved Scenarios", "Dependency", 0), ncol=3), file = "AllScenariosAnalysis.csv", col.names=F, row.names=F, append=TRUE, sep=",")
-	setwd(file.path(pathFoldersMergeScenarios[count], rq11))
+	setwd(file.path(mergeScenariosBuildsPath, rq11))
 	
 	sink("causes-frequency-CC.txt")
 	cat("What are the Causes of Conflicting Contributions?")
@@ -1153,7 +988,7 @@ dev.off()
 png(paste("frequency-build-conflicts-BC.png", sep="-"), width=600, height=550)
 #vioplot(frequencyBuildConflicts[,1],frequencyBuildConflicts[,2],frequencyBuildConflicts[,3], col="gray", names=c("BuiltMergeScenarios", "AllMergeScenarios", "IntervalMergeScenarios"))
 vioplot(frequencyBuildConflicts[,1], col="gray", names=c("BuiltMergeScenarios"))
-title(ylab="Percentage(%)", xlab=foldersMergeScenarios[count])
+title(ylab="Percentage(%)", xlab="Merge Scenarios")
 dev.off()
 print (mean(frequencyBuildConflicts[,1]))
 #print (mean(frequencyBuildConflicts[,2]))
@@ -1162,7 +997,7 @@ print (mean(frequencyBuildConflicts[,1]))
 png(paste("frequency-conflicting-contribution-CC.png", sep="-"), width=600, height=550)
 #vioplot(frequencyConflictingContributions[,1], frequencyConflictingContributions[,2], frequencyConflictingContributions[,3], col="gray", names=c("BuiltMergeScenarios", "AllMergeScenarios", "IntervalMergeScenarios"))
 vioplot(frequencyConflictingContributions[,1], col="gray", names=c("BuiltMergeScenarios"))
-title(ylab="Percentage(%)", xlab=foldersMergeScenarios[count])
+title(ylab="Percentage(%)", xlab="Merge Scenarios")
 dev.off()
 
 print (mean(frequencyConflictingContributions[,1]))
