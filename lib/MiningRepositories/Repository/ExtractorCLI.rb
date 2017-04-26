@@ -8,26 +8,15 @@ class ExtractorCLI
 		@travisLocation = travis
 		@downloadDir = download
 		@originalRepo = originalRepo
-		@repositoryTravis = nil
 		setName()
 		setFork()
 		setForkDir()
+	end
+
+	def activeForkProject()
 		createFork()
 		activateTravis()
 		cloneForkLocally()
-		getTravisRepositoryFork()
-	end
-
-	def getTravisRepositoryFork()
-		begin
-			@repositoryTravis = Travis::Repository.find(getFork())
-		rescue Exception => e  
-			print e
-		end
-	end
-
-	def getRepositoryTravis()
-		@repositoryTravis
 	end
 
 	def replayBuildOnTravis(commit, branch)
@@ -58,7 +47,6 @@ class ExtractorCLI
 
 	def setName()
 		parts = @originalRepo.split("/")
-		print parts[1]
 		@name = parts[1]
 	end
 
@@ -84,8 +72,12 @@ class ExtractorCLI
 	end
 
 	def deleteProject()
-		Dir.chdir getDownloadDir
-		%x(rm -rf #{getName()})
+		begin
+			Dir.chdir getDownloadDir
+			%x(rm -rf #{getName()})
+		rescue
+			print "PROJECT NOT DELETED"
+		end
 	end
 
 	def activateTravis()
