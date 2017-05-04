@@ -118,23 +118,27 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 										validMergeScenario.push(build.commit.sha)
 										totalMSErrored += 1
 										if (!intervalTime)
-											if (validScenarioProject < 3)
-												isConflict = confBuild.conflictAnalysisCategories(erroredConflicts, type, result[0])
-												#writeCSVForkAll.printConflictBuild(build, mergeCommit[0].to_s, mergeCommit[1].to_s, confForkAllErrored.findConflictCause(build, getPathProject(), pathGumTree, type, true), projectNameFile)
-												
-												if (isConflict and result[0] == true) 
-													writeCSVBuilt.printConflictBuild(build.id, result[1][0], result[2][0], confErroredForkBuilt.findConflictCause(build, getPathProject(), pathGumTree, type, true, cloneProject), projectNameFile)
-													validScenarioProject += 1
-													intervalTime = true
-												else
-													if (result[1] == nil)
-														notBuiltParents.push(mergeCommit[0])
+											if (!verifyEmptyBuildLogs(build))
+												if (validScenarioProject < 3)
+													isConflict = confBuild.conflictAnalysisCategories(erroredConflicts, type, result[0])
+													#writeCSVForkAll.printConflictBuild(build, mergeCommit[0].to_s, mergeCommit[1].to_s, confForkAllErrored.findConflictCause(build, getPathProject(), pathGumTree, type, true), projectNameFile)
+													
+													if (isConflict and result[0] == true) 
+														writeCSVBuilt.printConflictBuild(build.id, result[1][0], result[2][0], confErroredForkBuilt.findConflictCause(build, getPathProject(), pathGumTree, type, true, cloneProject), projectNameFile)
+														validScenarioProject += 1
+														intervalTime = true
+													else
+														if (result[1] == nil)
+															notBuiltParents.push(mergeCommit[0])
+														end
+														if (result[2] == nil)
+															notBuiltParents.push(mergeCommit[1])
+														end
+														totalPushesNoBuilt+=1
 													end
-													if (result[2] == nil)
-														notBuiltParents.push(mergeCommit[1])
-													end
-													totalPushesNoBuilt+=1
 												end
+											else
+												builtMergeScenarios.delete(build.commit.sha)
 											end
 										else
 											countIntervalCommits += 1
@@ -333,6 +337,19 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 
 		return extractorCLI.getInfoLastBuild()
 
+	end
+
+	def verifyEmptyBuildLogs(build)
+		indexJob = 0
+		while (indexJob < build.job_ids.size)
+			build.jobs[indexJob].log.body do |bodyJob|
+				if (bodyJob.to_s == "")
+					return true
+				end
+			end
+			indexJob += 1
+		end
+		return false
 	end
 
 end

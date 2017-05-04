@@ -284,6 +284,10 @@ class ConflictCategoryErrored
 			getCausesErroredBuild.setRemoteError(body.scan(/The job exceeded the maximum time limit for jobs, and has been terminated|No output has been received in the last [0-9]*|#{stringServiceUnavailable}|(y|Y)our test run exceeded 50(.0)? minutes|error: device not found|ValueError: No JSON object could be decoded|#{stringOverflowData}/).size)
 		end
 
+		if (otherCase)
+			getCausesErroredBuild.setOtherError(1)
+		end
+
 		return otherCase, localUnavailableSymbol, localMethodUpdate, localMalformedExp, localDuplicateStatement, localDependencyProblem, localUnimplementedMethod, causesFilesConflicts
 	end
 

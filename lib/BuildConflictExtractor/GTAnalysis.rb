@@ -55,6 +55,15 @@ class GTAnalysis
 	end
 
 	def gumTreeDiffByBranch(mergeCommit, result, left, right, base, conflictCauses, pathProject, parents, cloneProject)
+		statusModified = cloneProject.verifyBadlyMergeScenario(parents[0], parents[1], mergeCommit)
+		conflictingContributions = []
+		if (statusModified == true)
+			conflictCauses.getCausesConflict().each do |conflictCause|
+				conflictingContributions.push(true)
+			end	
+			return conflictingContributions, true
+		end
+
 		baseLeft = @parentMSDiff.runAllDiff(base, left)
 		baseRight = @parentMSDiff.runAllDiff(base, right)
 		leftResult = @parentMSDiff.runAllDiff(left, result)
@@ -72,14 +81,17 @@ class GTAnalysis
 	end
 
 	def verifyModificationStatus(mergeCommit, baseLeft, leftResult, baseRight, rightResult, conflictCauses, leftPath, rightPath, pathProject, parents, cloneProject)
-		statusModified = cloneProject.verifyBadlyMergeScenario(parents[0], parents[1], mergeCommit)
-		if (statusModified == false)
-			statusModified = verifyModifiedFile(baseLeft[0], leftResult[0], baseRight[0], rightResult[0])
-		end
+		conflictingContributions = []
+		statusModified = verifyModifiedFile(baseLeft[0], leftResult[0], baseRight[0], rightResult[0])
 		statusAdded = verifyAddedDeletedFile(baseLeft[1], leftResult[1], baseRight[1], rightResult[1])
 		statusDeleted = verifyAddedDeletedFile(baseLeft[2], leftResult[2], baseRight[2], rightResult[2])
+		if (statusModified and statusAdded and statusDeleted)
+			conflictCauses.getCausesConflict().each do |conflictCause|
+				conflictingContributions.push(true)
+			end	
+			return conflictingContributions, true
+		end
 		
-		conflictingContributions = []
 		allIntegratedContributions = false
 		indexValue = 0
 		conflictCauses.getCausesConflict().each do |conflictCause|
@@ -113,11 +125,8 @@ class GTAnalysis
 			indexValue += 1
 		end
 		
-		if (statusModified and statusAdded and statusDeleted)
-			return conflictingContributions, true
-		else
-			return conflictingContributions, false
-		end
+		return conflictingContributions, false
+
 	end
 
 	def verifyAddedDeletedFile(baseLeftInitial, leftResultFinal, baseRightInitial, rightResultFinal)

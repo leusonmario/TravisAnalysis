@@ -100,8 +100,11 @@ class ExtractorCLI
 	def cloneForkLocally()
 		Dir.chdir getDownloadDir()
 		cloneFork = "git clone https://github.com/" + @fork + ".git"
+		addRemote = "git remote add upstream git://github.com/" + @originalRepo + ".git"
 		begin
 			%x(#{cloneFork})
+			#Dir.chdir getName()
+			#{}%x(#{addRemote})
 		rescue 
 			print "NOT CLONED"
 		end
@@ -141,6 +144,17 @@ class ExtractorCLI
 		Dir.chdir getDownloadDir()
 		Dir.chdir getName()
 		pull = "git pull"
+		begin
+			%x(#{pull})
+		rescue
+			print "PULL IS NOT POSSIBLE"
+		end
+	end
+
+	def gitPullUpstream()
+		Dir.chdir getDownloadDir()
+		Dir.chdir getName()
+		pull = "git pull upstream master"
 		begin
 			%x(#{pull})
 		rescue
