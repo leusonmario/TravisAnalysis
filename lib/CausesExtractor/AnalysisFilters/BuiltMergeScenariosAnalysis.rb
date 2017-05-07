@@ -32,6 +32,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 		totalMSFailed = 0
 		totalMSCanceled = 0
 		validScenarioProject = 0
+		validScenarioProjectList = Array.new
 
 		fileErrored = ""
 		fileFailed = ""
@@ -199,6 +200,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 								if (result[1] != nil and result[2] != nil)
 									intervalTime = true
 									validScenarioProject += 1
+									validScenarioProjectList.push(mergeScenario)
 								else
 									if (result[1] == nil)
 										resultBuildProcess = verifyBuildCurrentState(extractorCLI, mergeCommit[0])
@@ -220,6 +222,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 									end
 									if ((result[1] != nil or firstParentStatus == "passed\n" or firstParentStatus == "failed\n") and (result[2] != nil or secondParentStatus == "passed\n" or secondParentStatus == "failed\n"))
 										validScenarioProject += 1
+										validScenarioProjectList.push(mergeScenario)
 										intervalTime = true
 									end
 								end
@@ -264,23 +267,25 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 					end
 				end
 
-				forkAllBuilds.each do |key, array|
-					if (key != nil)
-						if (@projectMergeScenarios.include? key+"\n" or @projectMergeScenarios.include? key)
-							mergeCommit = mergeScenariosAnalysisCommit(key)
+				#forkAllBuilds.each do |key, array|
+				validScenarioProjectList.each do |mergeScenario|
+					#if (key != nil)
+						if (@projectMergeScenarios.include? mergeScenario+"\n" or @projectMergeScenarios.include? mergeScenario)
+							mergeCommit = mergeScenariosAnalysisCommit(mergeScenario)
 							result = @gitProject.conflictScenarioAll(mergeCommit, allBuilds, forkAllBuilds)
 							if (result[0] == true)
-								type = confBuild.typeConflict(key)
-								if (array[0] == 'errored')
+								type = confBuild.typeConflict(mergeScenario)
+								infoValidScenario = forkAllBuilds[mergeScenario]
+								if (infoValidScenario[0] == 'errored')
 									totalMSErrored += 1
 									isConflict = confBuild.conflictAnalysisCategories(erroredConflicts, type, result[0])
 									if (isConflict and result[0] == true)
-										writeCSVBuilt.printConflictBuild(array[2], result[1][0], result[2][0], confErroredForkBuilt.findConflictCauseFork(array[1], key, getPathProject(), pathGumTree, type, true, cloneProject), projectNameFile)
+										writeCSVBuilt.printConflictBuild(infoValidScenario[2], result[1][0], result[2][0], confErroredForkBuilt.findConflictCauseFork(infoValidScenario[1], mergeScenario, getPathProject(), pathGumTree, type, true, cloneProject), projectNameFile)
 									end
 								end
 							end
 						end
-					end
+					#end
 				end
 			end
 
