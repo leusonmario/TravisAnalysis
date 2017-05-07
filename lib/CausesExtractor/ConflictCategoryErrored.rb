@@ -62,6 +62,7 @@ class ConflictCategoryErrored
 		localDuplicateStatement = 0 
 		localDependencyProblem = 0 
 		localUnimplementedMethod = 0
+		localOtherCase = 0
 		
 		causesFilesConflicts = CausesFilesConflicting.new()
 
@@ -82,7 +83,7 @@ class ConflictCategoryErrored
 			localUnimplementedMethod = otherCase[6]
 			causesFilesConflicts = otherCase[7]
 			if (otherCase[0])
-				@otherError += 1
+				localOtherCase += 1
 			end
 		end
 
@@ -100,6 +101,7 @@ class ConflictCategoryErrored
 		localDuplicateStatement = 0 
 		localDependencyProblem = 0 
 		localUnimplementedMethod = 0
+		localOtherCase = 0
 		
 		indexJob = 0
 		causesFilesConflicts = CausesFilesConflicting.new()
@@ -124,7 +126,7 @@ class ConflictCategoryErrored
 							localUnimplementedMethod = otherCase[6]
 							causesFilesConflicts = otherCase[7]
 							if (otherCase[0])
-								@otherError += 1
+								localOtherCase += 1
 							end
 						end
 					end
