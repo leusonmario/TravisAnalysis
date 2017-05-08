@@ -117,7 +117,7 @@ class ExtractorCLI
 		status = ""
 		begin
 			historyBuild = %x(#{checkout})
-			status = historyBuild.match(/State:[\s\S]*Type/).to_s.match(/State:[\s\S]*\n/).to_s.match(/ [\s\S]*/).to_s.gsub(" ","")
+			status = historyBuild.match(/State:[\s\S]*Type/).to_s.match(/State:[\s\S]*\n/).to_s.match(/ [\s\S]*/).to_s.gsub(" ","").gsub("\n","")
 		rescue 
 			print "NOT CHECKOUT EXECUTED"
 		end
@@ -168,10 +168,17 @@ class ExtractorCLI
 		logs = []
 		status = ""
 		buildId = ""
+		status = ""
 		begin
 			infoBuild = %x(travis show)
-			if (infoBuild.match(/Build #[0-9\.]*:/))
+			status = infoBuild.match(/State:[\s\S]*Type/).to_s.match(/State:[\s\S]*\n/).to_s.match(/ [\s\S]*/).to_s.gsub(" ","").gsub("\n","")
+			
+			while (status == "started")
+				infoBuild = %x(travis show)
 				status = infoBuild.match(/State:[\s\S]*Type/).to_s.match(/State:[\s\S]*\n/).to_s.match(/ [\s\S]*/).to_s.gsub(" ","").gsub("\n","")
+			end
+
+			if (infoBuild.match(/Build #[0-9\.]*:/))
 				buildId = infoBuild.match(/Build #[0-9\.]*:/).to_s.match(/#[0-9]*/).to_s.gsub("#","")
 				numberJobs = infoBuild.scan(/\#[0-9\.]* #{status}/)
 				
@@ -182,7 +189,6 @@ class ExtractorCLI
 				
 			elsif (infoBuild.match(/Job #[0-9\.]*:/))
 				buildId = infoBuild.match(/Job #[0-9\.]*:/).to_s.match(/#[0-9]*/).to_s.gsub("#","")
-				status = infoBuild.match(/State:[\s\S]*Type/).to_s.match(/State:[\s\S]*\n/).to_s.match(/ [\s\S]*/).to_s.gsub(" ","").gsub("\n","")
 				logs.push(%x(travis logs))
 			end
 		rescue

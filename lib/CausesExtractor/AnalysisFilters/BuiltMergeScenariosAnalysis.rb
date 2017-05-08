@@ -191,7 +191,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 							else
 								break
 							end
-							if (extractorCLI.checkStatusBuild() == "errored\n")
+							if (extractorCLI.checkStatusBuild() == "errored")
 								totalMSCanceled += 1
 								mergeCommit = mergeScenariosAnalysisCommit(mergeScenario)
 								result = @gitProject.conflictScenario(mergeCommit, allBuilds)
@@ -211,7 +211,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 										end
 										firstParentStatus = extractorCLI.checkStatusBuild()
 									end
-									if (result[2] == nil and (firstParentStatus == "passed\n" or firstParentStatus == "failed\n"))
+									if (result[2] == nil and (firstParentStatus == "passed" or firstParentStatus == "failed"))
 										resultBuildProcess = verifyBuildCurrentState(extractorCLI, mergeCommit[1])
 										if (resultBuildProcess != nil)
 											forkAllBuilds[mergeCommit[1]] = [resultBuildProcess[0], resultBuildProcess[1], resultBuildProcess[2]]
@@ -220,17 +220,17 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 										end
 										secondParentStatus = extractorCLI.checkStatusBuild()
 									end
-									if ((result[1] != nil or firstParentStatus == "passed\n" or firstParentStatus == "failed\n") and (result[2] != nil or secondParentStatus == "passed\n" or secondParentStatus == "failed\n"))
+									if ((result[1] != nil or firstParentStatus == "passed" or firstParentStatus == "failed") and (result[2] != nil or secondParentStatus == "passed" or secondParentStatus == "failed"))
 										validScenarioProject += 1
 										validScenarioProjectList.push(mergeScenario)
 										intervalTime = true
 									end
 								end
-							elsif (extractorCLI.checkStatusBuild() == "passed\n")
+							elsif (extractorCLI.checkStatusBuild() == "passed")
 								totalMSPassed += 1
-							elsif (extractorCLI.checkStatusBuild() == "failed\n")
+							elsif (extractorCLI.checkStatusBuild() == "failed")
 								totalMSFailed += 1
-							elsif (extractorCLI.checkStatusBuild() == "canceled\n")
+							elsif (extractorCLI.checkStatusBuild() == "canceled")
 								totalMSCanceled += 1
 							end
 						else
@@ -267,25 +267,22 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 					end
 				end
 
-				#forkAllBuilds.each do |key, array|
 				validScenarioProjectList.each do |mergeScenario|
-					#if (key != nil)
-						if (@projectMergeScenarios.include? mergeScenario+"\n" or @projectMergeScenarios.include? mergeScenario)
-							mergeCommit = mergeScenariosAnalysisCommit(mergeScenario)
-							result = @gitProject.conflictScenarioAll(mergeCommit, allBuilds, forkAllBuilds)
-							if (result[0] == true)
-								type = confBuild.typeConflict(mergeScenario)
-								infoValidScenario = forkAllBuilds[mergeScenario]
-								if (infoValidScenario[0] == 'errored')
-									totalMSErrored += 1
-									isConflict = confBuild.conflictAnalysisCategories(erroredConflicts, type, result[0])
-									if (isConflict and result[0] == true)
-										writeCSVBuilt.printConflictBuild(infoValidScenario[2], result[1][0], result[2][0], confErroredForkBuilt.findConflictCauseFork(infoValidScenario[1], mergeScenario, getPathProject(), pathGumTree, type, true, cloneProject), projectNameFile)
-									end
+					if (@projectMergeScenarios.include? mergeScenario+"\n" or @projectMergeScenarios.include? mergeScenario)
+						mergeCommit = mergeScenariosAnalysisCommit(mergeScenario)
+						result = @gitProject.conflictScenarioAll(mergeCommit, allBuilds, forkAllBuilds)
+						if (result[0] == true)
+							type = confBuild.typeConflict(mergeScenario)
+							infoValidScenario = forkAllBuilds[mergeScenario]
+							if (infoValidScenario[0] == 'errored')
+								totalMSErrored += 1
+								isConflict = confBuild.conflictAnalysisCategories(erroredConflicts, type, result[0])
+								if (isConflict and result[0] == true)
+									writeCSVBuilt.printConflictBuild(infoValidScenario[2], result[1][0], result[2][0], confErroredForkBuilt.findConflictCauseFork(infoValidScenario[1], mergeScenario, getPathProject(), pathGumTree, type, true, cloneProject), projectNameFile)
 								end
 							end
 						end
-					#end
+					end
 				end
 			end
 
@@ -334,7 +331,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 		end
 		
 		status = extractorCLI.checkStatusBuild()
-		while (status == "started\n" and indexCount < 10)
+		while (status == "started" and indexCount < 10)
 			sleep(20)
 			print "Merge Scenario Parents not built yet\n"
 			status = extractorCLI.checkStatusBuild()
