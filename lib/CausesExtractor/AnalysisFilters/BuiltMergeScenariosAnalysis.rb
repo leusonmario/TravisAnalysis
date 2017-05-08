@@ -258,7 +258,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 										totalMSErrored += 1
 										isConflict = confBuild.conflictAnalysisCategories(erroredConflicts, type, result[0])
 										if (isConflict and result[0] == true)
-											writeCSVBuilt.printConflictBuild(build.id, result[1][0], result[2][0], confErroredForkBuilt.findConflictCause(build, getPathProject(), pathGumTree, type, true, cloneProject), projectNameFile)
+											writeCSVBuilt.printConflictBuild(build.id, result[1], result[2], confErroredForkBuilt.findConflictCause(build, getPathProject(), pathGumTree, type, true, cloneProject), projectNameFile)
 										end
 									end
 								end
@@ -278,7 +278,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 								totalMSErrored += 1
 								isConflict = confBuild.conflictAnalysisCategories(erroredConflicts, type, result[0])
 								if (isConflict and result[0] == true)
-									writeCSVBuilt.printConflictBuild(infoValidScenario[2], result[1][0], result[2][0], confErroredForkBuilt.findConflictCauseFork(infoValidScenario[1], mergeScenario, getPathProject(), pathGumTree, type, true, cloneProject), projectNameFile)
+									writeCSVBuilt.printConflictBuild(infoValidScenario[2], result[1], result[2], confErroredForkBuilt.findConflictCauseFork(infoValidScenario[1], mergeScenario, getPathProject(), pathGumTree, type, true, cloneProject), projectNameFile)
 								end
 							end
 						end
