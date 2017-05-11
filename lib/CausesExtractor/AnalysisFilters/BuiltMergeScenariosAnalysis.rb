@@ -69,7 +69,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 			#		projectBuildsMap[build.commit.sha] = [build.id, build.state]
 			#	end
 			#end
-			effortTimeExtractor = EffortTimeExtractor(allBuilds, @pathProject)
+			effortTimeExtractor = EffortTimeExtractor.new(allBuilds, @pathProject)
 			getRepositoryTravisProject().each_build do |build|
 				if (build != nil)
 					status = confBuild.getBuildStatus(build)
@@ -138,9 +138,8 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 														if (stateBC.size > 1)
 															effort = effortTimeExtractor.checkFixedBuild(build.commit.sha)
 														end
-														#writeCSVBuilt.printConflictBuild(build.id, result[1][0], result[2][0], confErroredForkBuilt.findConflictCause(build, getPathProject(), pathGumTree, type, true, cloneProject), projectNameFile)
 														writeCSVBuilt.printConflictBuild(build.id, result[1][0], result[2][0], stateBC, projectNameFile, effort)
-)														validScenarioProject += 1
+														validScenarioProject += 1
 														intervalTime = true
 													else
 														if (result[1] == nil)
@@ -181,7 +180,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 				end
 			end
 
-			if (validScenarioProject < 3)
+			if (validScenarioProject < 1)
 				extractorCLI.activeForkProject()
 				forkAllBuilds = Hash.new()
 				notBuiltParents.each do |notBuiltParent|
@@ -254,7 +253,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 							end
 						end
 					end
-					if (validScenarioProject > 2)
+					if (validScenarioProject > 1)
 						break
 					end
 				end

@@ -17,9 +17,9 @@ class EffortTimeExtractor
 		numberBuilsTillFix = 0
 		@projectBuildsMap.each do |key, value|
 			if (checkFailedCommitAsParent(brokenCommit, key))
-				if (value[0] == "passed" or value[0] == "failed")
+				if (value[0][0] == "passed" or value[0][0] == "failed")
 					result = checkTimeEffort(brokenCommit, key)
-					return value[1], result[0], numberBuilsTillFix, result[1], result[2]
+					return value[1][0], value[0][0], result[0], numberBuilsTillFix, result[1], result[2], true
 				else
 					numberBuilsTillFix += 1
 					brokenCommit = key

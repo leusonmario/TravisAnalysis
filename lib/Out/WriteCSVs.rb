@@ -142,19 +142,19 @@ class WriteCSVs
 		if (File.exists?("Errored"+projectName+".csv"))
 			CSV.open("Errored"+projectName+".csv", "a+") do |csv|
 				if (effort != nil)
-					csv << [build, buildOne, buildTwo, state[0], state[2], state[1][0], state[1][1], effort[0], effort[1], effort[2], effort[3], effort[4]]
+					csv << [build, buildOne, buildTwo, state[0], state[2], state[1][0], state[1][1], effort[0], effort[1], effort[2], effort[3], effort[4], effort[5], effort[6]]
 				else
-					csv << [build, buildOne, buildTwo, state[0], state[2], state[1][0], state[1][1], "", "", "", "", ""]
+					csv << [build, buildOne, buildTwo, state[0], state[2], state[1][0], state[1][1], "", "", "", "", "", "", ""]
 				end
 
 			end
 		else
 			CSV.open("Errored"+projectName+".csv", "w") do |csv|
-				csv << ["BuildID", "BuildParentOne", "BuildParentTwo", "MessageState", "NumberOccurrences", "ConflictingContributions", "AllColaborationsIntgrated", "FiexBuildID", "Effort", "NumberBuildsPerformed", "SameAuthor", "SameCommiter"]
+				csv << ["BuildID", "BuildParentOne", "BuildParentTwo", "MessageState", "NumberOccurrences", "ConflictingContributions", "AllColaborationsIntgrated", "FixBuildID", "FixStatus", "Effort", "NumberBuildsPerformed", "SameAuthor", "SameCommiter", "BestCase"]
 				if (effort != nil)
-					csv << [build, buildOne, buildTwo, state[0], state[2], state[1][0], state[1][1], effort[0], effort[1], effort[2], effort[3], effort[4]]
+					csv << [build, buildOne, buildTwo, state[0], state[2], state[1][0], state[1][1], effort[0], effort[1], effort[2], effort[3], effort[4], effort[5], effort[6]]
 				else
-					csv << [build, buildOne, buildTwo, state[0], state[2], state[1][0], state[1][1], "", "", "", "", ""]
+					csv << [build, buildOne, buildTwo, state[0], state[2], state[1][0], state[1][1], "", "", "", "", "", "", ""]
 				end
 			end			
 		end
