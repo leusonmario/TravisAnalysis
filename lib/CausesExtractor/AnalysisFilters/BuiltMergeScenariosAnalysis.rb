@@ -54,6 +54,8 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 		confFailedAll = ConflictCategoryFailed.new()
 		confFailedInterval = ConflictCategoryFailed.new()
 
+		projectBuildsMap = Hash.new()
+
 		projectNameFile = projectName.gsub('/','-')	
 		@repositoryTravisProject = getGitProject.getRepositoryTravisByProject()
 		validMergeScenario = Array.new
@@ -62,6 +64,12 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 
 		if (getRepositoryTravisProject() != nil)
 			allBuilds = loadAllBuilds(getRepositoryTravisProject(), confBuild, withWithoutForks)
+			#getRepositoryTravisProject().each_build do |build|
+			#	if (!build.pull_request)
+			#		projectBuildsMap[build.commit.sha] = [build.id, build.state]
+			#	end
+			#end
+			effortTimeExtractor = EffortTimeExtractor(allBuilds, @pathProject)
 			getRepositoryTravisProject().each_build do |build|
 				if (build != nil)
 					status = confBuild.getBuildStatus(build)
@@ -125,8 +133,14 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 													#writeCSVForkAll.printConflictBuild(build, mergeCommit[0].to_s, mergeCommit[1].to_s, confForkAllErrored.findConflictCause(build, getPathProject(), pathGumTree, type, true), projectNameFile)
 													
 													if (isConflict and result[0] == true) 
-														writeCSVBuilt.printConflictBuild(build.id, result[1][0], result[2][0], confErroredForkBuilt.findConflictCause(build, getPathProject(), pathGumTree, type, true, cloneProject), projectNameFile)
-														validScenarioProject += 1
+														stateBC = confErroredForkBuilt.findConflictCause(build, getPathProject(), pathGumTree, type, true, cloneProject)
+														effort = nil
+														if (stateBC.size > 1)
+															effort = effortTimeExtractor.checkFixedBuild(build.commit.sha)
+														end
+														#writeCSVBuilt.printConflictBuild(build.id, result[1][0], result[2][0], confErroredForkBuilt.findConflictCause(build, getPathProject(), pathGumTree, type, true, cloneProject), projectNameFile)
+														writeCSVBuilt.printConflictBuild(build.id, result[1][0], result[2][0], stateBC, projectNameFile, effort)
+)														validScenarioProject += 1
 														intervalTime = true
 													else
 														if (result[1] == nil)

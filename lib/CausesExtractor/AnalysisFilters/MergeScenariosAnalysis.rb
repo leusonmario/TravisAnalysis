@@ -5,6 +5,7 @@ require_rel '../ConflictCategoryFailed'
 require_rel '../ConflictBuild'
 require_all '././MiningRepositories/Repository'
 require_all '././MiningRepositories/Data'
+require_all '././BuildConflictExtractor/BCTypes'
 
 class MergeScenariosAnalysis
 	def initialize(projectName, gitProject, localClone)

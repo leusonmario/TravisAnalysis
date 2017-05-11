@@ -12,8 +12,8 @@ class MergeCommit
 				break
 			end
 			if(line.include?('parent'))
-				commitSHA = line.partition('parent ').last.gsub('\n','').gsub(' ','').gsub('\r','')
-				@parentsCommit.push(commitSHA[0..39].to_s)
+				commitSHA = line.partition('parent ').last.gsub("\n","").gsub(' ','').gsub('\r','')
+				@parentsCommit.push(commitSHA)
 			end
 		end
 
