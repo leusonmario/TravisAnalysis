@@ -2,6 +2,7 @@ require 'require_all'
 require 'travis'
 require 'active_support/core_ext/numeric/time'
 require 'date'
+require 'time'
 
 class EffortTimeExtractor
 	@projectBuildsMap = Hash.new()
@@ -15,18 +16,24 @@ class EffortTimeExtractor
 	def checkFixedBuild(commit)
 		brokenCommit = commit
 		numberBuilsTillFix = 0
+		buildId = ""
 		@projectBuildsMap.each do |key, value|
 			if (checkFailedCommitAsParent(brokenCommit, key))
+				numberBuilsTillFix += 1
+				buildId = value[1][0]
 				if (value[0][0] == "passed" or value[0][0] == "failed")
 					result = checkTimeEffort(brokenCommit, key)
 					return value[1][0], value[0][0], result[0], numberBuilsTillFix, result[1], result[2], true
 				else
-					numberBuilsTillFix += 1
 					brokenCommit = key
 				end
 			end
 		end
-		return nil
+		if (numberBuilsTillFix == 0)
+			return nil
+		else
+			return buildId, "NO-FIX", "NO-FIX", numberBuilsTillFix, "NO-FIX", "NO-FIX", true
+		end
 	end
 
 	def checkFailedCommitAsParent(brokenCommit, fixedCommit)
@@ -52,7 +59,7 @@ class EffortTimeExtractor
 		fixedCommitInfo = getFixedProcessCommit(fixedCommit)
 		sameAuthors = false
 		sameCommiter = false
-		intervalTime = (DateTime.parse(fixedCommitInfo[2]) - DateTime.parse(brokenCommitInfo[2])).to_i
+		intervalTime = ((DateTime.parse(fixedCommitInfo[2]) - DateTime.parse(brokenCommitInfo[2]))*24*60).to_i
 
 		if (brokenCommitInfo[0] == fixedCommitInfo[0]) 
 			sameAuthors = true
