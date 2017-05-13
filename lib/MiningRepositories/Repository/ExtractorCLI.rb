@@ -15,8 +15,8 @@ class ExtractorCLI
 
 	def activeForkProject()
 		createFork()
-		activateTravis()
 		cloneForkLocally()
+		activateTravis()
 	end
 
 	def replayBuildOnTravis(commit, branch)
@@ -81,15 +81,20 @@ class ExtractorCLI
 	end
 
 	def activateTravis()
+		Dir.chdir getDownloadDir()
 		cmd = "travis" + " login --github-token " + @token
 		cmd2 = "travis" + " enable -r " + @username + "/" + @name
 		begin
 			%x(#{cmd})
-			sleep(20)
-			answer = %x(#{cmd2})
-			while (answer == "409: {\"message\":\"Sync already in progress. Try again later.\"}")
+			answerLogin = %x(travis whoami)
+			while (!answerLogin.include? "#{@username}")
+				answerLogin = %x(travis whoami)
 				sleep(10)
-				answer = %x(#{cmd2})
+			end
+			answerActivation = %x(#{cmd2})
+			while (!answerActivation.include? "enabled")
+				sleep(10)
+				answerActivation = %x(#{cmd2})
 			end
 			sleep(20)
 		rescue
