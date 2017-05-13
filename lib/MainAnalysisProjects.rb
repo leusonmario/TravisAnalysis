@@ -1,5 +1,3 @@
-#!/usr/bin/env ruby
-
 require 'require_all'
 require_all './MiningRepositories'
 require_all './Out'
