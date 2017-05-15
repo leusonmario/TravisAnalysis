@@ -13,7 +13,7 @@ class EffortTimeExtractor
 		@projectPath = path
 	end
 
-	def checkFixedBuild(commit)
+	def checkFixedBuild(commit, mergeCommit)
 		brokenCommit = commit
 		numberBuilsTillFix = 0
 		buildId = ""
@@ -29,10 +29,11 @@ class EffortTimeExtractor
 				end
 			end
 		end
-		if (numberBuilsTillFix == 0)
-			return nil
+		result = checkFixedBuildCommitCloser(commit, mergeCommit)
+		if (result.size > 2)
+			return result
 		else
-			return buildId, "NO-FIX", "NO-FIX", numberBuilsTillFix, "NO-FIX", "NO-FIX", true
+			return result[1], "NO-FIX", "NO-FIX", numberBuilsTillFix+result[0], "NO-FIX", "NO-FIX", false
 		end
 	end
 
@@ -90,4 +91,35 @@ class EffortTimeExtractor
 
 		return author, committer, date
 	end
+
+	def checkFixedBuildCommitCloser(commit, mergeCommit)
+		numberBuilsTillFix = 0
+		buildID = ""
+		brokenCommit = commit
+		@projectBuildsMap.each do |key, value|
+			if (getRevList(mergeCommit, key, brokenCommit) == true)
+				numberBuilsTillFix += 1
+				buildId = value[1][0]
+				if (value[0][0] == "passed" or value[0][0] == "failed")
+					result = checkTimeEffort(brokenCommit, key)
+					return value[1][0], value[0][0], result[0], numberBuilsTillFix, result[1], result[2], false
+				else
+					brokenCommit = key
+				end
+			end
+		end
+		return numberBuilsTillFix, buildID
+	end
+
+	def getRevList(mergeCommit, commit, commitFailed)
+		Dir.chdir @projectPath
+		base = %x(git merge-base --all #{mergeCommit[0]} #{mergeCommit[1]})
+		revList = %x(git rev-list #{base} #{commit})
+		if (revList.include? commitFailed)
+			return true
+		else
+			return false
+		end
+	end
+
 end
