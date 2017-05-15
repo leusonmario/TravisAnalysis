@@ -43,7 +43,6 @@ class BadlyMergeScenarioExtractor
 		%x(git checkout -b mergeCommit #{mergeCommit})
 		diff = %x(git diff rightParent)
 		%x(git checkout -f #{mainBranch})
-		#%x(git pull)
 		%x(git branch -D rightParent)
 		%x(git branch -D leftParent)
 		%x(git branch -D mergeCommit)
