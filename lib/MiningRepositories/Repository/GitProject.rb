@@ -178,11 +178,15 @@ class GitProject
 			if (projectBuilds[parentsMerge[0]][0]==["passed"] or projectBuilds[parentsMerge[0]][0]==["failed"])
 				parentOne = true
 				buildOne = projectBuilds[parentsMerge[0]][1]
+			else
+				buildOne = projectBuilds[parentsMerge[0]][2]
 			end
 			
 			if (projectBuilds[parentsMerge[1]][0]==["passed"] or projectBuilds[parentsMerge[1]][0]==["failed"])
 				parentTwo = true
 				buildTwo = projectBuilds[parentsMerge[1]][1]
+			else
+				buildTwo = projectBuilds[parentsMerge[1]][2]
 			end
 			
 			if (parentOne==true and parentTwo==true)

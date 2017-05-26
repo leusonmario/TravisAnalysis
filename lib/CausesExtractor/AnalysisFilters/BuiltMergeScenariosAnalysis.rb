@@ -142,6 +142,32 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 														validScenarioProject += 1
 														intervalTime = true
 													else
+														if !result[0]
+															causesBroken = confAllErrored.findConflictCause(build, getPathProject())
+															buildAgain = false
+															causesBroken.each do |cause|
+																if (cause == "methodUpdate" or cause == "unavailableSymbol" or cause == "unimplementedMethod" or cause == "statementDuplication")
+																	buildAgain = true
+																end
+															end
+															if buildAgain
+																causesParentOne = confAllErrored.findConflictCauseLocalID(result[1], getPathProject())
+																causesParentOne.each do |cause|
+																	if (cause == "dependencyProblem" or cause == "compilerError" or cause == "gitProblem" or cause ==  "remoteError")
+																		notBuiltParents.push(mergeCommit[0])
+																		break
+																	end
+																end
+
+																causesParentTwo = confAllErrored.findConflictCauseLocalID(result[2], getPathProject())
+																causesParentTwo.each do |cause|
+																	if (cause == "dependencyProblem" or cause == "compilerError" or cause == "gitProblem" or cause ==  "remoteError")
+																		notBuiltParents.push(mergeCommit[1])
+																		break
+																	end
+																end
+															end
+														end
 														if (result[1] == nil)
 															notBuiltParents.push(mergeCommit[0])
 														end

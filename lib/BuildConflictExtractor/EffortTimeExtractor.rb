@@ -55,11 +55,6 @@ class EffortTimeExtractor
 	end
 
 	def checkTimeEffort (brokenCommit, mergeCommit, fixedCommit)
-		print mergeCommit[0]
-		print "\n"
-		print mergeCommit[1]
-		print "\n"
-		print fixedCommit
 		firstParentInfo = getFixedProcessCommit(mergeCommit[0])
 		secondParentInfo = getFixedProcessCommit(mergeCommit[1])
 		brokenCommitInfo = getFixedProcessCommit(brokenCommit)

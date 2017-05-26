@@ -69,20 +69,20 @@ class MergeScenariosAnalysis
 		projectBuild.each_build do |build|
 			if (!build.pull_request)
 				if(allBuilds[build.commit.sha] == nil)
-					allBuilds[build.commit.sha] = [[confBuild.getBuildStatus(build)], [build.id]]
+					allBuilds[build.commit.sha] = [[confBuild.getBuildStatus(build)], [build.id], [build.number]]
 				elsif (allBuilds[build.commit.sha][0] != [confBuild.getBuildStatus(build)])
 					if (allBuilds[build.commit.sha][0] == ["canceled"] or confBuild.getBuildStatus(build) == "canceled")
 						allBuilds.delete(build.commit.sha)
-						allBuilds[build.commit.sha] = [["canceled"], [build.id]]
+						allBuilds[build.commit.sha] = [["canceled"], [build.id], [build.number]]
 					elsif (allBuilds[build.commit.sha][0] == ["passed"])
 						allBuilds.delete(build.commit.sha)
-						allBuilds[build.commit.sha] = [[confBuild.getBuildStatus(build)], [build.id]]
+						allBuilds[build.commit.sha] = [[confBuild.getBuildStatus(build)], [build.id], [build.number]]
 					elsif (allBuilds[build.commit.sha][0] == ["errored"] or confBuild.getBuildStatus(build) == "errored")
 						allBuilds.delete(build.commit.sha)
-						allBuilds[build.commit.sha] = [["errored"], [build.id]]
+						allBuilds[build.commit.sha] = [["errored"], [build.id], [build.number]]
 					else 
 						allBuilds.delete(build.commit.sha)
-						allBuilds[build.commit.sha] == [["failed"], [build.id]]
+						allBuilds[build.commit.sha] == [["failed"], [build.id], [build.number]]
 					end
 				end
 			end
