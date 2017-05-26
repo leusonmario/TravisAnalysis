@@ -13,8 +13,7 @@ class EffortTimeExtractor
 		@projectPath = path
 	end
 
-	def checkFixedBuild(commit, mergeCommit)
-		brokenCommit = commit
+	def checkFixedBuild(brokenCommit, mergeCommit)
 		numberBuilsTillFix = 0
 		buildId = ""
 		@projectBuildsMap.each do |key, value|
@@ -22,7 +21,7 @@ class EffortTimeExtractor
 				numberBuilsTillFix += 1
 				buildId = value[1][0]
 				if (value[0][0] == "passed" or value[0][0] == "failed")
-					result = checkTimeEffort(brokenCommit, key)
+					result = checkTimeEffort(brokenCommit, mergeCommit, key)
 					return value[1][0], value[0][0], result[0], numberBuilsTillFix, result[1], result[2], true
 				else
 					brokenCommit = key
@@ -55,18 +54,25 @@ class EffortTimeExtractor
 		return false
 	end
 
-	def checkTimeEffort (brokenCommit, fixedCommit)
+	def checkTimeEffort (brokenCommit, mergeCommit, fixedCommit)
+		print mergeCommit[0]
+		print "\n"
+		print mergeCommit[1]
+		print "\n"
+		print fixedCommit
+		firstParentInfo = getFixedProcessCommit(mergeCommit[0])
+		secondParentInfo = getFixedProcessCommit(mergeCommit[1])
 		brokenCommitInfo = getFixedProcessCommit(brokenCommit)
 		fixedCommitInfo = getFixedProcessCommit(fixedCommit)
 		sameAuthors = false
 		sameCommiter = false
 		intervalTime = ((DateTime.parse(fixedCommitInfo[2]) - DateTime.parse(brokenCommitInfo[2]))*24*60).to_i
 
-		if (brokenCommitInfo[0] == fixedCommitInfo[0]) 
+		if (firstParentInfo[0] == fixedCommitInfo[0] or secondParentInfo[0] == fixedCommitInfo[0])
 			sameAuthors = true
 		end
 
-		if (brokenCommitInfo[1] == fixedCommitInfo[1]) 
+		if (firstParentInfo[1] == fixedCommitInfo[1] or secondParentInfo[1] == fixedCommitInfo[1])
 			sameCommiter = true
 		end
 		return intervalTime, sameAuthors, sameCommiter
@@ -82,26 +88,25 @@ class EffortTimeExtractor
 
 		commitInfo.each_line do |line|
 			if (line.include?('author'))
-				author = line.partition('author ').last
+				author = line.partition('author ').last.to_s.scan(/[a-zA-Z ]*/)
 			end
 			if (line.include?('committer'))
-				committer = line.partition('committer ').last
+				committer = line.partition('committer ').last.to_s.scan(/[a-zA-Z ]*/)
 			end
 		end
 
 		return author, committer, date
 	end
 
-	def checkFixedBuildCommitCloser(commit, mergeCommit)
+	def checkFixedBuildCommitCloser(brokenCommit, mergeCommit)
 		numberBuilsTillFix = 0
 		buildID = ""
-		brokenCommit = commit
 		@projectBuildsMap.each do |key, value|
 			if (getRevList(mergeCommit, key, brokenCommit) == true)
 				numberBuilsTillFix += 1
 				buildId = value[1][0]
 				if (value[0][0] == "passed" or value[0][0] == "failed")
-					result = checkTimeEffort(brokenCommit, key)
+					result = checkTimeEffort(brokenCommit, mergeCommit,key)
 					return value[1][0], value[0][0], result[0], numberBuilsTillFix, result[1], result[2], false
 				else
 					brokenCommit = key
