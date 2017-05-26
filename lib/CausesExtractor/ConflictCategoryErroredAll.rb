@@ -263,9 +263,10 @@ class ConflictCategoryErroredAll
 		causesFilesConflicts = CausesFilesConflicting.new()
 		logs = getLogsBuild(build, pathProject)
 
-		logs.each do |log|
+		logs.each do |bodyJob|
 			if (bodyJob != nil)
 				otherCase = true
+				body = ""
 				if (bodyJob.include?('Retrying, 3 of 3'))
 					body = bodyJob[/Retrying, 3 of 3[\s\S]*/]
 				else
