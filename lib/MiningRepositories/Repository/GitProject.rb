@@ -196,6 +196,34 @@ class GitProject
 		return false, buildOne, buildTwo
 	end
 
+	def conflictScenarioFailed(parentsMerge, projectBuilds)
+		parentOne = nil
+		buildOne = nil
+		parentTwo = nil
+		buildTwo = nil
+
+		if (projectBuilds[parentsMerge[0]] != nil and projectBuilds[parentsMerge[1]] != nil)
+			if (projectBuilds[parentsMerge[0]][0]==["passed"])
+				parentOne = true
+				buildOne = projectBuilds[parentsMerge[0]][1]
+			else
+				buildOne = projectBuilds[parentsMerge[0]][2]
+			end
+
+			if (projectBuilds[parentsMerge[1]][0]==["passed"])
+				parentTwo = true
+				buildTwo = projectBuilds[parentsMerge[1]][1]
+			else
+				buildTwo = projectBuilds[parentsMerge[1]][2]
+			end
+
+			if (parentOne==true and parentTwo==true)
+				return true, buildOne, buildTwo
+			end
+		end
+		return false, buildOne, buildTwo
+	end
+
 	def conflictScenarioAll(parentsMerge, projectBuilds, projectBuildsFork)		
 		parentOne = nil
 		buildOne = nil

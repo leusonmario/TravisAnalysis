@@ -28,7 +28,30 @@ class EffortTimeExtractor
 				end
 			end
 		end
-		result = checkFixedBuildCommitCloser(commit, mergeCommit)
+		result = checkFixedBuildCommitCloser(brokenCommit, mergeCommit)
+		if (result.size > 2)
+			return result
+		else
+			return result[1], "NO-FIX", "NO-FIX", numberBuilsTillFix+result[0], "NO-FIX", "NO-FIX", false
+		end
+	end
+
+	def checkFixedBuildFailed(brokenCommit, mergeCommit)
+		numberBuilsTillFix = 0
+		buildId = ""
+		@projectBuildsMap.each do |key, value|
+			if (checkFailedCommitAsParent(brokenCommit, key))
+				numberBuilsTillFix += 1
+				buildId = value[1][0]
+				if (value[0][0] == "passed")
+					result = checkTimeEffort(brokenCommit, mergeCommit, key)
+					return value[1][0], value[0][0], result[0], numberBuilsTillFix, result[1], result[2], true
+				else
+					brokenCommit = key
+				end
+			end
+		end
+		result = checkFixedBuildCommitCloser(brokenCommit, mergeCommit)
 		if (result.size > 2)
 			return result
 		else

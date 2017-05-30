@@ -128,7 +128,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 										totalMSErrored += 1
 										if (!intervalTime)
 											if (!verifyEmptyBuildLogs(build))
-												if (validScenarioProject < 1)
+												if (validScenarioProject < 3)
 													isConflict = confBuild.conflictAnalysisCategories(erroredConflicts, type, result[0])
 													#writeCSVForkAll.printConflictBuild(build, mergeCommit[0].to_s, mergeCommit[1].to_s, confForkAllErrored.findConflictCause(build, getPathProject(), pathGumTree, type, true), projectNameFile)
 													
@@ -188,11 +188,12 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 										end
 									elsif (status == "failed")
 										totalMSFailed += 1
-										isConflict = confBuild.conflictAnalysisCategories(failedConflicts, type, result[0])
-										#writeCSVForkAll.printConflictTest(build, mergeCommit[0].to_s, mergeCommit[1].to_s, confFailedAll.findConflictCause(build), projectNameFile)
+										resultFailed = result = @gitProject.conflictScenarioFailed(mergeCommit, allBuilds)
+										isConflict = confBuild.conflictAnalysisCategories(failedConflicts, type, resultFailed[0])
 
-										if (isConflict and result[0] == true) 
-											#writeCSVBuilt.printConflictTest(build, result[1][0], result[2][0], confFailedBuilt.findConflictCause(build), projectNameFile)
+										if (isConflict and result[0])
+											effort = effortTimeExtractor.checkFixedBuild(build.commit.sha, mergeCommit)
+											writeCSVBuilt.printConflictTest(build, result[1][0], result[2][0], confFailedBuilt.findConflictCause(build), projectNameFile, effort)
 										end
 									else
 										totalMSCanceled += 1
@@ -206,7 +207,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 				end
 			end
 
-			if (validScenarioProject < 1)
+			if (validScenarioProject < 3)
 				extractorCLI.activeForkProject()
 				forkAllBuilds = Hash.new()
 				notBuiltParents.each do |notBuiltParent|
@@ -279,7 +280,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 							end
 						end
 					end
-					if (validScenarioProject > 0)
+					if (validScenarioProject > 2)
 						break
 					end
 				end

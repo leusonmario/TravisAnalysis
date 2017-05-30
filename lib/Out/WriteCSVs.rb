@@ -160,16 +160,24 @@ class WriteCSVs
 		end
 	end
 
-	def printConflictTest(build, buildOne, buildTwo, state, projectName)
+	def printConflictTest(build, buildOne, buildTwo, state, projectName, effort)
 		Dir.chdir getPathFailedCases()
 		if (File.exists?("Failed"+projectName+".csv"))
 			CSV.open("Failed"+projectName+".csv", "a+") do |csv|
-				csv << [build.id, buildOne, buildTwo, state]
+				if (effort != nil)
+					csv << [build.id, buildOne, buildTwo, state, effort[0], effort[1], effort[2], effort[3], effort[4], effort[5], effort[6]]
+				else
+					csv << [build.id, buildOne, buildTwo, state, "", "", "", "", "", "", ""]
+				end
 			end
 		else
 			CSV.open("Failed"+projectName+".csv", "ab") do |csv|
-				csv << ["BuildID", "BuildParentOne", "BuildParentTwo", "MessageState", "ConflictingContributions"]
-				csv << [build.id, buildOne, buildTwo, state]
+				csv << ["BuildID", "BuildParentOne", "BuildParentTwo", "MessageState", "ConflictingContributions", "FixBuildID", "FixStatus", "Effort", "NumberBuildsPerformed", "SameAuthor", "SameCommiter", "BestCase"]
+				if (effort != nil)
+					csv << [build.id, buildOne, buildTwo, state, effort[0], effort[1], effort[2], effort[3], effort[4], effort[5], effort[6]]
+				else
+					csv << [build.id, buildOne, buildTwo, state, "", "", "", "", "", "", ""]
+				end
 			end			
 		end
 	end
