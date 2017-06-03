@@ -7,8 +7,23 @@ class BCUnavailableSymbol
 	def verifyBuildConflict(baseLeft, leftResult, baseRight, rightResult, filesConflicting, leftPath, rightPath)
 		count = 0
 		while(count < filesConflicting.size)
-			if(leftResult[0][filesConflicting[count][0]] != nil and leftResult[0][filesConflicting[count][0]].to_s.match(/Delete SimpleName: #{filesConflicting[count][1]}[\s\S]*[\n\r]?|Update SimpleName: #{filesConflicting[count][1]}[\s\S]*[\n\r]?/))
-				if (rightResult[0][filesConflicting[count][2]] != nil and rightResult[0][filesConflicting[count][2]].to_s.match(/Insert (SimpleName|QualifiedName): [a-zA-Z\.]*?#{filesConflicting[count][1]}[\s\S]*[\n\r]?/))
+			if(baseRight[0][filesConflicting[count][0]] != nil and baseRight[0][filesConflicting[count][0]].to_s.match(/Delete SimpleName: #{filesConflicting[count][1]}[\s\S]*[\n\r]?|Update SimpleName: #{filesConflicting[count][1]}[\s\S]*[\n\r]?/))
+				if (baseLeft[0][filesConflicting[count][2]] != nil and baseLeft[0][filesConflicting[count][2]].to_s.match(/Insert (SimpleName|QualifiedName): [a-zA-Z\.]*?#{filesConflicting[count][1]}[\s\S]*[\n\r]?/))
+					return true
+				else
+					baseRight[1].each do |item|
+						if (item.include?(filesConflicting[count][2].to_s))
+							return true
+						end
+					end
+
+					if (baseLeft[0][filesConflicting[count][2]] == nil)
+						return true
+					end
+				end
+			end
+			if(baseLeft[0][filesConflicting[count][0]] != nil and baseLeft[0][filesConflicting[count][0]].to_s.match(/Delete SimpleName: #{filesConflicting[count][1]}[\s\S]*[\n\r]?|Update SimpleName: #{filesConflicting[count][1]}[\s\S]*[\n\r]?/))
+				if(baseRight[0][filesConflicting[count][2]] != nil and baseRight[0][filesConflicting[count][2]].to_s.match(/Insert (SimpleName|QualifiedName): [a-zA-Z\.]*?#{filesConflicting[count][1]}[\s\S]*[\n\r]?/))
 					return true
 				else
 					baseLeft[1].each do |item|
@@ -17,22 +32,7 @@ class BCUnavailableSymbol
 						end
 					end
 
-					if (rightResult[0][filesConflicting[count][2]] == nil)
-						return true
-					end
-				end
-			end
-			if(rightResult[0][filesConflicting[count][0]] != nil and rightResult[0][filesConflicting[count][0]].to_s.match(/Delete SimpleName: #{filesConflicting[count][1]}[\s\S]*[\n\r]?|Update SimpleName: #{filesConflicting[count][1]}[\s\S]*[\n\r]?/))
-				if(leftResult[0][filesConflicting[count][2]] != nil and leftResult[0][filesConflicting[count][2]].to_s.match(/Insert (SimpleName|QualifiedName): [a-zA-Z\.]*?#{filesConflicting[count][1]}[\s\S]*[\n\r]?/))
-					return true
-				else
-					rightResult[1].each do |item|
-						if (item.include?(filesConflicting[count][2].to_s))
-							return true
-						end
-					end
-
-					if (leftResult[0][filesConflicting[count][2]] == nil)
+					if (baseRight[0][filesConflicting[count][2]] == nil)
 						return true
 					end
 				end

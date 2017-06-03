@@ -61,7 +61,7 @@ class GTAnalysis
 			conflictCauses.getCausesConflict().each do |conflictCause|
 				conflictingContributions.push(true)
 			end	
-			return conflictingContributions, true
+			return conflictingContributions, true, true
 		end
 
 		baseLeft = @parentMSDiff.runAllDiff(base, left)
@@ -89,7 +89,7 @@ class GTAnalysis
 			conflictCauses.getCausesConflict().each do |conflictCause|
 				conflictingContributions.push(true)
 			end	
-			return conflictingContributions, true
+			return conflictingContributions, true, true
 		end
 		
 		allIntegratedContributions = false
@@ -99,33 +99,44 @@ class GTAnalysis
 				bcUnimplementedMethod = BCUnimplementedMethod.new()
 				if (bcUnimplementedMethod.verifyBuildConflict(baseLeft[0], leftResult[0], baseRight[0], rightResult[0], conflictCauses.getFilesConflict()[indexValue]) == false)
 					conflictingContributions[indexValue] = false
+				else
+					conflictingContributions[indexValue] = true
 				end
 			elsif (conflictCause == "unavailableSymbolMethod" || conflictCause == "unavailableSymbolVariable" || conflictCause == "unavailableSymbolFile")
 				bcUnavailableSymbol = BCUnavailableSymbol.new()
 				if (bcUnavailableSymbol.verifyBuildConflict(baseLeft, leftResult, baseRight, rightResult, conflictCauses.getFilesConflict()[indexValue], leftPath, rightPath) == false)
 					conflictingContributions[indexValue] = false
+				else
+					conflictingContributions[indexValue] = true
 				end
 			elsif (conflictCause == "statementDuplication")
 				bcStatementDuplication = BCStatementDuplication.new()
 				if (bcStatementDuplication.verifyBuildConflict(baseLeft, leftResult, baseRight, rightResult, conflictCauses.getFilesConflict()[indexValue]) == false)
 					conflictingContributions[indexValue] = false
+				else
+					conflictingContributions[indexValue] = true
 				end
 			elsif (conflictCause == "methodParameterListSize")
 				bcMethodUpdate = BCMethodUpdate.new(getGumTreePath())
 				if (bcMethodUpdate.verifyBuildConflict(leftPath, rightPath, conflictCauses.getFilesConflict()[indexValue]) == false)
 					conflictingContributions[indexValue] = false
+				else
+					conflictingContributions[indexValue] = true
 				end
 			elsif (conflictCause == "dependencyProblem")
 				bcDependency = BCDependency.new()
 				if (bcDependency.verifyBuildConflict(baseLeft[0], leftResult[0], baseRight[0], rightResult[0], conflictCauses.getFilesConflict()[indexValue]) == true)
 					conflictingContributions[indexValue] = false
+				else
+					conflictingContributions[indexValue] = true
 				end
+			else
+				conflictingContributions[indexValue] = true
 			end
-			conflictingContributions[indexValue] = true
 			indexValue += 1
 		end
 		
-		return conflictingContributions, false
+		return conflictingContributions, false, true
 
 	end
 
