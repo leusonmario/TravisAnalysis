@@ -3,6 +3,7 @@ require 'travis'
 require 'active_support/core_ext/numeric/time'
 require 'date'
 require 'time'
+require_rel 'ResolutionPatterns/'
 
 class EffortTimeExtractor
 	@projectBuildsMap = Hash.new()
@@ -13,18 +14,35 @@ class EffortTimeExtractor
 		@projectPath = path
 	end
 
-	def checkFixedBuild(brokenCommit, mergeCommit)
+	def checkFixedBuild(brokenCommit, mergeCommit, pathProject, pathGumTree, causesConflicts)
 		numberBuilsTillFix = 0
+		localBrokenCommit = brokenCommit
 		buildId = ""
 		@projectBuildsMap.each do |key, value|
-			if (checkFailedCommitAsParent(brokenCommit, key))
+			if (checkFailedCommitAsParent(localBrokenCommit, key))
 				numberBuilsTillFix += 1
 				buildId = value[1][0]
 				if (value[0][0] == "passed" or value[0][0] == "failed")
 					result = checkTimeEffort(brokenCommit, mergeCommit, key)
-					return value[1][0], value[0][0], result[0], numberBuilsTillFix, result[1], result[2], true
+					# aqui chamar o método que verifica como o problema foi resolvido
+
+
+					fixCommit = CopyFixCommit.new(pathProject, brokenCommit, key)
+					resultRunDiff = fixCommit.runAllDiff(pathGumTree)
+					fixCommit.deleteProjectCopies()
+					index = 0
+					fixPatterns = []
+					causesConflicts.getCausesConflict().each do |cause|
+						if (cause == "statementDuplication")
+							fixStatementDuplication = FixStatementDuplication.new
+							fixPatterns[index] = fixStatementDuplication.verfyFixPattern(causesConflicts.getFilesConflict()[index], resultRunDiff)
+						end
+						index += 1
+					end
+
+					return value[1][0], value[0][0], result[0], numberBuilsTillFix, result[1], result[2], true, fixPatterns
 				else
-					brokenCommit = key
+					localBrokenCommit = key
 				end
 			end
 		end

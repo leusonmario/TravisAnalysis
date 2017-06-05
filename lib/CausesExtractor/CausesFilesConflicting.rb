@@ -1,37 +1,38 @@
 class CausesFilesConflicting
 
 	def initialize()
-		@causesConflict = Array.new
-		@filesConflict = Array.new
+		@causesFilesInfoConflicts = Hash.new
 	end
 
 	def getCausesConflict()
-		@causesConflict
+		@causesFilesInfoConflicts.keys
 	end
 
 	def getFilesConflict()
-		@filesConflict
+		@causesFilesInfoConflicts.values
 	end
 
 	def getCausesNumber()
-		causesNumber = []
-		@filesConflict.each do |fileConflict|
-			causesNumber.push(fileConflict.size)
-		end
-		return causesNumber
+		return @causesFilesInfoConflicts.keys.size
 	end
 
 	def insertNewCauseOne(cause, filesRelated)
 		if (filesRelated.size > 0)
-			@causesConflict.push(cause)
-			@filesConflict.push(filesRelated)
+			includeNewCause(cause, filesRelated)
 		elsif (cause=="compilerError" or cause=="dependencyProblem" or cause=="remoteError" or cause=="gitProblem")
-			@causesConflict.push(cause)
-			@filesConflict.push(filesRelated)
+			includeNewCause(cause, filesRelated)
 		end
 	end
 
 	def insertNewCause(cause)
-		@causesConflict.push(cause)
+		includeNewCause(cause, nil)
+	end
+
+  def includeNewCause(cause, filesRelated)
+		if (@causesFilesInfoConflicts.include?(cause))
+			@causesFilesInfoConflicts[cause] += filesRelated
+		else
+			@causesFilesInfoConflicts[cause] = filesRelated
+		end
 	end
 end

@@ -135,8 +135,8 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 													if (isConflict and result[0] == true) 
 														stateBC = confErroredForkBuilt.findConflictCause(build, getPathProject(), pathGumTree, type, true, cloneProject)
 														effort = nil
-														if (stateBC.size > 1)
-															effort = effortTimeExtractor.checkFixedBuild(build.commit.sha, mergeCommit)
+														if (stateBC.size > 2)
+															effort = effortTimeExtractor.checkFixedBuild(build.commit.sha, mergeCommit, getPathProject(), pathGumTree, stateBC[3])
 														end
 														writeCSVBuilt.printConflictBuild(build.id, result[1][0], result[2][0], stateBC, projectNameFile, effort)
 														validScenarioProject += 1
@@ -207,7 +207,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 				end
 			end
 
-			if (validScenarioProject < 3)
+			if (validScenarioProject < 1)
 				extractorCLI.activeForkProject()
 				forkAllBuilds = Hash.new()
 				notBuiltParents.each do |notBuiltParent|
@@ -280,7 +280,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 							end
 						end
 					end
-					if (validScenarioProject > 2)
+					if (validScenarioProject > 0)
 						break
 					end
 				end

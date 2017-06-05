@@ -135,7 +135,7 @@ class ConflictCategoryErrored
 			indexJob += 1
 		end
 		if (mergeScenario)
-			return causesFilesConflicts.getCausesConflict(), getFinalStatus(pathGumTree, pathProject, build.commit.sha, causesFilesConflicts, localMethodUpdate, localUnavailableSymbol, localDuplicateStatement, localUnimplementedMethod, localDependencyProblem, cloneProject), causesFilesConflicts.getCausesNumber()
+			return causesFilesConflicts.getCausesConflict(), getFinalStatus(pathGumTree, pathProject, build.commit.sha, causesFilesConflicts, localMethodUpdate, localUnavailableSymbol, localDuplicateStatement, localUnimplementedMethod, localDependencyProblem, cloneProject), causesFilesConflicts.getCausesNumber(), causesFilesConflicts
 		else
 			return causesFilesConflicts.getCausesConflict()
 		end
