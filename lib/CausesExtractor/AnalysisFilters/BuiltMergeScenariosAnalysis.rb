@@ -192,7 +192,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 										isConflict = confBuild.conflictAnalysisCategories(failedConflicts, type, resultFailed[0])
 
 										if (isConflict and result[0])
-											effort = effortTimeExtractor.checkFixedBuild(build.commit.sha, mergeCommit)
+											effort = effortTimeExtractor.checkFixedBuildFailed(build.commit.sha, mergeCommit)
 											writeCSVBuilt.printConflictTest(build, result[1][0], result[2][0], confFailedBuilt.findConflictCause(build), projectNameFile, effort)
 										end
 									else

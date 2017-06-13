@@ -32,10 +32,13 @@ class EffortTimeExtractor
 					fixCommit.deleteProjectCopies()
 					index = 0
 					fixPatterns = []
-					causesConflicts.getCausesConflict().each do |cause|
-						if (cause == "statementDuplication")
+					causesConflicts.getCausesFilesInfoConflicts().each do |key, value|
+						if (key == "statementDuplication")
 							fixStatementDuplication = FixStatementDuplication.new
-							fixPatterns[index] = fixStatementDuplication.verfyFixPattern(causesConflicts.getFilesConflict()[index], resultRunDiff)
+							fixPatterns[index] = fixStatementDuplication.verfyFixPattern(value, resultRunDiff)
+						elsif (key == "unavailableSymbol" or key == "unavailableSymbolFile" or key == "unavailableSymbolMethod" or key=="unavailableSymbolVariable")
+							fixUnavailableSymbol = FixUnavailableSymbol.new
+							fixPatterns[index] = fixUnavailableSymbol.verfyFixPattern(value, resultRunDiff)
 						end
 						index += 1
 					end

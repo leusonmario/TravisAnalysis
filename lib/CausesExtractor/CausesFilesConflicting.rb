@@ -4,6 +4,10 @@ class CausesFilesConflicting
 		@causesFilesInfoConflicts = Hash.new
 	end
 
+  def getCausesFilesInfoConflicts()
+		@causesFilesInfoConflicts
+	end
+
 	def getCausesConflict()
 		@causesFilesInfoConflicts.keys
 	end
