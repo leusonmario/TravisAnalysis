@@ -24,26 +24,26 @@ class EffortTimeExtractor
 				buildId = value[1][0]
 				if (value[0][0] == "passed" or value[0][0] == "failed")
 					result = checkTimeEffort(brokenCommit, mergeCommit, key)
-					# aqui chamar o método que verifica como o problema foi resolvido
-
 
 					fixCommit = CopyFixCommit.new(pathProject, brokenCommit, key)
 					resultRunDiff = fixCommit.runAllDiff(pathGumTree)
 					fixCommit.deleteProjectCopies()
 					index = 0
 					fixPatterns = []
-					causesConflicts.getCausesFilesInfoConflicts().each do |key, value|
-						if (key == "statementDuplication")
-							fixStatementDuplication = FixStatementDuplication.new
-							fixPatterns[index] = fixStatementDuplication.verfyFixPattern(value, resultRunDiff)
-						elsif (key == "unavailableSymbol" or key == "unavailableSymbolFile" or key == "unavailableSymbolMethod" or key=="unavailableSymbolVariable")
-							fixUnavailableSymbol = FixUnavailableSymbol.new
-							fixPatterns[index] = fixUnavailableSymbol.verfyFixPattern(value, resultRunDiff)
+					if causesConflicts != nil
+						causesConflicts.getCausesFilesInfoConflicts().each do |key, value|
+							if (key == "statementDuplication")
+								fixStatementDuplication = FixStatementDuplication.new
+								fixPatterns[index] = fixStatementDuplication.verfyFixPattern(value, resultRunDiff)
+							elsif (key == "unavailableSymbol" or key == "unavailableSymbolFile" or key == "unavailableSymbolMethod" or key=="unavailableSymbolVariable")
+								fixUnavailableSymbol = FixUnavailableSymbol.new
+								fixPatterns[index] = fixUnavailableSymbol.verfyFixPattern(value, resultRunDiff)
+							end
+							index += 1
 						end
-						index += 1
-					end
 
-					return value[1][0], value[0][0], result[0], numberBuilsTillFix, result[1], result[2], true, fixPatterns
+						return value[1][0], value[0][0], result[0], numberBuilsTillFix, result[1], result[2], true, fixPatterns
+					end
 				else
 					localBrokenCommit = key
 				end
