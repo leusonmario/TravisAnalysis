@@ -59,7 +59,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 		projectNameFile = projectName.gsub('/','-')	
 		@repositoryTravisProject = getGitProject.getRepositoryTravisByProject()
 		validMergeScenario = Array.new
-		intervalTime = false
+		lastScenarioDate = nil
 		countIntervalCommits = 0
 		travisProjectClone = getTravisRepository(getGitProject.getLogin(), getGitProject.getProjectName)
 
@@ -119,9 +119,9 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 									elsif (status == "errored")
 										validMergeScenario.push(build.commit.sha)
 										totalMSErrored += 1
-										if (!intervalTime)
+										if (verifyDateDifference(lastScenarioDate, build.started_at))
 											if (!verifyEmptyBuildLogs(build))
-												if (validScenarioProject < 20)
+												if (validScenarioProject < 100)
 													isConflict = confBuild.conflictAnalysisCategories(erroredConflicts, type, result[0])
 													#writeCSVForkAll.printConflictBuild(build, mergeCommit[0].to_s, mergeCommit[1].to_s, confForkAllErrored.findConflictCause(build, getPathProject(), pathGumTree, type, true), projectNameFile)
 
@@ -133,7 +133,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 														end
 														writeCSVBuilt.printConflictBuild(build.id, result[1][0], result[2][0], stateBC, projectNameFile, effort)
 														validScenarioProject += 1
-														intervalTime = true
+														lastScenarioDate = build.started_at
 													else
 														if !result[0]
 															causesBroken = confAllErrored.findConflictCause(build, getPathProject())
@@ -173,11 +173,6 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 											else
 												builtMergeScenarios.delete(build.commit.sha)
 											end
-										else
-											countIntervalCommits += 1
-											if (countIntervalCommits == 10)
-												intervalTime = false
-											end
 										end
 									elsif (status == "failed")
 										totalMSFailed += 1
@@ -202,6 +197,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 				end
 			end
 
+			lastScenarioDate = nil
 			if (travisProjectClone != nil)
 				travisProjectClone.each_build do |build|
 					if (build != nil)
@@ -229,9 +225,9 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 										elsif (status == "errored")
 											validMergeScenario.push(build.commit.sha)
 											totalMSErrored += 1
-											if (!intervalTime)
+											if (verifyDateDifference(lastScenarioDate, build.started_at))
 												if (!verifyEmptyBuildLogs(build))
-													if (validScenarioProject < 20)
+													if (validScenarioProject < 100)
 														isConflict = confBuild.conflictAnalysisCategories(erroredConflicts, type, result[0])
 														#writeCSVForkAll.printConflictBuild(build, mergeCommit[0].to_s, mergeCommit[1].to_s, confForkAllErrored.findConflictCause(build, getPathProject(), pathGumTree, type, true), projectNameFile)
 
@@ -243,7 +239,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 															end
 															writeCSVBuilt.printConflictBuild(build.id, result[1][0], result[2][0], stateBC, projectNameFile, effort)
 															validScenarioProject += 1
-															intervalTime = true
+															lastScenarioDate = build.started_at
 														else
 															if !result[0]
 																causesBroken = confAllErrored.findConflictCause(build, getPathProject())
@@ -283,11 +279,6 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 												else
 													builtMergeScenarios.delete(build.commit.sha)
 												end
-											else
-												countIntervalCommits += 1
-												if (countIntervalCommits == 10)
-													intervalTime = false
-												end
 											end
 										elsif (status == "failed")
 											totalMSFailed += 1
@@ -313,7 +304,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 				end
 			end
 
-			if (validScenarioProject < 20)
+			if (validScenarioProject < 100)
 				extractorCLI.activeForkProject()
 				forkAllBuilds = Hash.new()
 				notBuiltParents.each do |notBuiltParent|
@@ -326,11 +317,12 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 				end
 
 				extractorCLI.gitPull()
-				intervalTime = false
 				countIntervalCommits = 0
 				@projectMergeScenarios.each do |mergeScenario|
 					if (!builtMergeScenarios.include? mergeScenario)
-						if (intervalTime == false)
+						mergeScenarioDate = getDataMergeScenario(mergeScenario)
+						if (verifyDateDifference(lastScenarioDate,mergeScenarioDate))
+							lastScenarioDate = mergeScenarioDate
 							resultBuildProcess = verifyBuildCurrentState(extractorCLI, mergeScenario)
 							if (resultBuildProcess != nil)
 								forkAllBuilds[mergeScenario] = [resultBuildProcess[0], resultBuildProcess[1], resultBuildProcess[2]]
@@ -344,7 +336,6 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 								firstParentStatus = ""
 								secondParentStatus = ""
 								if (result[1] != nil and result[2] != nil)
-									intervalTime = true
 									validScenarioProject += 1
 									validScenarioProjectList.push(mergeScenario)
 								else
@@ -369,7 +360,6 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 									if ((result[1] != nil or firstParentStatus == "passed" or firstParentStatus == "failed") and (result[2] != nil or secondParentStatus == "passed" or secondParentStatus == "failed"))
 										validScenarioProject += 1
 										validScenarioProjectList.push(mergeScenario)
-										intervalTime = true
 									end
 								end
 							elsif (extractorCLI.checkStatusBuild() == "passed")
@@ -379,14 +369,9 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 							elsif (extractorCLI.checkStatusBuild() == "canceled")
 								totalMSCanceled += 1
 							end
-						else
-							countIntervalCommits += 1
-							if (countIntervalCommits == 10)
-								intervalTime = false
-							end
 						end
 					end
-					if (validScenarioProject > 20)
+					if (validScenarioProject > 99)
 						break
 					end
 				end
@@ -510,13 +495,30 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 		projectBuild = nil
 		begin
 			projectBuild = Travis::Repository.find("#{username}/#{project}")
-			projectBuild.each_build do |build|
-				print "#{build.commit.sha}\n"
-			end
 			return projectBuild
 		rescue Exception => e
 			return nil
 		end
+	end
+
+	def verifyDateDifference(lastScenarioDate, candidateScenarioDate)
+		if lastScenarioDate == nil
+			return true
+		else
+			intervalTime = ((DateTime.parse(lastScenarioDate.to_s) - DateTime.parse(candidateScenarioDate.to_s))).to_i
+			if (intervalTime > 7)
+				return true
+			end
+			return false
+		end
+	end
+
+	def getDataMergeScenario(mergeCommit)
+		actualPath = Dir.pwd
+		Dir.chdir getPathProject()
+		date = %x(git show -s --format=%cd #{mergeCommit})
+		Dir.chdir actualPath
+		return date
 	end
 
 end
