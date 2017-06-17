@@ -119,7 +119,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 									elsif (status == "errored")
 										validMergeScenario.push(build.commit.sha)
 										totalMSErrored += 1
-										if (verifyDateDifference(lastScenarioDate, build.started_at))
+										if (verifyDateDifference(lastScenarioDate, getDataMergeScenario(build.commit.sha)))
 											if (!verifyEmptyBuildLogs(build))
 												if (validScenarioProject < 100)
 													isConflict = confBuild.conflictAnalysisCategories(erroredConflicts, type, result[0])
@@ -133,7 +133,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 														end
 														writeCSVBuilt.printConflictBuild(build.id, result[1][0], result[2][0], stateBC, projectNameFile, effort)
 														validScenarioProject += 1
-														lastScenarioDate = build.started_at
+														lastScenarioDate = getDataMergeScenario(build.commit.sha)
 													else
 														if !result[0]
 															causesBroken = confAllErrored.findConflictCause(build, getPathProject())
@@ -225,7 +225,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 										elsif (status == "errored")
 											validMergeScenario.push(build.commit.sha)
 											totalMSErrored += 1
-											if (verifyDateDifference(lastScenarioDate, build.started_at))
+											if (verifyDateDifference(lastScenarioDate, getDataMergeScenario(build.commit.sha)))
 												if (!verifyEmptyBuildLogs(build))
 													if (validScenarioProject < 100)
 														isConflict = confBuild.conflictAnalysisCategories(erroredConflicts, type, result[0])
@@ -239,7 +239,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 															end
 															writeCSVBuilt.printConflictBuild(build.id, result[1][0], result[2][0], stateBC, projectNameFile, effort)
 															validScenarioProject += 1
-															lastScenarioDate = build.started_at
+															lastScenarioDate = getDataMergeScenario(build.commit.sha)
 														else
 															if !result[0]
 																causesBroken = confAllErrored.findConflictCause(build, getPathProject())
