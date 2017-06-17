@@ -21,6 +21,8 @@ class ParentsMSDiff
 		addedFiles = []
 		deletedFiles = []
 		begin
+			kill = %x(pkill -f gumtree)
+			sleep(5)
 			thr = Thread.new { diff = system "bash", "-c", "exec -a gumtree ./gumtree webdiff #{firstBranch.gsub("\n","")} #{secondBranch.gsub("\n","")}" }
 			sleep(10)
 			mainDiff = %x(wget http://127.0.0.1:4754/ -q -O -)
