@@ -5,7 +5,7 @@ class MergeCommit
 	end
 
 	def getParentsMergeIfTrue(pathProject, commit)
-		Dir.chdir pathProject.gsub('.travis.yml','')
+		Dir.chdir pathProject.to_s.gsub('.travis.yml','')
 		commitType = %x(git cat-file -p #{commit})
 		commitType.each_line do |line|
 			if(line.include?('author'))

@@ -1,15 +1,32 @@
 require 'require_all'
 require_rel 'ConflictCategories'
+require_all '././BuildConflictExtractor'
 
 class ConflictCategoryFailed
 	include ConflictCategories
 
-	def initialize()
+	def initialize(pathGumTree, projectName, localClone)
+		@projectName = projectName
+		@pathGumTree = pathGumTree
+		@localClone = localClone
 		@gitProblem = 0
 		@remoteError = 0
 		@otherError = 0
 		@permission = 0
 		@failed = 0
+		@gtAnalysis = GTAnalysis.new(@pathGumTree, @projectName, @localClone)
+	end
+
+	def getProjectName()
+		@projectName
+	end
+
+	def getPathGumTree()
+		@pathGumTree
+	end
+
+	def getLocalClone()
+		@localClone
 	end
 
 	def getGitProblem()
@@ -36,28 +53,34 @@ class ConflictCategoryFailed
 		return getGitProblem() + getRemoteError() + getFailed() + getOtherError() + getPermission()
 	end
 
-	def findConflictCauseFork(logs)
-		result = ""
+	def findConflictCauseFork(logs, mergeScenario, localClone)
+		result = []
 		logs.each do |log|
-			result = getCauseByJob(log)
+			result.push(getCauseByJob(log))
 		end
-		return log
+		getFinalStatus(result, mergeScenario, localClone)
+		return result
 	end
 
-	def findConflictCause(build)
-		result = ""
+	def findConflictCause(build, pathLocalClone)
+		result = []
 		indexJob = 0
 		while (indexJob < build.job_ids.size)
 			if (build.jobs[indexJob].state == "failed")
 				if (build.jobs[indexJob].log != nil)
 					build.jobs[indexJob].log.body do |part|
-						result = getCauseByJob(part)
+						result.push(getCauseByJob(part))
 					end
 				end
 			end
 			indexJob += 1
 		end
+		getFinalStatus(result, build.commit.sha, pathLocalClone)
 		return result
+	end
+
+	def getFinalStatus(resultByJobs, sha, localClone)
+			diffsMergeScenario = @gtAnalysis.getGumTreeTCAnalysis(localClone, sha, @localClone)
 	end
 
 	def getCauseByJob(log)

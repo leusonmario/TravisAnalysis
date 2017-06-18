@@ -173,7 +173,7 @@ class GitProject
 		buildOne = nil
 		parentTwo = nil
 		buildTwo = nil
-		
+
 		if (projectBuilds[parentsMerge[0]] != nil and projectBuilds[parentsMerge[1]] != nil)
 			if (projectBuilds[parentsMerge[0]][0]==["passed"] or projectBuilds[parentsMerge[0]][0]==["failed"])
 				parentOne = true

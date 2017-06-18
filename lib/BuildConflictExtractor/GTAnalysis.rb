@@ -54,6 +54,19 @@ class GTAnalysis
 		return out
 	end
 
+	def getGumTreeTCAnalysis(pathProject, sha, cloneProject)
+		parents = @mergeCommit.getParentsMergeIfTrue(pathProject, sha)
+		actualPath = Dir.pwd
+
+		pathCopies = @copyDirectories.createCopyProject(sha, parents, pathProject)
+
+		#  		   					result 		  left 			right 			MergeCommit 	parent1 		parent2 	problemas
+		out = []#gumTreeDiffTCByBranch(sha, pathCopies[1], pathCopies[2], pathCopies[3], pathCopies[4], pathProject, parents, cloneProject)
+		@copyDirectories.deleteProjectCopies(pathCopies)
+		Dir.chdir actualPath
+		return out
+	end
+
 	def gumTreeDiffByBranch(mergeCommit, result, left, right, base, conflictCauses, pathProject, parents, cloneProject)
 		statusModified = cloneProject.verifyBadlyMergeScenario(parents[0], parents[1], mergeCommit)
 		conflictingContributions = []
@@ -70,6 +83,22 @@ class GTAnalysis
 		rightResult = @parentMSDiff.runAllDiff(right, result)
 		# passar como parametro o caminho dos diretorios (base, left, right, result). Por enquanto apenas o left e right
 		return verifyModificationStatus(mergeCommit, baseLeft, leftResult, baseRight, rightResult, conflictCauses, left, right, pathProject, parents, cloneProject)
+	end
+
+	def gumTreeDiffTCByBranch(mergeCommit, result, left, right, base, pathProject, parents, cloneProject)
+		statusModified = cloneProject.verifyBadlyMergeScenario(parents[0], parents[1], mergeCommit)
+		conflictingContributions = nil
+		if (statusModified == true)
+				conflictingContributions = true
+		end
+
+		baseLeft = []#@parentMSDiff.runAllDiff(base, left)
+		baseRight = []#@parentMSDiff.runAllDiff(base, right)
+		leftResult = []#@parentMSDiff.runAllDiff(left, result)
+		rightResult = []#@parentMSDiff.runAllDiff(right, result)
+		# passar como parametro o caminho dos diretorios (base, left, right, result). Por enquanto apenas o left e right
+		#return verifyModificationStatus(mergeCommit, baseLeft, leftResult, baseRight, rightResult, conflictCauses, left, right, pathProject, parents, cloneProject)
+		return baseLeft, leftResult, baseRight, rightResult, conflictingContributions
 	end
 
 	def deleteProjectCopies(pathCopies)
