@@ -59,7 +59,7 @@ class ConflictCategoryFailed
 		logs.each do |log|
 			result.push(getCauseByJob(log))
 		end
-		return result, getFinalStatus(result, mergeScenario, localClone)
+		return adjustValueReturn(result), result[2]#, getFinalStatus(result, mergeScenario, localClone)
 	end
 
 	def findConflictCause(build, pathLocalClone)
@@ -76,7 +76,17 @@ class ConflictCategoryFailed
 			end
 			indexJob += 1
 		end
-		return result, getFinalStatus(result, build.commit.sha, pathLocalClone)
+		return adjustValueReturn(result), result[2]#, getFinalStatus(result, build.commit.sha, pathLocalClone)
+	end
+
+	def adjustValueReturn(result)
+		arrayFrequency = []
+		arrayStatus = []
+		result.each do |individualResult|
+			arrayFrequency.push(individualResult[1])
+			arrayStatus.push(individualResult[0])
+		end
+		return arrayStatus, arrayFrequency
 	end
 
 	def getFinalStatus(resultByJobs, sha, localClone)
@@ -84,7 +94,6 @@ class ConflictCategoryFailed
 		testConflictsExtractor = TestConflictInfo.new()
 		resultByJobs.each do |filesInfo|
 			resultTC = testConflictsExtractor.getInfoTestConflicts(diffsMergeScenario, filesInfo)
-			print resultTC
 		end
 	end
 
