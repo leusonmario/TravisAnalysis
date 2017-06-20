@@ -183,7 +183,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 											if (isConflict and result[0] and verifyDateDifference(lastScenarioDateFailed, getDataMergeScenario(build.commit.sha)))
 												effort = effortTimeExtractor.checkFixedBuildFailed(build.commit.sha, mergeCommit)
 												resultFailedBuild = confFailedBuilt.findConflictCause(build, getPathProject())
-												writeCSVBuilt.printConflictTest(build, result[1][0], result[2][0], resultFailedBuild, projectNameFile, effort)
+												writeCSVBuilt.printConflictTest(build, result[1][0], result[2][0], resultFailedBuild[0], projectNameFile, effort)
 												validScenarioProjectFailed += 1
 												lastScenarioDateFailed = getDataMergeScenario(build.commit.sha)
 											end
@@ -296,7 +296,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 												if (isConflict and result[0])
 													effort = effortTimeExtractor.checkFixedBuildFailed(build.commit.sha, mergeCommit)
 													resultFailedBuild = confFailedBuilt.findConflictCause(build, getPathProject())
-													writeCSVBuilt.printConflictTest(build, result[1][0], result[2][0], resultFailedBuild, projectNameFile, effort)
+													writeCSVBuilt.printConflictTest(build, result[1][0], result[2][0], resultFailedBuild[0], projectNameFile, effort)
 													lastScenarioDateFailed = getDataMergeScenario(build.commit.sha)
 													validScenarioProjectFailed += 1
 												end
@@ -447,7 +447,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 										if (isConflict and result[0] == true)
 											effort = effortTimeExtractor.checkFixedBuildFailed(build.commit.sha, mergeCommit)
 											resultFailedBuild = confFailedBuilt.findConflictCause(build, getPathProject())
-											writeCSVBuilt.printConflictTest(build, result[1][0], result[2][0], resultFailedBuild, projectNameFile, effort)
+											writeCSVBuilt.printConflictTest(build, result[1][0], result[2][0], resultFailedBuild[0], projectNameFile, effort)
 										end
 									end
 								end
@@ -482,7 +482,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 									if (isConflict and result[0])
 										effort = effortTimeExtractor.checkFixedBuildFailed(mergeScenario, mergeCommit)
 										resultFailedBuild = confFailedBuilt.findConflictCauseFork(infoValidScenario[1], mergeScenario, getPathProject())
-										writeCSVBuilt.printConflictTest(infoValidScenario[2], result[1][0], result[2][0], resultFailedBuild, projectNameFile, effort)
+										writeCSVBuilt.printConflictTest(infoValidScenario[2], result[1][0], result[2][0], resultFailedBuild[0], projectNameFile, effort)
 										lastScenarioDateFailed = getDataMergeScenario(mergeScenario)
 										validScenarioProjectFailed += 1
 									end

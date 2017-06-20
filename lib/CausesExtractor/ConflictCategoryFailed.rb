@@ -1,6 +1,7 @@
 require 'require_all'
 require_rel 'ConflictCategories'
 require_all '././BuildConflictExtractor'
+require_all '././TestConflictsExtractor'
 
 class ConflictCategoryFailed
 	include ConflictCategories
@@ -58,8 +59,7 @@ class ConflictCategoryFailed
 		logs.each do |log|
 			result.push(getCauseByJob(log))
 		end
-		getFinalStatus(result, mergeScenario, localClone)
-		return result
+		return result, getFinalStatus(result, mergeScenario, localClone)
 	end
 
 	def findConflictCause(build, pathLocalClone)
@@ -69,18 +69,23 @@ class ConflictCategoryFailed
 			if (build.jobs[indexJob].state == "failed")
 				if (build.jobs[indexJob].log != nil)
 					build.jobs[indexJob].log.body do |part|
-						result.push(getCauseByJob(part))
+						causesInfo = getCauseByJob(part)
+						result.push(causesInfo)
 					end
 				end
 			end
 			indexJob += 1
 		end
-		getFinalStatus(result, build.commit.sha, pathLocalClone)
-		return result
+		return result, getFinalStatus(result, build.commit.sha, pathLocalClone)
 	end
 
 	def getFinalStatus(resultByJobs, sha, localClone)
-			diffsMergeScenario = @gtAnalysis.getGumTreeTCAnalysis(localClone, sha, @localClone)
+		diffsMergeScenario = @gtAnalysis.getGumTreeTCAnalysis(localClone, sha, @localClone)
+		testConflictsExtractor = TestConflictInfo.new()
+		resultByJobs.each do |filesInfo|
+			resultTC = testConflictsExtractor.getInfoTestConflicts(diffsMergeScenario, filesInfo)
+			print resultTC
+		end
 	end
 
 	def getCauseByJob(log)
@@ -89,6 +94,8 @@ class ConflictCategoryFailed
 		stringTerminated = "The build has been terminated"
 		stringTheCommand = "The command "
 		result = ""
+		numberFailures = 0
+		filesInfo = []
 		if (log[/Errors: [0-9]*/])
 			@failed += 1
 			result = "failed"
@@ -108,6 +115,19 @@ class ConflictCategoryFailed
 			@otherError += 1
 			result = "otherError"
 		end
-		return result
+
+		if (log[/Failed tests: (\n)*[\s\S\:\)\(]*\nTests run: [\s\S\:\,\-\.0-9\n ]* Failures: 1[\s\S\n]* BUILD FAILURE/])
+			numberFailures = log.to_s.match(/Failed tests: (\n)*[\s\S\:\)\(]*\nTests run: [\s\S\:\,\-\.0-9\n ]* Failures: 1[\s\S\n]* BUILD FAILURE/).to_s.match(/Failed tests: (\n)*[\s\S]*(\n)*Skipped:/).to_s.match(/Failures: [0-9]*/).to_s.split("Failures: ")[1].to_i
+		end
+		if (log[/Failures: 1[0-9]*[\s\S]* <<< FAILURE!/])
+			numberOccurences = log.to_enum(:scan, /Failures: 1[0-9]*[\s\S]* <<< FAILURE!/).map { Regexp.last_match }
+			numberOccurences.each do |occurence|
+				generalInfo = occurence.to_s.match(/FAILURE![\s\S]*\([\s\S]*\)/).to_s.split("\(")
+				methodName = generalInfo[0].to_s.gsub("FAILURE!","").to_s.gsub("\n","").to_s.gsub("\r","")
+				file = generalInfo[1].split(".").last.to_s.gsub("\)","")
+				filesInfo.push([file, methodName])
+			end
+		end
+		return result, numberFailures, filesInfo
 	end
 end

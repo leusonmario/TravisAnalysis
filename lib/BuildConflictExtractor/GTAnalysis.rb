@@ -61,7 +61,7 @@ class GTAnalysis
 		pathCopies = @copyDirectories.createCopyProject(sha, parents, pathProject)
 
 		#  		   					result 		  left 			right 			MergeCommit 	parent1 		parent2 	problemas
-		out = []#gumTreeDiffTCByBranch(sha, pathCopies[1], pathCopies[2], pathCopies[3], pathCopies[4], pathProject, parents, cloneProject)
+		out = gumTreeDiffTCByBranch(sha, pathCopies[1], pathCopies[2], pathCopies[3], pathCopies[4], pathProject, parents, cloneProject)
 		@copyDirectories.deleteProjectCopies(pathCopies)
 		Dir.chdir actualPath
 		return out
@@ -92,10 +92,10 @@ class GTAnalysis
 				conflictingContributions = true
 		end
 
-		baseLeft = []#@parentMSDiff.runAllDiff(base, left)
-		baseRight = []#@parentMSDiff.runAllDiff(base, right)
-		leftResult = []#@parentMSDiff.runAllDiff(left, result)
-		rightResult = []#@parentMSDiff.runAllDiff(right, result)
+		baseLeft = @parentMSDiff.runAllDiff(base, left)
+		baseRight = @parentMSDiff.runAllDiff(base, right)
+		leftResult = @parentMSDiff.runAllDiff(left, result)
+		rightResult = @parentMSDiff.runAllDiff(right, result)
 		# passar como parametro o caminho dos diretorios (base, left, right, result). Por enquanto apenas o left e right
 		#return verifyModificationStatus(mergeCommit, baseLeft, leftResult, baseRight, rightResult, conflictCauses, left, right, pathProject, parents, cloneProject)
 		return baseLeft, leftResult, baseRight, rightResult, conflictingContributions
