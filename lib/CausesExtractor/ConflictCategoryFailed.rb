@@ -59,7 +59,7 @@ class ConflictCategoryFailed
 		logs.each do |log|
 			result.push(getCauseByJob(log))
 		end
-		return adjustValueReturn(result), result[2]#, getFinalStatus(result, mergeScenario, localClone)
+		return adjustValueReturn(result), result[2], getFinalStatus(result, mergeScenario, localClone)
 	end
 
 	def findConflictCause(build, pathLocalClone)
@@ -76,7 +76,7 @@ class ConflictCategoryFailed
 			end
 			indexJob += 1
 		end
-		return adjustValueReturn(result), result[2]#, getFinalStatus(result, build.commit.sha, pathLocalClone)
+		return adjustValueReturn(result), result[2], getFinalStatus(result, build.commit.sha, pathLocalClone)
 	end
 
 	def adjustValueReturn(result)
@@ -92,9 +92,21 @@ class ConflictCategoryFailed
 	def getFinalStatus(resultByJobs, sha, localClone)
 		diffsMergeScenario = @gtAnalysis.getGumTreeTCAnalysis(localClone, sha, @localClone)
 		testConflictsExtractor = TestConflictInfo.new()
+		resultTC = []
 		resultByJobs.each do |filesInfo|
-			resultTC = testConflictsExtractor.getInfoTestConflicts(diffsMergeScenario, filesInfo)
+			resultTC.push(testConflictsExtractor.getInfoTestConflicts(diffsMergeScenario, filesInfo))
 		end
+		return adjustInfoTestConflict(resultTC)
+	end
+
+	def adjustInfoTestConflict(resultTC)
+		newTestFileArray = []
+		newTestCaseArray = []
+		resultTC.each do |result|
+			newTestFileArray.push(result[0])
+			newTestCaseArray.push(result[1])
+		end
+		return newTestFileArray, newTestCaseArray
 	end
 
 	def getCauseByJob(log)

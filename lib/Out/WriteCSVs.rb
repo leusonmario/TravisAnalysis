@@ -160,23 +160,23 @@ class WriteCSVs
 		end
 	end
 
-	def printConflictTest(build, buildOne, buildTwo, status, projectName, effort, frequency)
+	def printConflictTest(build, buildOne, buildTwo, status, projectName, effort, frequency, infoNewTestFile, infoNewTestCase)
 		Dir.chdir getPathFailedCases()
 		if (File.exists?("Failed"+projectName+".csv"))
 			CSV.open("Failed"+projectName+".csv", "a+") do |csv|
 				if (effort != nil)
-					csv << [build.id, buildOne, buildTwo, status, frequency, effort[0], effort[1], effort[2], effort[3], effort[4], effort[5], effort[6]]
+					csv << [build.id, buildOne, buildTwo, status, frequency, effort[0], effort[1], effort[2], effort[3], effort[4], effort[5], effort[6], infoNewTestFile, infoNewTestCase]
 				else
-					csv << [build.id, buildOne, buildTwo, status, frequency, "", "", "", "", "", "", ""]
+					csv << [build.id, buildOne, buildTwo, status, frequency, "", "", "", "", "", "", "", infoNewTestFile, infoNewTestCase]
 				end
 			end
 		else
 			CSV.open("Failed"+projectName+".csv", "ab") do |csv|
-				csv << ["BuildID", "BuildParentOne", "BuildParentTwo", "MessageState", "Frequency", "ConflictingContributions", "FixBuildID", "FixStatus", "Effort", "NumberBuildsPerformed", "SameAuthor", "SameCommiter", "BestCase"]
+				csv << ["BuildID", "BuildParentOne", "BuildParentTwo", "MessageState", "Frequency", "ConflictingContributions", "FixBuildID", "FixStatus", "Effort", "NumberBuildsPerformed", "SameAuthor", "SameCommiter", "BestCase", "NewTestFile", "NewTestCase"]
 				if (effort != nil)
-					csv << [build.id, buildOne, buildTwo, status, frequency, effort[0], effort[1], effort[2], effort[3], effort[4], effort[5], effort[6]]
+					csv << [build.id, buildOne, buildTwo, status, frequency, effort[0], effort[1], effort[2], effort[3], effort[4], effort[5], effort[6], infoNewTestFile, infoNewTestCase]
 				else
-					csv << [build.id, buildOne, buildTwo, status, frequency, "", "", "", "", "", "", ""]
+					csv << [build.id, buildOne, buildTwo, status, frequency, "", "", "", "", "", "", "", infoNewTestFile, infoNewTestCase]
 				end
 			end			
 		end
