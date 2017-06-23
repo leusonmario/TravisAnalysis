@@ -1,10 +1,11 @@
 class MergeCommit
 
 	def initialize()
-		@parentsCommit = Array.new
+
 	end
 
 	def getParentsMergeIfTrue(pathProject, commit)
+		parentsCommit = []
 		Dir.chdir pathProject.to_s.gsub('.travis.yml','')
 		commitType = %x(git cat-file -p #{commit})
 		commitType.each_line do |line|
@@ -13,20 +14,20 @@ class MergeCommit
 			end
 			if(line.include?('parent'))
 				commitSHA = line.partition('parent ').last.gsub("\n","").gsub(' ','').gsub('\r','')
-				@parentsCommit.push(commitSHA)
+				parentsCommit.push(commitSHA)
 			end
 		end
 
-		if (@parentsCommit.size > 1)
-			return @parentsCommit
+		if (parentsCommit.size > 1)
+			return parentsCommit
 		else
 			return nil
 		end
 	end
 
 	def getTypeConflict(pathProject, commit)
-		Dir.chdir @pathProject
-		filesConflict = %x(git diff --name-only #{@commit}^!)
+		Dir.chdir pathProject
+		filesConflict = %x(git diff --name-only #{commit}^!)
 		statusConfig = true
 		if (filesConflict == ".travis.yml\n")
 			return "Travis"

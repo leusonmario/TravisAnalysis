@@ -40,8 +40,8 @@ class CopyProjectDirectories
 		checkout = %x(git checkout #{mergeCommit} > /dev/null 2>&1)
 		clone = %x(cp -R #{pathProject} #{copyBranch[1]})
 		invalidFiles = %x(find #{copyBranch[1]} -type f -regextype posix-extended -iregex '.*\.(sh|vm|md|yaml|yml|conf|scala|properties|less|txt|gitignore|sql|html)$' -delete)
-		invalidFiles = %x(find #{copyBranch[4]} -type f  ! -name "*.?*" -delete)
-		
+		invalidFiles = %x(find #{copyBranch[1]} -type f  ! -name "*.?*" -delete)
+
 		index = 0
 		while(index < parents.size)
 			checkout = %x(git checkout #{parents[index]} > /dev/null 2>&1)
@@ -52,16 +52,12 @@ class CopyProjectDirectories
 			index += 1
 		end
 
-		return copyBranch[0], copyBranch[1], copyBranch[2], copyBranch[3], copyBranch[4], mergeCommit
+		return copyBranch[0], copyBranch[1], copyBranch[2], copyBranch[3], copyBranch[4]
 		#      copies         result 			left 		right 			base			mergeCommit
 	end
 
 	def deleteProjectCopies(pathCopies)
-		index = 0
-		while(index < pathCopies.size)
-			delete = %x(rm -rf #{pathCopies[index]})	
-			index += 1
-		end
+		delete = %x(rm -rf #{pathCopies[0]})
 	end
 
 end

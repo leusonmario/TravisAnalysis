@@ -55,8 +55,8 @@ class GTAnalysis
 	end
 
 	def getGumTreeTCAnalysis(pathProject, sha, cloneProject)
-		parents = @mergeCommit.getParentsMergeIfTrue(pathProject, sha)
 		actualPath = Dir.pwd
+		parents = @mergeCommit.getParentsMergeIfTrue(pathProject, sha)
 
 		pathCopies = @copyDirectories.createCopyProject(sha, parents, pathProject)
 

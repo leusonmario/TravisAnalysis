@@ -577,7 +577,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 			return true
 		else
 			intervalTime = ((DateTime.parse(candidateScenarioDate.to_s) - DateTime.parse(lastScenarioDate.to_s))).to_i
-			if (intervalTime > 7)
+			if (intervalTime > 7 or intervalTime < 7)
 				return true
 			end
 			return false

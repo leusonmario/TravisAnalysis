@@ -137,15 +137,15 @@ class ConflictCategoryFailed
 			result = "otherError"
 		end
 
-		if (log[/Failed tests: (\n)*[\s\S\:\)\(]*\nTests run: [\s\S\:\,\-\.0-9\n ]* Failures: 1[\s\S\n]* BUILD FAILURE/])
-			numberFailures = log.to_s.match(/Failed tests: (\n)*[\s\S\:\)\(]*\nTests run: [\s\S\:\,\-\.0-9\n ]* Failures: 1[\s\S\n]* BUILD FAILURE/).to_s.match(/Failed tests: (\n)*[\s\S]*(\n)*Skipped:/).to_s.match(/Failures: [0-9]*/).to_s.split("Failures: ")[1].to_i
+		if (log[/Failed tests: (\n)*[\s\S\:\)\(]*\nTests run: [\s\S\:\,\-\.0-9\n ]* Failures: [1-9][0-9]*[\s\S\n]* BUILD FAILURE/])
+			numberFailures = log.to_s.match(/Failed tests: (\n)*[\s\S\:\)\(]*\nTests run: [\s\S\:\,\-\.0-9\n ]* Failures: [1-9][0-9]*[\s\S\n]* BUILD FAILURE/).to_s.match(/Failed tests: (\n)*[\s\S]*(\n)*Skipped:/).to_s.match(/Failures: [0-9]*/).to_s.split("Failures: ")[1].to_i
 		end
-		if (log[/Failures: 1[0-9]*[\s\S]* <<< FAILURE!/])
-			numberOccurences = log.to_enum(:scan, /Failures: 1[0-9]*[\s\S]* <<< FAILURE!/).map { Regexp.last_match }
+		if (log[/Failures: [1-9][0-9]*[\s\S]* <<< FAILURE!/])
+			numberOccurences = log.to_enum(:scan, /[a-zA-Z0-9]*\([a-zA-Z.0-9]*\)  Time elapsed: [0-9.]* sec  <<< FAILURE!/).map { Regexp.last_match }
 			numberOccurences.each do |occurence|
-				generalInfo = occurence.to_s.match(/FAILURE![\s\S]*\([\s\S]*\)/).to_s.split("\(")
-				methodName = generalInfo[0].to_s.gsub("FAILURE!","").to_s.gsub("\n","").to_s.gsub("\r","")
-				file = generalInfo[1].split(".").last.to_s.gsub("\)","")
+				generalInfo = occurence.to_s.split("\(")
+				methodName = generalInfo[0]
+				file = generalInfo[1].split("\)")[0].to_s.split("\.").last
 				filesInfo.push([file, methodName])
 			end
 		end
