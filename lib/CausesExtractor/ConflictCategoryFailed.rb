@@ -92,19 +92,22 @@ class ConflictCategoryFailed
 	def getFinalStatus(resultByJobs, sha, localClone)
 		diffsMergeScenario = @gtAnalysis.getGumTreeTCAnalysis(localClone, sha, @localClone)
 		testConflictsExtractor = TestConflictInfo.new()
-		resultTC = []
-		resultByJobs.each do |filesInfo|
-			resultTC.push(testConflictsExtractor.getInfoTestConflicts(diffsMergeScenario, filesInfo))
+		newTestFileArray = []
+		newTestCaseArray = []
+		updateTestArray = []
+		resultByJobs[0][2].each do |filesInfo|
+			resultTC = testConflictsExtractor.getInfoTestConflicts(diffsMergeScenario, filesInfo)
+			newTestFileArray.push(resultTC[0])
+			newTestCaseArray.push(resultTC[1])
+			updateTestArray.push(resultTC[2])
 		end
-		return adjustInfoTestConflict(resultTC)
+		return newTestFileArray, newTestCaseArray, updateTestArray
 	end
 
 	def adjustInfoTestConflict(resultTC)
-		newTestFileArray = []
-		newTestCaseArray = []
+
 		resultTC.each do |result|
-			newTestFileArray.push(result[0])
-			newTestCaseArray.push(result[1])
+
 		end
 		return newTestFileArray, newTestCaseArray
 	end

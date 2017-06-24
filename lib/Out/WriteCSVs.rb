@@ -160,23 +160,23 @@ class WriteCSVs
 		end
 	end
 
-	def printConflictTest(build, buildOne, buildTwo, status, projectName, effort, frequency, infoNewTestFile, infoNewTestCase)
+	def printConflictTest(build, buildOne, buildTwo, status, projectName, effort, frequency, infoNewTestFile, infoNewTestCase, updateTestCase)
 		Dir.chdir getPathFailedCases()
 		if (File.exists?("Failed"+projectName+".csv"))
 			CSV.open("Failed"+projectName+".csv", "a+") do |csv|
 				if (effort != nil)
-					csv << [build.id, buildOne, buildTwo, status, frequency, effort[0], effort[1], effort[2], effort[3], effort[4], effort[5], effort[6], infoNewTestFile, infoNewTestCase]
+					csv << [build.id, buildOne, buildTwo, status, frequency, effort[0], effort[1], effort[2], effort[3], effort[4], effort[5], effort[6], infoNewTestFile, infoNewTestCase, updateTestCase]
 				else
-					csv << [build.id, buildOne, buildTwo, status, frequency, "", "", "", "", "", "", "", infoNewTestFile, infoNewTestCase]
+					csv << [build.id, buildOne, buildTwo, status, frequency, "", "", "", "", "", "", "", infoNewTestFile, infoNewTestCase, updateTestCase]
 				end
 			end
 		else
 			CSV.open("Failed"+projectName+".csv", "ab") do |csv|
-				csv << ["BuildID", "BuildParentOne", "BuildParentTwo", "MessageState", "Frequency", "ConflictingContributions", "FixBuildID", "FixStatus", "Effort", "NumberBuildsPerformed", "SameAuthor", "SameCommiter", "BestCase", "NewTestFile", "NewTestCase"]
+				csv << ["BuildID", "BuildParentOne", "BuildParentTwo", "MessageState", "Frequency", "ConflictingContributions", "FixBuildID", "FixStatus", "Effort", "NumberBuildsPerformed", "SameAuthor", "SameCommiter", "BestCase", "NewTestFile", "NewTestCase", "UpdateTestFile"]
 				if (effort != nil)
-					csv << [build.id, buildOne, buildTwo, status, frequency, effort[0], effort[1], effort[2], effort[3], effort[4], effort[5], effort[6], infoNewTestFile, infoNewTestCase]
+					csv << [build.id, buildOne, buildTwo, status, frequency, effort[0], effort[1], effort[2], effort[3], effort[4], effort[5], effort[6], infoNewTestFile, infoNewTestCase, updateTestCase]
 				else
-					csv << [build.id, buildOne, buildTwo, status, frequency, "", "", "", "", "", "", "", infoNewTestFile, infoNewTestCase]
+					csv << [build.id, buildOne, buildTwo, status, frequency, "", "", "", "", "", "", "", infoNewTestFile, infoNewTestCase, updateTestCase]
 				end
 			end			
 		end
