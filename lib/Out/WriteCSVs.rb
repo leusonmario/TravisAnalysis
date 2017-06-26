@@ -172,7 +172,7 @@ class WriteCSVs
 			end
 		else
 			CSV.open("Failed"+projectName+".csv", "ab") do |csv|
-				csv << ["BuildID", "BuildParentOne", "BuildParentTwo", "MessageState", "Frequency", "ConflictingContributions", "FixBuildID", "FixStatus", "Effort", "NumberBuildsPerformed", "SameAuthor", "SameCommiter", "BestCase", "NewTestFile", "NewTestCase", "UpdateTestFile"]
+				csv << ["BuildID", "BuildParentOne", "BuildParentTwo", "MessageState", "Frequency", "ConflictingContributions", "FixBuildID", "FixStatus", "Effort", "NumberBuildsPerformed", "SameAuthor", "SameCommiter", "BestCase", "NewTestFile", "NewTestCase", "UpdateTestCase"]
 				if (effort != nil)
 					csv << [build.id, buildOne, buildTwo, status, frequency, effort[0], effort[1], effort[2], effort[3], effort[4], effort[5], effort[6], infoNewTestFile, infoNewTestCase, updateTestCase]
 				else

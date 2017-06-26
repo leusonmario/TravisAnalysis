@@ -69,7 +69,7 @@ class BCMethodUpdate
                             if (countMethod[indexMethodID] != nil)
                                 countMethod[indexMethodID] = countMethod[indexMethodID] + 1
                             else
-                                countMethod[indexMethodID] = 0 + 1
+                                countMethod[indexMethodID] = countMethod[indexMethodID] + 1
                             end
                             typeVariableMethod[indexMethodID] = methodDeclaration["children"][0]["label"]
                         end

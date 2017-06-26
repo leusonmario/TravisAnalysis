@@ -96,20 +96,13 @@ class ConflictCategoryFailed
 		newTestCaseArray = []
 		updateTestArray = []
 		resultByJobs[0][2].each do |filesInfo|
-			resultTC = testConflictsExtractor.getInfoTestConflicts(diffsMergeScenario, filesInfo)
+			resultTC = testConflictsExtractor.getInfoTestConflicts(diffsMergeScenario[0], diffsMergeScenario[1], filesInfo, getPathGumTree())
 			newTestFileArray.push(resultTC[0])
 			newTestCaseArray.push(resultTC[1])
 			updateTestArray.push(resultTC[2])
 		end
+		@gtAnalysis.deleteProjectCopies(diffsMergeScenario[1])
 		return newTestFileArray, newTestCaseArray, updateTestArray
-	end
-
-	def adjustInfoTestConflict(resultTC)
-
-		resultTC.each do |result|
-
-		end
-		return newTestFileArray, newTestCaseArray
 	end
 
 	def getCauseByJob(log)

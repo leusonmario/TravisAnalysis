@@ -4,7 +4,7 @@ class TestConflictInfo
 
   end
 
-  def getInfoTestConflicts(gumTreeDiff, buildsInfo)
+  def getInfoTestConflicts(gumTreeDiff, pathCopies, buildsInfo, pathGumTree)
     baseLeft = gumTreeDiff[0]
     leftResult = gumTreeDiff[1]
     baseRight = gumTreeDiff[2]
@@ -23,10 +23,12 @@ class TestConflictInfo
         else
           newTestCase = verifyIfNewTestCase(baseRight, buildsInfo)
           if (!newTestCase)
-            updatedTest = verifyUpdatedTest(baseLeft, buildsInfo)
-            if (!updatedTest)
-              updatedTest = verifyUpdatedTest(baseRight, buildsInfo)
-            end
+            #updatedTest = verifyUpdatedTest(baseLeft, buildsInfo)
+            updatedTest = verifyChangesOnSameMethod(pathCopies[2], pathCopies[3], buildsInfo[0], buildsInfo[1], pathGumTree)
+            #if (!updatedTest)
+              #updatedTest = verifyUpdatedTest(baseRight, buildsInfo)
+              #updatedTest = verifyChangesOnSameMethod(baseRight, buildsInfo)
+            #end
           end
         end
       end
@@ -65,6 +67,40 @@ class TestConflictInfo
     else
       return true
     end
+  end
+
+  def verifyChangesOnSameMethod(parentOnePath, parentTwoPath, fileName, caseTest, gumTreePath)
+    diffParentOne = getMethodChangesByParent(parentOnePath, fileName, caseTest, gumTreePath)
+    diffParentTwo = getMethodChangesByParent(parentTwoPath, fileName, caseTest, gumTreePath)
+    if (diffParentOne == diffParentTwo)
+      return false
+    else
+      return true
+    end
+  end
+
+
+  def getMethodChangesByParent(branchPath, fileName, caseTest, gumTreePath)
+    Dir.chdir branchPath
+    pathFile = %x(find -name #{fileName+".java"})
+    branchFile = %x(readlink -f #{pathFile})
+
+    Dir.chdir gumTreePath
+    data = %x(./gumtree parse #{branchFile})
+    stringJson = JSON.parse(data)
+
+    stringJson["root"]["children"].each do |child|
+      child["children"].each do |newChild|
+        if (newChild["typeLabel"] == "MethodDeclaration")
+          newChild["children"].each do |methodDeclaration|
+            if (methodDeclaration["label"] == caseTest)
+              return newChild.to_s.gsub(/\"pos\"\=\>\"[0-9]*\"\,/, "")
+            end
+          end
+        end
+      end
+    end
+    return ""
   end
 
 end

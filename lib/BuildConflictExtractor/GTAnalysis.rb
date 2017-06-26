@@ -62,9 +62,12 @@ class GTAnalysis
 
 		#  		   					result 		  left 			right 			MergeCommit 	parent1 		parent2 	problemas
 		out = gumTreeDiffTCByBranch(sha, pathCopies[1], pathCopies[2], pathCopies[3], pathCopies[4], pathProject, parents, cloneProject)
-		@copyDirectories.deleteProjectCopies(pathCopies)
 		Dir.chdir actualPath
-		return out
+		return out, pathCopies
+	end
+
+	def deleteCopies(pathCopies)
+		@copyDirectories.deleteProjectCopies(pathCopies)
 	end
 
 	def gumTreeDiffByBranch(mergeCommit, result, left, right, base, conflictCauses, pathProject, parents, cloneProject)
