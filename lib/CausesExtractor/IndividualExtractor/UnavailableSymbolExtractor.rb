@@ -13,36 +13,83 @@ class UnavailableSymbolExtractor
 		filesInformation = []
 		numberOcccurrences = buildLog.scan(/\[ERROR\] [a-zA-Z0-9\/\-\.\:\[\]\,]* cannot find symbol[\n\r]+\[ERROR\]?[ \t\r\n\f]*symbol[ \t\r\n\f]*:[ \t\r\n\f]*method [a-zA-Z0-9\/\-\.\:\[\]\,\(\)]*[\n\r]+\[ERROR\]?[ \t\r\n\f]*location[ \t\r\n\f]*:[ \t\r\n\f]*class[ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,\(\)]*[\n\r]?|\[#{stringErro}\][\s\S]*#{stringNotFindType}|\[#{stringErro}\][\s\S]*#{stringNotMember}|\[ERROR\]?[\s\S]*cannot find symbol/).size
 		begin
-			if (buildLog[/\[ERROR\]?[\s\S]*cannot find symbol/] || buildLog[/\[ERROR\] [a-zA-Z0-9\/\-\.\:\[\]\,]* cannot find symbol[\n\r]+\[ERROR\]?[ \t\r\n\f]*symbol[ \t\r\n\f]*:[ \t\r\n\f]*method [a-zA-Z0-9\/\-\.\:\[\]\,\(\)]*[\n\r]+\[ERROR\]?[ \t\r\n\f]*location[ \t\r\n\f]*:[ \t\r\n\f]*class[ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,\(\)]*[\n\r]?/])
-				methodNames = buildLog.to_enum(:scan, /\[ERROR\][ \t\r\n\f]*symbol[ \t\r\n\f]*:[ \t\r\n\f]*[method|class|variable|constructor|static]*[ \t\r\n\f]*[a-zA-Z0-9\(\)\.\/\,\_]*[ \t\r\n\f]*\[ERROR\][ \t\r\n\f]*location/).map { Regexp.last_match }
-				
-				if (methodNames[0].to_s.match(/symbol[ \t\r\n\f]*:[ \t\r\n\f]*(method|constructor)[ \t\r\n\f]*[a-zA-Z0-9\_]*/))
-					categoryMissingSymbol = "unavailableSymbolMethod"
-				elsif (methodNames[0].to_s.match(/symbol[ \t\r\n\f]*:[ \t\r\n\f]*(variable)[ \t\r\n\f]*[a-zA-Z0-9\_]*/)) 
-					categoryMissingSymbol = "unavailableSymbolVariable"
+			if (buildLog[/\[ERROR\]?[\s\S]*cannot find symbol/] || buildLog[/\[ERROR\] [a-zA-Z0-9\/\-\.\:\[\]\,]* cannot find symbol[\n\r]+\[ERROR\]?[ \t\r\n\f]*symbol[ \t\r\n\f]*:[ \t\r\n\f]*method [a-zA-Z0-9\/\-\.\:\[\]\,\(\)]*[\n\r]+\[ERROR\]?[ \t\r\n\f]*location[ \t\r\n\f]*:[ \t\r\n\f]*class[ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,\(\)]*[\n\r]?/] || buildLog[/\[javac\] [\/a-zA-Z\_\-\.\:0-9]* cannot find symbol/])
+				if (buildLog[/error: package [a-zA-Z\.]* does not exist/])
+					return getInfoSecondCase(buildLog, completeBuildLog)
 				else
-					categoryMissingSymbol = "unavailableSymbolFile"
-				end
-				classFiles = buildLog.to_enum(:scan, /\[ERROR\]?[ \t\r\n\f]*location[ \t\r\n\f]*:[ \t\r\n\f]*(@)?[class|interface|variable]+[ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,\(\)]*[\n\r]?/).map { Regexp.last_match }
-				callClassFiles = ""
-				if (completeBuildLog.include?('Retrying, 3 of 3'))
-					callClassFiles = buildLog[/BUILD FAILURE[\s\S]*/].to_enum(:scan, /\[ERROR\]?[ \t\r\n\f]*[\/\-\.\:a-zA-Z\[\]0-9\,]* cannot find symbol/).map { Regexp.last_match }
-				else
-					callClassFiles = buildLog[/Compilation failure:[\s\S]*/].to_enum(:scan, /\[ERROR\]?[ \t\r\n\f]*[\/\-\.\:a-zA-Z\[\]0-9\,]* cannot find symbol/).map { Regexp.last_match }
-				end
-				count = 0
-				while (count < classFiles.size)
-					methodName = methodNames[count].to_s.match(/symbol[ \t\r\n\f]*:[ \t\r\n\f]*(method|variable|class|constructor|static)[ \t\r\n\f]*[a-zA-Z0-9\_]*/)[0].split(" ").last
-					classFile = classFiles[count].to_s.match(/location[ \t\r\n\f]*:[ \t\r\n\f]*(@)?(class|interface)?[ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,\(\)]*/)[0].split(".").last.gsub("\r", "").to_s
-					callClassFile = callClassFiles[count].to_s.match(/\[ERROR\]?[ \t\r\n\f]*[\/\-\.\:a-zA-Z0-9\,]*/)[0].split("/").last.gsub(".java:", "").gsub("\r", "").to_s
-					count += 1
-					filesInformation.push([classFile, methodName, callClassFile])
+					return getInfoDefaultCase(buildLog, completeBuildLog)
 				end
 			end
-			return categoryMissingSymbol, filesInformation, classFiles.size
 		rescue
 			return categoryMissingSymbol, [], 0
 		end
 	end
-	
+
+	def getInfoDefaultCase(buildLog, completeBuildLog)
+		classFiles = []
+		methodNames = []
+		callClassFiles = []
+		if (buildLog[/\[javac\] [\/a-zA-Z\_\-\.\:0-9]* cannot find symbol[\s\S]* \[javac\] (location:)+/])
+			methodNames = buildLog.to_enum(:scan, /\[javac\] [\/a-zA-Z\_\-\.\:0-9]* cannot find symbol[\s\S]* \[javac\] (location:)+ [a-zA-Z\. ]*/).map { Regexp.last_match }
+			classFiles = buildLog.to_enum(:scan, /\[javac\] [\/a-zA-Z\_\-\.\:0-9]* cannot find symbol[\s\S]* \[javac\] (location:)+ [a-zA-Z\. ]*/).map { Regexp.last_match }
+			callClassFiles = buildLog.to_enum(:scan, /\[javac\] [\/a-zA-Z\_\-\.\:0-9]* cannot find symbol[\s\S]* \[javac\] (location:)+ [a-zA-Z\. ]*/).map { Regexp.last_match }
+		else
+			methodNames = buildLog.to_enum(:scan, /\[ERROR\][ \t\r\n\f]*symbol[ \t\r\n\f]*:[ \t\r\n\f]*[method|class|variable|constructor|static]*[ \t\r\n\f]*[a-zA-Z0-9\(\)\.\/\,\_]*[ \t\r\n\f]*\[ERROR\][ \t\r\n\f]*(location)?/).map { Regexp.last_match }
+			classFiles = buildLog.to_enum(:scan, /\[ERROR\]?[ \t\r\n\f]*location[ \t\r\n\f]*:[ \t\r\n\f]*(@)?[class|interface|variable]+[ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,\(\)]*[\n\r]?/).map { Regexp.last_match }
+			callClassFiles = getCallClassFiles(completeBuildLog)
+		end
+		categoryMissingSymbol = getTypeUnavailableSymbol(methodNames[0])
+		filesInformation = []
+		count = 0
+		while (count < classFiles.size)
+			methodName = methodNames[count].to_s.match(/symbol[ \t\r\n\f]*:[ \t\r\n\f]*(method|variable|class|constructor|static)[ \t\r\n\f]*[a-zA-Z0-9\_]*/)[0].split(" ").last
+			classFile = classFiles[count].to_s.match(/location[ \t\r\n\f]*:[ \t\r\n\f]*(@)?(class|interface)?[ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,\(\)]*/)[0].split(".").last.gsub("\r", "").to_s
+			callClassFile = ""
+			if (buildLog[/\[javac\] [\/a-zA-Z\_\-\.\:0-9]* cannot find symbol[\s\S]* \[javac\] (location:)+/])
+				callClassFile = classFile
+			else
+				callClassFile = callClassFiles[count].to_s.match(/\[ERROR\]?[ \t\r\n\f]*[\/\-\.\:a-zA-Z0-9\,]*/)[0].split("/").last.gsub(".java:", "").gsub("\r", "").to_s
+			end
+			count += 1
+			filesInformation.push([classFile, methodName, callClassFile])
+		end
+		return categoryMissingSymbol, filesInformation, filesInformation.size
+	end
+
+	def getInfoSecondCase(buildLog, completeBuildLog)
+		#classFiles = buildLog.to_enum(:scan, /\[javac\] [\/a-zA-Z\_\-\.\:0-9]* cannot find symbol[\s\S]* \[javac\] (location:)+/).map { Regexp.last_match }
+		methodNames = buildLog.to_enum(:scan, /\[javac\] [\/a-zA-Z\_\-\.\:0-9]* cannot find symbol[\s\S]* \[javac\] (location:)+/).map { Regexp.last_match }
+		#categoryMissingSymbol = getTypeUnavailableSymbol(methodNames[0])
+		categoryMissingSymbol = getTypeUnavailableSymbol(methodNames[0])
+		filesInformation = []
+		methodNames = buildLog.to_enum(:scan, /error: package [a-zA-Z\.]* does not exist/).map { Regexp.last_match }
+		count = 0
+		while (count < methodNames.size)
+			packageName = methodNames[count].to_s.split("package ").last.to_s.gsub(" does not exist")
+			count += 1
+			filesInformation.push([packageName])
+		end
+		return categoryMissingSymbol, filesInformation, filesInformation.size
+	end
+
+	def getCallClassFiles(buildLog)
+		if (completeBuildLog.include?('Retrying, 3 of 3'))
+			return buildLog[/BUILD FAILURE[\s\S]*/].to_enum(:scan, /\[ERROR\]?[ \t\r\n\f]*[\/\-\.\:a-zA-Z\[\]0-9\,]* cannot find symbol/).map { Regexp.last_match }
+		else
+			return buildLog[/Compilation failure:[\s\S]*/].to_enum(:scan, /\[ERROR\]?[ \t\r\n\f]*[\/\-\.\:a-zA-Z\[\]0-9\,]* cannot find symbol/).map { Regexp.last_match }
+		end
+	end
+
+	def getTypeUnavailableSymbol(methodNames)
+		if (methodNames.to_s.match(/symbol[ \t\r\n\f]*:[ \t\r\n\f]*(method|constructor)[ \t\r\n\f]*[a-zA-Z0-9\_]*/))
+			return "unavailableSymbolMethod"
+		elsif (methodNames.to_s.match(/symbol[ \t\r\n\f]*:[ \t\r\n\f]*(variable)[ \t\r\n\f]*[a-zA-Z0-9\_]*/))
+			return "unavailableSymbolVariable"
+		elsif (methodNames.to_s.match[/error: package/])
+			return "unavailablePackage"
+		else
+			return "unavailableSymbolFile"
+		end
+	end
+
 end
