@@ -88,7 +88,7 @@ class ConflictCategoryErrored
 		end
 
 		if (mergeScenario)
-			return causesFilesConflicts.getCausesConflict(), getFinalStatus(pathGumTree, pathProject, sha, causesFilesConflicts, localMethodUpdate, localUnavailableSymbol, localDuplicateStatement, localUnimplementedMethod, localDependencyProblem, cloneProject), causesFilesConflicts.getCausesNumber()
+			return causesFilesConflicts.getCausesConflict(), getFinalStatus(pathGumTree, pathProject, sha, causesFilesConflicts, localMethodUpdate, localUnavailableSymbol, localDuplicateStatement, localUnimplementedMethod, localDependencyProblem, localMalformedExp, cloneProject), causesFilesConflicts.getCausesNumber()
 		else
 			return causesFilesConflicts.getCausesConflict()
 		end
@@ -135,7 +135,7 @@ class ConflictCategoryErrored
 			indexJob += 1
 		end
 		if (mergeScenario)
-			return causesFilesConflicts.getCausesConflict(), getFinalStatus(pathGumTree, pathProject, build.commit.sha, causesFilesConflicts, localMethodUpdate, localUnavailableSymbol, localDuplicateStatement, localUnimplementedMethod, localDependencyProblem, cloneProject), causesFilesConflicts.getCausesNumber(), causesFilesConflicts
+			return causesFilesConflicts.getCausesConflict(), getFinalStatus(pathGumTree, pathProject, build.commit.sha, causesFilesConflicts, localMethodUpdate, localUnavailableSymbol, localDuplicateStatement, localUnimplementedMethod, localDependencyProblem, localMalformedExp, cloneProject), causesFilesConflicts.getCausesNumber(), causesFilesConflicts
 		else
 			return causesFilesConflicts.getCausesConflict()
 		end
@@ -263,10 +263,10 @@ class ConflictCategoryErrored
 			end
 		end
 
-		if (body[/\[ERROR\][ \t\r\n\f]Failed to execute goal[\/\-\.\:a-zA-Z\[\]0-9\,\(\) ]*\n\[ERROR\][ \t\r\n\f][\/\-\.\:a-zA-Z\[\]0-9\,\(\) ]*illegal (character)/] || body[/\[ERROR\]?[ \t\r\n\f]*Failed to execute goal[\/\-\.\:a-zA-Z\[\]0-9\,\(\) ]* Some files do not have the expected license header/] || body[/\[ERROR\][ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,]* missing return statement/] || body[/\[ERROR\][ \t\r\n\f]* [a-zA-Z0-9\/\-\.\:\[\]\,\(\)\; ]* \'[a-zA-Z0-9\/\-\.\:\[\]\,\(\)\; ]*\' expected/] || body[/#{stringUnexpectedToken}/]  || body[/\[#{stringErro}\](.*)?#{stringError}\: #{stringMalformed}/] or body[/\[ERROR\](.*)?#{stringError}\:\'(.*)?\'#{stringExpected}/])
+		if (body[/\[ERROR\][ \t\r\n\f]Failed to execute goal[\/\-\.\:a-zA-Z\[\]0-9\,\(\) ]*\n\[ERROR\][ \t\r\n\f][\/\-\.\:a-zA-Z\[\]0-9\,\(\) ]*illegal (character)/] || body[/\[ERROR\]?[ \t\r\n\f]*Failed to execute goal[\/\-\.\:a-zA-Z\[\]0-9\,\(\) ]* Some files do not have the expected license header/] || body[/\[ERROR\][ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,]* missing return statement/] || body[/\[ERROR\][ \t\r\n\f]* [a-zA-Z0-9\/\-\.\:\[\]\,\(\)\; ]* \'[a-zA-Z0-9\/\-\.\:\[\]\,\(\)\; ]*\' expected/] || body[/#{stringUnexpectedToken}/]  || body[/\[#{stringErro}\](.*)?(#{stringError}\:)? #{stringMalformed}/] or body[/\[ERROR\](.*)?#{stringError}\:\'(.*)?\'#{stringExpected}/] or body[/\[ERROR\](.*) (is not (preceded with|followed by)+ whitespace|must match pattern|Unused import)+/])
 			otherCase = false
-			causesFilesConflicts.insertNewCauseOne("malformedExpression",[])
-			localMalformedExp = body.scan(/\[ERROR\][ \t\r\n\f]Failed to execute goal[\/\-\.\:a-zA-Z\[\]0-9\,\(\) ]*\n\[ERROR\][ \t\r\n\f][\/\-\.\:a-zA-Z\[\]0-9\,\(\) ]*illegal (character)|\[ERROR\]?[ \t\r\n\f]*Failed to execute goal[\/\-\.\:a-zA-Z\[\]0-9\,\(\) ]* Some files do not have the expected license header|\[ERROR\][ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,]* missing return statement|\[ERROR\][ \t\r\n\f]* [a-zA-Z0-9\/\-\.\:\[\]\,\(\)\; ]* \'[a-zA-Z0-9\/\-\.\:\[\]\,\(\)\; ]*\' expected|\[#{stringErro}\](.*)?#{stringError}\: #{stringMalformed}|\[ERROR\](.*)?#{stringError}\:\'(.*)?\'#{stringExpected}/).size
+			causesFilesConflicts.insertNewCauseOne("malformedExpression",["malformedExpression"])
+			localMalformedExp = body.scan(/\[ERROR\][ \t\r\n\f]Failed to execute goal[\/\-\.\:a-zA-Z\[\]0-9\,\(\) ]*\n\[ERROR\][ \t\r\n\f][\/\-\.\:a-zA-Z\[\]0-9\,\(\) ]*illegal (character)|\[ERROR\]?[ \t\r\n\f]*Failed to execute goal[\/\-\.\:a-zA-Z\[\]0-9\,\(\) ]* Some files do not have the expected license header|\[ERROR\][ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,]* missing return statement|\[ERROR\][ \t\r\n\f]* [a-zA-Z0-9\/\-\.\:\[\]\,\(\)\; ]* \'[a-zA-Z0-9\/\-\.\:\[\]\,\(\)\; ]*\' expected|\[#{stringErro}\](.*)?(#{stringError}\:)? #{stringMalformed}|\[ERROR\](.*)?#{stringError}\:\'(.*)?\'#{stringExpected}|\[ERROR\](.*) (is not (preceded with|followed by)+ whitespace|must match pattern|Unused import)+/).size
 			getCausesErroredBuild.setExpectedSymbol(localMalformedExp)
 		end
 		# depois ver a questao do |Could not transfer
@@ -293,10 +293,10 @@ class ConflictCategoryErrored
 		return otherCase, localUnavailableSymbol, localMethodUpdate, localMalformedExp, localDuplicateStatement, localDependencyProblem, localUnimplementedMethod, causesFilesConflicts
 	end
 
-	def getFinalStatus(pathGumTree, pathProject, sha, conflictCauses, localMethodUpdate, localUnavailableSymbol, localDuplicateStatement, localUnimplementedMethod, localDependencyProblem, cloneProject)
+	def getFinalStatus(pathGumTree, pathProject, sha, conflictCauses, localMethodUpdate, localUnavailableSymbol, localDuplicateStatement, localUnimplementedMethod, localDependencyProblem, localMalformedExp, cloneProject)
 		gtAnalysis = GTAnalysis.new(pathGumTree, @projectName, getPathLocalClone())
-		if(localMethodUpdate > 0 || localUnavailableSymbol > 0 || localDuplicateStatement > 0 || localUnimplementedMethod > 0 || localDependencyProblem > 0)
-			if(localUnimplementedMethod > 0 or localUnavailableSymbol > 0 or localDuplicateStatement > 0 or localMethodUpdate > 0 or localDependencyProblem > 0)
+		if(localMethodUpdate > 0 || localUnavailableSymbol > 0 || localDuplicateStatement > 0 || localUnimplementedMethod > 0 || localDependencyProblem > 0 || localMalformedExp > 0)
+			if(localUnimplementedMethod > 0 or localUnavailableSymbol > 0 or localDuplicateStatement > 0 or localMethodUpdate > 0 or localDependencyProblem > 0 || localMalformedExp > 0)
 				if (conflictCauses.getFilesConflict().size < 1)
 					return false, nil
 				else

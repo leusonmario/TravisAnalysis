@@ -162,13 +162,15 @@ class GTAnalysis
 				else
 					conflictingContributions[indexValue] = true
 				end
+			elsif (conflictCause == "malformedExpression")
+				conflictingContributions[indexValue] = false
 			else
 				conflictingContributions[indexValue] = true
 			end
 			indexValue += 1
 		end
 		
-		return conflictingContributions, false, true
+		return conflictingContributions, allIntegratedContributions, true
 
 	end
 

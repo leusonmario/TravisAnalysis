@@ -73,8 +73,9 @@ class UnavailableSymbolExtractor
 	end
 
 	def getCallClassFiles(buildLog)
-		if (completeBuildLog.include?('Retrying, 3 of 3'))
-			return buildLog[/BUILD FAILURE[\s\S]*/].to_enum(:scan, /\[ERROR\]?[ \t\r\n\f]*[\/\-\.\:a-zA-Z\[\]0-9\,]* cannot find symbol/).map { Regexp.last_match }
+		if (buildLog.include?('Retrying, 3 of 3'))
+			aux = buildLog[/BUILD FAILURE[\s\S]*/]
+			return aux.to_s.to_enum(:scan, /\[ERROR\]?[ \t\r\n\f]*[\/\-\.\:a-zA-Z\[\]0-9\,]* cannot find symbol/).map { Regexp.last_match }
 		else
 			return buildLog[/Compilation failure:[\s\S]*/].to_enum(:scan, /\[ERROR\]?[ \t\r\n\f]*[\/\-\.\:a-zA-Z\[\]0-9\,]* cannot find symbol/).map { Regexp.last_match }
 		end
@@ -85,7 +86,7 @@ class UnavailableSymbolExtractor
 			return "unavailableSymbolMethod"
 		elsif (methodNames.to_s.match(/symbol[ \t\r\n\f]*:[ \t\r\n\f]*(variable)[ \t\r\n\f]*[a-zA-Z0-9\_]*/))
 			return "unavailableSymbolVariable"
-		elsif (methodNames.to_s.match[/error: package/])
+		elsif (methodNames.to_s.match(/error: package/))
 			return "unavailablePackage"
 		else
 			return "unavailableSymbolFile"
