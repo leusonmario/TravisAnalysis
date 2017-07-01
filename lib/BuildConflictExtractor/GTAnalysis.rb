@@ -124,7 +124,8 @@ class GTAnalysis
 			return conflictingContributions, true, true
 		end
 		
-		allIntegratedContributions = false
+		allIntegratedContributions = true
+		brokenBuild = false
 		indexValue = 0
 		conflictCauses.getCausesConflict().each do |conflictCause|
 			if(conflictCause == "unimplementedMethod" || conflictCause == "unimplementedMethodSuperType")
@@ -164,13 +165,16 @@ class GTAnalysis
 				end
 			elsif (conflictCause == "malformedExpression")
 				conflictingContributions[indexValue] = false
+			elsif (conflictCause == "incompatibleTypes")
+				conflictingContributions[indexValue] = false
+				brokenBuild = false
 			else
 				conflictingContributions[indexValue] = true
 			end
 			indexValue += 1
 		end
 		
-		return conflictingContributions, allIntegratedContributions, true
+		return conflictingContributions, allIntegratedContributions, brokenBuild
 
 	end
 

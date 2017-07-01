@@ -213,7 +213,13 @@ class ConflictCategoryErrored
 			getCausesErroredBuild.setMethodParameterListSize(extraction[2])
 			causesFilesConflicts.insertNewCauseOne(extraction[0], extraction[1])
 		end
-		
+
+		if (body[/\[ERROR\] [a-zA-Z\/\-0-9\.\:\[\]\,]* error: incompatible types: [a-zA-Z0-9]* cannot be converted to [a-zA-Z0-9]*/])
+			otherCase = false
+			localUnavailableSymbol = body.scan(/\[ERROR\] [a-zA-Z\/\-0-9\.\:\[\]\,]* error: incompatible types: [a-zA-Z0-9]* cannot be converted to [a-zA-Z0-9]*/).size
+			causesFilesConflicts.insertNewCauseOne("incompatibleTypes", ["incompatibleTypes"])
+		end
+
 		if (body[/\[#{stringErro}\][\s\S]*#{stringDefined}[\s\S]*\[#{stringInfo}\](.*)?[0-9]/])
 			otherCase = false
 			localDuplicateStatement = body.scan(/\[#{stringErro}\][\s\S]*#{stringDefined}[\s\S]*\[#{stringInfo}\](.*)?[0-9]/).size
