@@ -167,7 +167,7 @@ class ConflictCategoryErrored
 		stringUnsupported = "Unsupported major.minor version"
 		stringBuildFail = "BUILD FAILED"
 		stringUndefinedExt = "uses an undefined extension point"
-		stringNoOverride = "does not override abstract method"
+		stringNoOverride = "does not override (abstract|or implement a)? method"
 		stringInfo = "INFO"
 		stringScript = "Script"
 		stringGradle = ".gradle"

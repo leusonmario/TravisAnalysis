@@ -127,7 +127,7 @@ class GTAnalysis
 		allIntegratedContributions = false
 		indexValue = 0
 		conflictCauses.getCausesConflict().each do |conflictCause|
-			if(conflictCause == "unimplementedMethod")
+			if(conflictCause == "unimplementedMethod" || conflictCause == "unimplementedMethodSuperType")
 				bcUnimplementedMethod = BCUnimplementedMethod.new()
 				if (bcUnimplementedMethod.verifyBuildConflict(baseLeft[0], leftResult[0], baseRight[0], rightResult[0], conflictCauses.getFilesConflict()[indexValue]) == false)
 					conflictingContributions[indexValue] = false
