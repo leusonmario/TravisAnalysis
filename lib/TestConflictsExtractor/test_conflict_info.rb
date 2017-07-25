@@ -5,9 +5,11 @@ class TestConflictInfo
   end
 
   def getInfoTestConflicts(gumTreeDiff, pathCopies, buildsInfo, pathGumTree)
-    baseLeft = gumTreeDiff[0]
+    #baseLeft = gumTreeDiff[0]
+    baseLeft = gumTreeDiff[3]
     leftResult = gumTreeDiff[1]
-    baseRight = gumTreeDiff[2]
+    #baseRight = gumTreeDiff[2]
+    baseRight = gumTreeDiff[1]
     rightResult = gumTreeDiff[3]
 
     newTestFile = false
@@ -24,7 +26,9 @@ class TestConflictInfo
           newTestCase = verifyIfNewTestCase(baseRight, buildsInfo)
           if (!newTestCase)
             #updatedTest = verifyUpdatedTest(baseLeft, buildsInfo)
-            updatedTest = verifyChangesOnSameMethod(pathCopies[2], pathCopies[3], buildsInfo[0], buildsInfo[1], pathGumTree)
+            #quando os parents mudam o teste mas esse não mudou em relação a base, entende-se que tais modificações são inválidas
+            updatedTest = verifyChangesOnSameMethod(pathCopies[1], pathCopies[4], buildsInfo[0], buildsInfo[1], pathGumTree)
+            #updatedTest = verifyChangesOnSameMethod(pathCopies[2], pathCopies[3], buildsInfo[0], buildsInfo[1], pathGumTree)
             #if (!updatedTest)
               #updatedTest = verifyUpdatedTest(baseRight, buildsInfo)
               #updatedTest = verifyChangesOnSameMethod(baseRight, buildsInfo)
