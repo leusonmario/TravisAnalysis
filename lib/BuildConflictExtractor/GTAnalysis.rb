@@ -117,15 +117,17 @@ class GTAnalysis
 		statusModified = verifyModifiedFile(baseLeft[0], leftResult[0], baseRight[0], rightResult[0])
 		statusAdded = verifyAddedDeletedFile(baseLeft[1], leftResult[1], baseRight[1], rightResult[1])
 		statusDeleted = verifyAddedDeletedFile(baseLeft[2], leftResult[2], baseRight[2], rightResult[2])
+		allIntegratedContributions = true
 		if (statusModified and statusAdded and statusDeleted)
 			conflictCauses.getCausesConflict().each do |conflictCause|
 				conflictingContributions.push(true)
 			end	
 			return conflictingContributions, true, true
+		else
+			allIntegratedContributions = false
 		end
-		
-		allIntegratedContributions = true
-		brokenBuild = false
+
+		brokenBuild = true
 		indexValue = 0
 		conflictCauses.getCausesConflict().each do |conflictCause|
 			if(conflictCause == "unimplementedMethod" || conflictCause == "unimplementedMethodSuperType")
