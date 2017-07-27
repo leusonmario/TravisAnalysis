@@ -16,6 +16,7 @@ class ConflictCategoryFailed
 		@permission = 0
 		@failed = 0
 		@gtAnalysis = GTAnalysis.new(@pathGumTree, @projectName, @localClone)
+		@testCaseCoverge = TestCaseCoverage.new(@localClone.getCloneProject().getLocalClone())
 	end
 
 	def getProjectName()
@@ -100,7 +101,12 @@ class ConflictCategoryFailed
 			newTestFileArray.push(resultTC[0])
 			newTestCaseArray.push(resultTC[1])
 			updateTestArray.push(resultTC[2])
+			#add uma classe responsável por fazer a análise
+			#esta iria receber apenas as iformações relacionadas
+			@gtAnalysis.getParentsMFDiff.runOnlyModifiedAddFiles(diffsMergeScenario[1][0], diffsMergeScenario[1][1])
+			@testCaseCoverge.runTestCase(filesInfo[0], filesInfo[1])
 		end
+		#ainda tenho o caminho em diffMergeScenario[1]
 		@gtAnalysis.deleteProjectCopies(diffsMergeScenario[1])
 		return newTestFileArray, newTestCaseArray, updateTestArray
 	end
