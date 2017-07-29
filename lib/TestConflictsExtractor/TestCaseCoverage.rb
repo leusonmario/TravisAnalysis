@@ -15,11 +15,12 @@ class TestCaseCoverage
     @pathProject = pathProject
   end
 
-  def runTestCase(testFileName, testCaseName)
+  def runTestCase(testFileName, testCaseName, sha)
     actualPath = Dir.pwd
     Dir.chdir @pathProject
 
     begin
+      checkout = %x(git checkout #{sha})
       addPluginOnPom()
       Dir.chdir @pathProject
       sleep 5
@@ -101,13 +102,13 @@ class TestCaseCoverage
           packagesCovered.push([row[1], row[2]])
         end
       end
-      return coveragedMethodsByFile()
+      return coveragedMethodsByFile(packagesCovered)
     rescue
       return nil
     end
   end
 
-  def coveragedMethodsByFile()
+  def coveragedMethodsByFile(packagesCovered)
     localPath = Dir.pwd
     hashMap = Hash.new
     packagesCovered.each do |package|

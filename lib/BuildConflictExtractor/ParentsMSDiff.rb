@@ -38,27 +38,29 @@ class ParentsMSDiff
 		return modifiedFilesDiff, addedFiles, deletedFiles
 	end
 
-	def runOnlyModifiedAddFiles(firstBranch, secondBranch)
-		Dir.chdir getGumTreePath()
-		mainDiff = nil
-		modifiedFilesDiff = []
-		addedFiles = []
-		deletedFiles = []
+	def runOnlyModifiedAddFiles(modifiedFiles, firstBranch, secondBranch)
+		#Dir.chdir getGumTreePath()
+		#mainDiff = nil
+		#modifiedFilesDiff = []
+		#addedFiles = []
+		#deletedFiles = []
+		addedFiles = nil
+		modifiedMethodsByFile = Hash.new
 		begin
-			kill = %x(pkill -f gumtree)
-			sleep(5)
-			thr = Thread.new { diff = system "bash", "-c", "exec -a gumtree ./gumtree webdiff #{firstBranch.gsub("\n","")} #{secondBranch.gsub("\n","")}" }
-			sleep(10)
-			mainDiff = %x(wget http://127.0.0.1:4754/ -q -O -)
-			modifiedFilesDiff = getDiffByModification(mainDiff[/Modified files \((.*?)\)/m, 1])
-			addedFiles = getDiffByAddedFile(mainDiff[/Added files \((.*?)\)/m, 1])
-
-			kill = %x(pkill -f gumtree)
-			sleep(5)
+			#kill = %x(pkill -f gumtree)
+			#sleep(5)
+			#thr = Thread.new { diff = system "bash", "-c", "exec -a gumtree ./gumtree webdiff #{firstBranch.gsub("\n","")} #{secondBranch.gsub("\n","")}" }
+			#sleep(10)
+			#mainDiff = %x(wget http://127.0.0.1:4754/ -q -O -)
+			#modifiedFilesDiff = getDiffByModification(mainDiff[/Modified files \((.*?)\)/m, 1])
+			modifiedMethodsByFile = getDiffByModificationAndMethods(modifiedFiles, firstBranch, secondBranch)
+			#addedFiles = getDiffByAddedFile(mainDiff[/Added files \((.*?)\)/m, 1])
+			#kill = %x(pkill -f gumtree)
+			#sleep(5)
 		rescue Exception => e
 			puts "GumTree Failed"
 		end
-		return modifiedFilesDiff, addedFiles
+		return modifiedMethodsByFile, addedFiles
 	end
 
 	def verifyModifiedFile(baseLeftInitial, leftResultFinal, baseRightInitial, rightResultFinal)
@@ -126,7 +128,7 @@ class ParentsMSDiff
 		modifiedFiles.each do |key, value|
 		 	changedMethods[key]	= methodsModifiedOnFile(getParsedFile(pathBranchOne, key), getParsedFile(pathBranchTwo, key))
 		end
-
+		return changedMethods
 	end
 
 	def methodsModifiedOnFile(parsedFileOne, parsedFileTwo)
@@ -161,7 +163,7 @@ class ParentsMSDiff
 				end
 			end
 		end
-
+		return modifiedMethods
 	end
 
 	def getParsedFile(pathBranch, fileName)
