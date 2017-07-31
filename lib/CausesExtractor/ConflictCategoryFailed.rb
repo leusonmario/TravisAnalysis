@@ -97,6 +97,9 @@ class ConflictCategoryFailed
 		newTestFileArray = []
 		newTestCaseArray = []
 		updateTestArray = []
+		changesSameMethod = []
+		dependentChangesParentOne = []
+		dependentChangesParentTwo = []
 		resultByJobs[0][2].each do |filesInfo|
 			resultTC = testConflictsExtractor.getInfoTestConflicts(diffsMergeScenario[0], diffsMergeScenario[1], filesInfo, getPathGumTree())
 			newTestFileArray.push(resultTC[0])
@@ -108,11 +111,14 @@ class ConflictCategoryFailed
 			addModFilesLeftResult = @gtAnalysis.getParentsMFDiff.runOnlyModifiedAddFiles(diffsMergeScenario[0][1][0], diffsMergeScenario[1][2], diffsMergeScenario[1][1])
 			addModFilesRightResult = @gtAnalysis.getParentsMFDiff.runOnlyModifiedAddFiles(diffsMergeScenario[0][3][0], diffsMergeScenario[1][3], diffsMergeScenario[1][1])
 			coverageAnalysis = @testCaseCoverge.runTestCase(filesInfo[0], filesInfo[1], sha)
-			result = @tcAnalyzer.runTCAnalysis(coverageAnalysis, addModFilesLeftResult, addModFilesRightResult)
+			resultCoverageAnalysis = @tcAnalyzer.runTCAnalysis(coverageAnalysis, addModFilesLeftResult, addModFilesRightResult)
+			changesSameMethod.push(resultCoverageAnalysis[0])
+			dependentChangesParentOne.push(resultCoverageAnalysis[1])
+			dependentChangesParentTwo.push(resultCoverageAnalysis[2])
 		end
 		#ainda tenho o caminho em diffMergeScenario[1]
 		@gtAnalysis.deleteProjectCopies(diffsMergeScenario[1])
-		return newTestFileArray, newTestCaseArray, updateTestArray
+		return newTestFileArray, newTestCaseArray, updateTestArray, changesSameMethod, dependentChangesParentOne, dependentChangesParentTwo
 	end
 
 	def getCauseByJob(log)
