@@ -26,21 +26,25 @@ class ExtractorCLI
 	def commitAndPush(commit, branch)
 		Dir.chdir getDownloadDir()
 		Dir.chdir getName()
-		head = "git rev-parse HEAD"
-		reset = "git reset --hard " + commit
-		forcePush = "git push -f origin "
-		changeOnHead = false
-		begin
-			previousHead = %x(#{head})
-			%x(#{reset})
-			currentHead = %x(#{head})
-			%x(#{forcePush})
-			if (previousHead != currentHead)
-				changeOnHead = true
+		checkTravis = %x(find -name '.travis.yml')
+		if (checkTravis != "")
+			head = "git rev-parse HEAD"
+			reset = "git reset --hard " + commit
+			forcePush = "git push -f origin "
+			changeOnHead = false
+			begin
+				previousHead = %x(#{head})
+				%x(#{reset})
+				currentHead = %x(#{head})
+				%x(#{forcePush})
+				if (previousHead != currentHead)
+					changeOnHead = true
+				end
+			rescue
+				print "IT DID NOT WORK"
 			end
-		rescue
-			print "IT DID NOT WORK"	
 		end
+
 		Dir.chdir getDownloadDir()
 		return changeOnHead
 	end
