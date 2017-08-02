@@ -126,7 +126,7 @@ class ConflictCategoryFailed
 		if (log[/Errors: [0-9]*/])
 			@failed += 1
 			result = "failed"
-		elsif (log[/#{stringBuildFail}\s*([^\n\r]*)\s*([^\n\r]*)\s*([^\n\r]*)failed/] || part[/#{stringTheCommand}("mvn|"\.\/mvnw)+(.*)failed(.*)/])
+		elsif (log[/#{stringBuildFail}\s*([^\n\r]*)\s*([^\n\r]*)\s*([^\n\r]*)failed/] || log[/#{stringTheCommand}("mvn|"\.\/mvnw)+(.*)failed(.*)/])
 			@failed += 1
 			result = "failed"
 		elsif (log[/#{stringTheCommand}("git clone |"git checkout)(.*?)failed(.*)[\n]*/])

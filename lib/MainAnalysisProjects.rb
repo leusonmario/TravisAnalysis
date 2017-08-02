@@ -100,7 +100,7 @@ class MainAnalysisProjects
 			mainGitProject = GitProject.new(project, getLocalCLone(), getLoginUser(), getPasswordUser())
 			cloneProject = BadlyMergeScenarioExtractor.new(project, "", getLocalCLone())
 			extractorCLI = ExtractorCLI.new(getLoginUser(), getPasswordUser(), getTravisToken(), "travis", getLocalCLone(), project)
-			if(mainGitProject.getProjectAvailable())
+			if(mainGitProject.getProjectAvailable() and mainGitProject.getCloneProject().checkPomFile)
 				projectName = mainGitProject.getProjectName()
 				buildTravis = BuildTravis.new(projectName, mainGitProject, getLocalCLone())
 				mainProjectAnalysisBuilt = buildTravis.runAllAnalysisBuilt(projectName, getWriteCSVAllErroredBuilds(), getWriteCSVForkBuilt(), getWriteCSVForkAll(), getWriteCSVForkInterval(), getPathGumTree(), true, cloneProject, extractorCLI)
@@ -111,6 +111,11 @@ class MainAnalysisProjects
 				if (mainProjectAnalysisBuilt != nil)
 					getWriteCSVForkBuilt().writeResultsAll(mainProjectAnalysisBuilt)
 				end
+			else
+				mainGitProject.getCloneProject().deleteProject()
+				cloneProject.getCloneProject().deleteProject()
+				extractorCLI.deleteProject()
+				print "PROJECT DOES NOT HAVE POM AVAILABLE"
 			end
 			index += 1
 		end

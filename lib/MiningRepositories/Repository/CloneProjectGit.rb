@@ -26,4 +26,18 @@ class CloneProjectGit
 		%x(rm -rf #{@nameFolder})
 	end
 
+  def checkPomFile()
+		actualPath = Dir.pwd
+		Dir.chdir @localClone
+		checkPom = %x(find -name 'pom.xml')
+		sleep 3
+		checkGradle = %x(find -name 'build.gradle')
+		Dir.chdir actualPath
+		if (checkPom != "" and checkGradle == "")
+			return true
+		else
+			return false
+		end
+	end
+
 end
