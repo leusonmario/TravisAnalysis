@@ -122,11 +122,11 @@ class ExtractorCLI
 	end
 
 	def checkStatusBuild()
-		Dir.chdir getDownloadDir()
-		Dir.chdir getName()
-		checkout = "travis show"
 		status = ""
 		begin
+			Dir.chdir getDownloadDir()
+			Dir.chdir getName()
+			checkout = "travis show"
 			historyBuild = %x(#{checkout})
 			status = historyBuild.match(/State:[\s\S]*Type/).to_s.match(/State:[\s\S]*\n/).to_s.match(/ [\s\S]*/).to_s.gsub(" ","").gsub("\n","")
 		rescue 
@@ -137,11 +137,11 @@ class ExtractorCLI
 	end
 
 	def checkIdLastBuild()
-		Dir.chdir getDownloadDir()
-		Dir.chdir getName()
-		travisShow = "travis show"
 		idBuild = ""
 		begin
+			Dir.chdir getDownloadDir()
+			Dir.chdir getName()
+			travisShow = "travis show"
 			historyBuild = %x(#{travisShow})
 			idBuild = historyBuild.match(/(Build|Job)[\s\S]*State/).to_s.match(/(Build|Job)[ 0-9\.\#]*:/).to_s.match(/#[\s\S]*:/).to_s.gsub(":","")
 		rescue 

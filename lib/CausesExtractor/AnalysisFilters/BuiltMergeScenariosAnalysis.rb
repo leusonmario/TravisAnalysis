@@ -481,7 +481,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 								end
 =begin							elsif (infoValidScenario[0] == "failed")
 								totalMSFailed += 1
-								if (verifyDateDifference(lastScenarioDateFailed, getDataMergeScenario(build.commit.sha)) and validScenarioProjectFailed < 100)
+								if (verifyDateDifference(lastScenarioDateFailed, getDataMergeScenario(mergeCommit)) and validScenarioProjectFailed < 100)
 									resultFailed = result = @gitProject.conflictScenarioFailed(mergeCommit, allBuilds)
 									isConflict = confBuild.conflictAnalysisCategories(failedConflicts, type, resultFailed[0])
 									if (isConflict and result[0])
