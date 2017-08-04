@@ -38,6 +38,9 @@ class EffortTimeExtractor
 							elsif (key == "unavailableSymbol" or key == "unavailableSymbolFile" or key == "unavailableSymbolMethod" or key=="unavailableSymbolVariable")
 								fixUnavailableSymbol = FixUnavailableSymbol.new
 								fixPatterns[index] = fixUnavailableSymbol.verfyFixPattern(value, resultRunDiff)
+							elsif (key == "unimplementedMethod")
+								fixUnimplementedMethod = FixUnimplementedMethod.new
+								fixPatterns[index] = fixUnimplementedMethod.verfyFixPattern(value, resultRunDiff)
 							end
 							index += 1
 						end
