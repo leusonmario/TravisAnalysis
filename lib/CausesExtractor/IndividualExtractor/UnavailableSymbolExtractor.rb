@@ -16,6 +16,8 @@ class UnavailableSymbolExtractor
 			if (buildLog[/\[ERROR\]?[\s\S]*cannot find symbol/] || buildLog[/\[ERROR\] [a-zA-Z0-9\/\-\.\:\[\]\,]* cannot find symbol[\n\r]+\[ERROR\]?[ \t\r\n\f]*symbol[ \t\r\n\f]*:[ \t\r\n\f]*method [a-zA-Z0-9\/\-\.\:\[\]\,\(\)]*[\n\r]+\[ERROR\]?[ \t\r\n\f]*location[ \t\r\n\f]*:[ \t\r\n\f]*class[ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,\(\)]*[\n\r]?/] || buildLog[/\[javac\] [\/a-zA-Z\_\-\.\:0-9]* cannot find symbol/])
 				if (buildLog[/error: package [a-zA-Z\.]* does not exist/])
 					return getInfoSecondCase(buildLog, completeBuildLog)
+				elsif (buildLog[/error: cannot find symbol/])
+					return getInfoThirdCase(completeBuildLog)
 				else
 					return getInfoDefaultCase(buildLog, completeBuildLog)
 				end
@@ -54,6 +56,18 @@ class UnavailableSymbolExtractor
 			filesInformation.push([classFile, methodName, callClassFile])
 		end
 		return categoryMissingSymbol, filesInformation, filesInformation.size
+	end
+
+	def getInfoThirdCase(buildLog)
+		filesInformation = []
+		classFiles = buildLog.to_enum(:scan, /\[ERROR\][a-zA-Z0-9\/\.\: \[\]\,\-]* error: cannot find symbol/).map { Regexp.last_match }
+		count = 0
+		while(count < classFiles.size)
+			classFile = classFiles[count].to_s.split(".java")[0].to_s.split('\/').last
+			filesInformation.push(classFile)
+			count += 1
+		end
+		return "unavailableSymbolFileSpecialCase", filesInformation, filesInformation.size
 	end
 
 	def getInfoSecondCase(buildLog, completeBuildLog)

@@ -31,20 +31,20 @@ class UnimplementedMethodExtractor
 			classFiles = buildLog.to_enum(:scan, /error: [a-zA-Z\/\-]* is not abstract/).map { Regexp.last_match }
 		end
 
-		interfaceFiles = buildLog.to_enum(:scan, /#{stringNoOverride} [a-zA-Z\(\)\<\>\.\,]* in [a-zA-Z\.]*[^\n]+/).map { Regexp.last_match }
-		methodInterfaces = buildLog.to_enum(:scan, /#{stringNoOverride} [a-zA-Z\(\)]* in/).map { Regexp.last_match }
+		interfaceFiles = buildLog.to_enum(:scan, /#{stringNoOverride} [0-9a-zA-Z\(\)\<\>\.\,]* in [a-zA-Z\.]*[^\n]+/).map { Regexp.last_match }
+		methodInterfaces = buildLog.to_enum(:scan, /#{stringNoOverride} [0-9a-zA-Z\(\)\.\,]* in/).map { Regexp.last_match }
 		count = 0
 		while(count < interfaceFiles.size)
 			classFile = ""
 			methodInterface = ""
-			if (buildLog.match(/\[ERROR\] [a-zA-Z\/\-]*\.java/).to_s.match(/[a-zA-Z]+\.java/)[0].to_s)
+			if (buildLog.match(/\[ERROR\] [0-9a-zA-Z\/\-]*\.java/).to_s.match(/[a-zA-Z]+\.java/)[0].to_s)
 				classFile = classFiles[count].to_s.match(/[a-zA-Z]+\.java/)[0].to_s
-			elsif (buildLog.match(/error: [a-zA-Z\/\-]* is not abstract/))
+			elsif (buildLog.match(/error: [0-9a-zA-Z\/\-]* is not abstract/))
 				classFile = classFiles[count].to_s.match(/error: [a-zA-Z\/\-]*/).gsub("error: ","")
 			end
 			interfaceFile = interfaceFiles[count].to_s.split(".").last.gsub("\r", "").to_s
-			if (methodInterfaces[count].to_s.match(/does not override abstract method( \<[a-zA-Z]*\>)+[\s\S]*\(/))
-				methodInterface = methodInterfaces[count].to_s.match(/does not override abstract method( \<[a-zA-Z]*\>)+[\s\S]*\(/).to_s.gsub(/does not override abstract method( \<[a-zA-Z]*\>)+/,"").to_s.gsub("\(","")
+			if (methodInterfaces[count].to_s.match(/does not override abstract method[\s\S]*\(/))
+				methodInterface = methodInterfaces[count].to_s.match(/does not override abstract method[\s\S]*\(/).to_s.gsub(/does not override abstract method /,"").to_s.gsub("\(","")
 			else
 				methodInterface = methodInterfaces[count].to_s.match(/[a-zA-Z\(\)]* in/).to_s.gsub(" in","").to_s
 			end
