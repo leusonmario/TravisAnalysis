@@ -477,7 +477,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 									if (stateBC.size > 1)
 										effort = effortTimeExtractor.checkFixedBuild(mergeScenario, mergeCommit, getPathProject(), pathGumTree, stateBC[3])
 									end
-									writeCSVBuilt.printConflictBuild(infoValidScenario[2], result[1], result[2], stateBC, projectNameFile, effort)
+									writeCSVBuilt.printConflictBuild(@gitProject.getBuildID(mergeScenario, allBuilds, forkAllBuilds), result[1], result[2], stateBC, projectNameFile, effort)
 								end
 =begin							elsif (infoValidScenario[0] == "failed")
 								totalMSFailed += 1

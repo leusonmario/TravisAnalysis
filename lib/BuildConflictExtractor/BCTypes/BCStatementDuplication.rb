@@ -6,9 +6,6 @@ class BCStatementDuplication
 
 	def verifyBuildConflict(baseLeft, leftResult, baseRight, rightResult, filesConflicting)
 		count = 0
-		print filesConflicting[count][0]
-		print filesConflicting[count][1]
-		print filesConflicting[count][2]
 
 		while(count < filesConflicting.size)
 			if (filesConflicting[count][1] != "method")
@@ -40,8 +37,12 @@ class BCStatementDuplication
 					end
 				end
 			else
+				begin
 				if(baseLeft[0][filesConflicting[count][0]] != nil and baseLeft[0][filesConflicting[count][0]].to_s.match(/Insert SimpleName: #{filesConflicting[count][2]}[0-9\(\)]* into [a-zA-Z]*[0-9\(\)]*/) and baseRight[0][filesConflicting[count][0]] != nil and baseRight[0][filesConflicting[count][0]].to_s.match(/Insert SimpleName: #{filesConflicting[count][2]}[0-9\(\)]* into [a-zA-Z]*[0-9\(\)]*/))
 					return true
+				end
+				rescue
+					print "EMPTY INFO FROM GUMTREE"
 				end
 			end
 			count += 1
