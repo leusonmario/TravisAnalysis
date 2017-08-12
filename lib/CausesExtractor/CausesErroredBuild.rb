@@ -10,12 +10,17 @@ class CausesErroredBuild
 		@unavailableMethod = 0
 		@unavailableFile = 0
 		@unimplementedMethod = 0
+		@alternativeStatement = 0
 		@deniedAccess = 0
 		@remoteError = 0
 		@compilerError = 0
 		@dependencyProblem = 0
 		@otherError = 0
 		@gitProblem = 0
+	end
+
+  def getAlternativeStatement()
+		@alternativeStatement
 	end
 
 	def getMethodParameterListSize()
@@ -76,6 +81,10 @@ class CausesErroredBuild
 
 	def getGitProblem()
 		@gitProblem
+	end
+
+	def setAlternativeStatement(value)
+		@alternativeStatement += value
 	end
 
 	def setMethodParameterListSize(value)

@@ -224,7 +224,17 @@ class GitProject
 		return false, buildOne, buildTwo
 	end
 
-	def conflictScenarioAll(parentsMerge, projectBuilds, projectBuildsFork)		
+	def getBuildID(sha, projectBuilds, projectBuildsFork)
+		if (projectBuilds[sha] != nil)
+			return projectBuilds[sha][1]
+		end
+		if (projectBuildsFork[sha] != nil)
+			return projectBuildsFork[sha][2]
+		end
+		return nil
+	end
+
+	def conflictScenarioAll(parentsMerge, projectBuilds, projectBuildsFork)
 		parentOne = nil
 		buildOne = nil
 		parentTwo = nil
