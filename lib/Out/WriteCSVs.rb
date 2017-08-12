@@ -142,19 +142,19 @@ class WriteCSVs
 		if (File.exists?("Errored"+projectName+".csv"))
 			CSV.open("Errored"+projectName+".csv", "a+") do |csv|
 				if (effort != nil)
-					csv << [build, buildOne, buildTwo, state[0], state[2], state[1][0], state[1][1], state[1][2], effort[0], effort[1], effort[2], effort[3], effort[4], effort[5], effort[6], effort[7]]
+					csv << [build, buildOne, buildTwo, state[0], state[2], state[1][0], state[1][1], state[1][2], state[1][3], effort[0], effort[1], effort[2], effort[3], effort[4], effort[5], effort[6], effort[7]]
 				else
-					csv << [build, buildOne, buildTwo, state[0], state[2], state[1][0], state[1][1], state[1][2], "", "", "", "", "", "", "", ""]
+					csv << [build, buildOne, buildTwo, state[0], state[2], state[1][0], state[1][1], state[1][2], state[1][3], "", "", "", "", "", "", "", ""]
 				end
 
 			end
 		else
 			CSV.open("Errored"+projectName+".csv", "ab") do |csv|
-				csv << ["BuildID", "BuildParentOne", "BuildParentTwo", "MessageState", "NumberOccurrences", "ConflictingContributions", "AllColaborationsIntgrated", "BrokenBuild", "FixBuildID", "FixStatus", "Effort", "NumberBuildsPerformed", "SameAuthor", "SameCommiter", "BestCase", "FIxPattern"]
+				csv << ["BuildID", "BuildParentOne", "BuildParentTwo", "MessageState", "NumberOccurrences", "ConflictingContributions", "AllColaborationsIntgrated", "BrokenBuild", "Dependency", "FixBuildID", "FixStatus", "Effort", "NumberBuildsPerformed", "SameAuthor", "SameCommiter", "BestCase", "FIxPattern"]
 				if (effort != nil)
-					csv << [build, buildOne, buildTwo, state[0], state[2], state[1][0], state[1][1], state[1][2], effort[0], effort[1], effort[2], effort[3], effort[4], effort[5], effort[6], effort[7]]
+					csv << [build, buildOne, buildTwo, state[0], state[2], state[1][0], state[1][1], state[1][2], state[1][3], effort[0], effort[1], effort[2], effort[3], effort[4], effort[5], effort[6], effort[7]]
 				else
-					csv << [build, buildOne, buildTwo, state[0], state[2], state[1][0], state[1][1], state[1][2], "", "", "", "", "", "", "", ""]
+					csv << [build, buildOne, buildTwo, state[0], state[2], state[1][0], state[1][1], state[1][2], state[1][3], "", "", "", "", "", "", "", ""]
 				end
 			end			
 		end

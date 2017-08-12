@@ -16,6 +16,7 @@ class ConflictCategoryErrored
 		@statementDuplicationExtractor = StatementDuplicationExtractor.new()
 		@unimplementedMethodExtractor = UnimplementedMethodExtractor.new()
 		@unavailableSymbolExtractor = UnavailableSymbolExtractor.new()
+		@alternativeStatement = AlternativeStatement.new()
 		@DependencyExtractor = DependencyExtractor.new()
 	end
 
@@ -51,6 +52,10 @@ class ConflictCategoryErrored
 		@unavailableSymbolExtractor
 	end
 
+	def getAlternativeStatement()
+		@alternativeStatement
+	end
+
 	def getTotal()
 		return getCausesErroredBuild.getTotal()
 	end
@@ -63,6 +68,7 @@ class ConflictCategoryErrored
 		localDependencyProblem = 0 
 		localUnimplementedMethod = 0
 		localOtherCase = 0
+		localAlternativeStatement = 0
 		
 		causesFilesConflicts = CausesFilesConflicting.new()
 
@@ -74,21 +80,22 @@ class ConflictCategoryErrored
 			else
 				body = log
 			end
-			otherCase = getCauseByBuild(body, log, causesFilesConflicts, localUnavailableSymbol, localMethodUpdate, localMalformedExp, localDuplicateStatement, localDependencyProblem, localUnimplementedMethod)
+			otherCase = getCauseByBuild(body, log, causesFilesConflicts, localUnavailableSymbol, localMethodUpdate, localMalformedExp, localDuplicateStatement, localDependencyProblem, localUnimplementedMethod, localAlternativeStatement)
 			localUnavailableSymbol = otherCase[1]
 			localMethodUpdate = otherCase[2]
 			localMalformedExp = otherCase[3]
 			localDuplicateStatement = otherCase[4]
 			localDependencyProblem = otherCase[5]
 			localUnimplementedMethod = otherCase[6]
-			causesFilesConflicts = otherCase[7]
+			localAlternativeStatement = otherCase[7]
+			causesFilesConflicts = otherCase[8]
 			if (otherCase[0])
 				localOtherCase += 1
 			end
 		end
 
 		if (mergeScenario)
-			return causesFilesConflicts.getCausesConflict(), getFinalStatus(pathGumTree, pathProject, sha, causesFilesConflicts, localMethodUpdate, localUnavailableSymbol, localDuplicateStatement, localUnimplementedMethod, localDependencyProblem, localMalformedExp, cloneProject), causesFilesConflicts.getCausesNumber()
+			return causesFilesConflicts.getCausesConflict(), getFinalStatus(pathGumTree, pathProject, sha, causesFilesConflicts, localMethodUpdate, localUnavailableSymbol, localDuplicateStatement, localUnimplementedMethod, localDependencyProblem, localMalformedExp, localAlternativeStatement, cloneProject), causesFilesConflicts.getCausesNumber()
 		else
 			return causesFilesConflicts.getCausesConflict()
 		end
@@ -102,6 +109,7 @@ class ConflictCategoryErrored
 		localDependencyProblem = 0 
 		localUnimplementedMethod = 0
 		localOtherCase = 0
+		localAlternativeStatement = 0
 		
 		indexJob = 0
 		causesFilesConflicts = CausesFilesConflicting.new()
@@ -117,14 +125,15 @@ class ConflictCategoryErrored
 							else
 								body = bodyJob
 							end
-							otherCase = getCauseByBuild(body, bodyJob, causesFilesConflicts, localUnavailableSymbol, localMethodUpdate, localMalformedExp, localDuplicateStatement, localDependencyProblem, localUnimplementedMethod)
+							otherCase = getCauseByBuild(body, bodyJob, causesFilesConflicts, localUnavailableSymbol, localMethodUpdate, localMalformedExp, localDuplicateStatement, localDependencyProblem, localUnimplementedMethod, localAlternativeStatement)
 							localUnavailableSymbol = otherCase[1]
 							localMethodUpdate = otherCase[2]
 							localMalformedExp = otherCase[3]
 							localDuplicateStatement = otherCase[4]
 							localDependencyProblem = otherCase[5]
 							localUnimplementedMethod = otherCase[6]
-							causesFilesConflicts = otherCase[7]
+							localAlternativeStatement = otherCase[7]
+							causesFilesConflicts = otherCase[8]
 							if (otherCase[0])
 								localOtherCase += 1
 							end
@@ -135,13 +144,13 @@ class ConflictCategoryErrored
 			indexJob += 1
 		end
 		if (mergeScenario)
-			return causesFilesConflicts.getCausesConflict(), getFinalStatus(pathGumTree, pathProject, build.commit.sha, causesFilesConflicts, localMethodUpdate, localUnavailableSymbol, localDuplicateStatement, localUnimplementedMethod, localDependencyProblem, localMalformedExp, cloneProject), causesFilesConflicts.getCausesNumber(), causesFilesConflicts
+			return causesFilesConflicts.getCausesConflict(), getFinalStatus(pathGumTree, pathProject, build.commit.sha, causesFilesConflicts, localMethodUpdate, localUnavailableSymbol, localDuplicateStatement, localUnimplementedMethod, localDependencyProblem, localMalformedExp, localAlternativeStatement, cloneProject), causesFilesConflicts.getCausesNumber(), causesFilesConflicts
 		else
 			return causesFilesConflicts.getCausesConflict()
 		end
 	end
 
-	def getCauseByBuild(body, bodyJob, causesFilesConflicts, localUnavailableSymbol, localMethodUpdate, localMalformedExp, localDuplicateStatement, localDependencyProblem, localUnimplementedMethod)
+	def getCauseByBuild(body, bodyJob, causesFilesConflicts, localUnavailableSymbol, localMethodUpdate, localMalformedExp, localDuplicateStatement, localDependencyProblem, localUnimplementedMethod, localAlternativeStatemnt)
 		otherCase = true
 
 		stringCompError = " COMPILATION ERROR :"
@@ -236,6 +245,14 @@ class ConflictCategoryErrored
 			causesFilesConflicts.insertNewCauseOne(extraction[0], extraction[1])
 		end
 
+		if (body[/\[INFO\][\s\S]* Alternatives in a multi-catch statement cannot be related by subclassing/])
+			otherCase = false
+			localAlternativeStatemnt = body.scan(/\[INFO\][\s\S]* Alternatives in a multi-catch statement cannot be related by subclassing/)
+			extraction = getAlternativeStatement().extractionFilesInfo(body)
+			getCausesErroredBuild.setAlternativeStatement(extraction[2])
+			causesFilesConflicts.insertNewCauseOne(extraction[0], extraction[1])
+		end
+
 		if (body[/\[javac\] [\/a-zA-Z\_\-\.\:0-9]* cannot find symbol[\s\S]* \[javac\] (location:)+/] || body[/\[ERROR\]?[\s\S]*cannot find symbol/] || body[/\[ERROR\] [a-zA-Z0-9\/\-\.\:\[\]\,]* cannot find symbol[\n\r]+\[ERROR\]?[ \t\r\n\f]*symbol[ \t\r\n\f]*:[ \t\r\n\f]*method [a-zA-Z0-9\/\-\.\:\[\]\,\(\)]*[\n\r]+\[ERROR\]?[ \t\r\n\f]*location[ \t\r\n\f]*:[ \t\r\n\f]*class[ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,\(\)]*[\n\r]?/] || body[/\[#{stringErro}\][\s\S]*#{stringNotFindType}/] || body[/\[#{stringErro}\][\s\S]*#{stringNotMember}/])
 			otherCase = false
 			localUnavailableSymbol = body.scan(/\[javac\] [\/a-zA-Z\_\-\.\:0-9]* cannot find symbol[\s\S]* \[javac\] (location:)+|\[ERROR\] [a-zA-Z0-9\/\-\.\:\[\]\,]* cannot find symbol[\n\r]+\[ERROR\]?[ \t\r\n\f]*symbol[ \t\r\n\f]*:[ \t\r\n\f]*method [a-zA-Z0-9\/\-\.\:\[\]\,\(\)]*[\n\r]+\[ERROR\]?[ \t\r\n\f]*location[ \t\r\n\f]*:[ \t\r\n\f]*class[ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,\(\)]*[\n\r]?|\[#{stringErro}\][\s\S]*#{stringNotFindType}|\[#{stringErro}\][\s\S]*#{stringNotMember}|\[ERROR\]?[\s\S]*cannot find symbol/).size
@@ -286,22 +303,22 @@ class ConflictCategoryErrored
 			causesFilesConflicts.insertNewCauseOne("gitProblem",[])
 			getCausesErroredBuild.setGitProblem(body.scan(/#{stringTheCommand}(#{stringGitClone}|#{stringGitCheckout})(.*?)#{stringFailed}(.*)[\n]*/).size)
 		end
-		if (body[/The job exceeded the maximum time limit for jobs, and has been terminated/] || body[/#{stringServiceUnavailable}/] || body[/No output has been received in the last [0-9]*/] || body[/[\s\S]*#{stringOverflowData}[\s\S]*/] || body[/(y|Y)our test run exceeded 50(.0)? minutes/] || body[/error: device not found/] || body[/ValueError: No JSON object could be decoded/])
+		if (body[/The job exceeded the maximum time limit for jobs, and has been terminated/] || body[/#{stringServiceUnavailable}/] || body[/No output has been received in the last [0-9]*/] || body[/[\s\S]*#{stringOverflowData}[\s\S]*/] || body[/(y|Y)our test run exceeded 50(.0)? minutes/] || body[/error: device not found/] || body[/ValueError: No JSON object could be decoded/] || body[/The job has been terminated/])
 			otherCase = false
 			causesFilesConflicts.insertNewCauseOne("remoteError",[])
-			getCausesErroredBuild.setRemoteError(body.scan(/The job exceeded the maximum time limit for jobs, and has been terminated|No output has been received in the last [0-9]*|#{stringServiceUnavailable}|(y|Y)our test run exceeded 50(.0)? minutes|error: device not found|ValueError: No JSON object could be decoded|#{stringOverflowData}/).size)
+			getCausesErroredBuild.setRemoteError(body.scan(/The job exceeded the maximum time limit for jobs, and has been terminated|No output has been received in the last [0-9]*|#{stringServiceUnavailable}|(y|Y)our test run exceeded 50(.0)? minutes|error: device not found|ValueError: No JSON object could be decoded|#{stringOverflowData}|The job has been terminated/).size)
 		end
 
 		if (otherCase)
 			getCausesErroredBuild.setOtherError(1)
 		end
 
-		return otherCase, localUnavailableSymbol, localMethodUpdate, localMalformedExp, localDuplicateStatement, localDependencyProblem, localUnimplementedMethod, causesFilesConflicts
+		return otherCase, localUnavailableSymbol, localMethodUpdate, localMalformedExp, localDuplicateStatement, localDependencyProblem, localUnimplementedMethod, localAlternativeStatemnt, causesFilesConflicts
 	end
 
-	def getFinalStatus(pathGumTree, pathProject, sha, conflictCauses, localMethodUpdate, localUnavailableSymbol, localDuplicateStatement, localUnimplementedMethod, localDependencyProblem, localMalformedExp, cloneProject)
+	def getFinalStatus(pathGumTree, pathProject, sha, conflictCauses, localMethodUpdate, localUnavailableSymbol, localDuplicateStatement, localUnimplementedMethod, localDependencyProblem, localMalformedExp, localAlternativeStatement, cloneProject)
 		gtAnalysis = GTAnalysis.new(pathGumTree, @projectName, getPathLocalClone())
-		if(localMethodUpdate > 0 || localUnavailableSymbol > 0 || localDuplicateStatement > 0 || localUnimplementedMethod > 0 || localDependencyProblem > 0 || localMalformedExp > 0)
+		if(localMethodUpdate > 0 || localUnavailableSymbol > 0 || localDuplicateStatement > 0 || localUnimplementedMethod > 0 || localDependencyProblem > 0 || localMalformedExp > 0 || localAlternativeStatement  > 0)
 			if(localUnimplementedMethod > 0 or localUnavailableSymbol > 0 or localDuplicateStatement > 0 or localMethodUpdate > 0 or localDependencyProblem > 0 || localMalformedExp > 0)
 				if (conflictCauses.getFilesConflict().size < 1)
 					return false, nil

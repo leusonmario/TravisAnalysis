@@ -73,19 +73,19 @@ class GTAnalysis
 	def gumTreeDiffByBranch(mergeCommit, result, left, right, base, conflictCauses, pathProject, parents, cloneProject)
 		statusModified = cloneProject.verifyBadlyMergeScenario(parents[0], parents[1], mergeCommit)
 		conflictingContributions = []
-		if (statusModified == true)
-			conflictCauses.getCausesConflict().each do |conflictCause|
-				conflictingContributions.push(true)
-			end	
-			return conflictingContributions, true, true
-		end
+		#if (statusModified == true)
+		#	conflictCauses.getCausesConflict().each do |conflictCause|
+		#		conflictingContributions.push(true)
+		#	end
+		#	return conflictingContributions, true, true
+		#end
 
 		baseLeft = @parentMSDiff.runAllDiff(base, left)
 		baseRight = @parentMSDiff.runAllDiff(base, right)
 		leftResult = @parentMSDiff.runAllDiff(left, result)
 		rightResult = @parentMSDiff.runAllDiff(right, result)
 		# passar como parametro o caminho dos diretorios (base, left, right, result). Por enquanto apenas o left e right
-		return verifyModificationStatus(mergeCommit, baseLeft, leftResult, baseRight, rightResult, conflictCauses, left, right, pathProject, parents, cloneProject)
+		return verifyModificationStatus(mergeCommit, baseLeft, leftResult, baseRight, rightResult, conflictCauses, left, right, pathProject, parents, cloneProject, statusModified)
 	end
 
 	def gumTreeDiffTCByBranch(mergeCommit, result, left, right, base, pathProject, parents, cloneProject)
@@ -112,71 +112,132 @@ class GTAnalysis
 		end
 	end
 
-	def verifyModificationStatus(mergeCommit, baseLeft, leftResult, baseRight, rightResult, conflictCauses, leftPath, rightPath, pathProject, parents, cloneProject)
+	def verifyModificationStatus(mergeCommit, baseLeft, leftResult, baseRight, rightResult, conflictCauses, leftPath, rightPath, pathProject, parents, cloneProject, contributionsState)
 		conflictingContributions = []
-		statusModified = verifyModifiedFile(baseLeft[0], leftResult[0], baseRight[0], rightResult[0])
-		statusAdded = verifyAddedDeletedFile(baseLeft[1], leftResult[1], baseRight[1], rightResult[1])
-		statusDeleted = verifyAddedDeletedFile(baseLeft[2], leftResult[2], baseRight[2], rightResult[2])
-		allIntegratedContributions = true
-		if (statusModified and statusAdded and statusDeleted)
-			conflictCauses.getCausesConflict().each do |conflictCause|
-				conflictingContributions.push(true)
-			end	
-			return conflictingContributions, true, true
-		else
-			allIntegratedContributions = false
+		allIntegratedContributions = false
+		bcDependency = []
+		if (!contributionsState)
+			statusModified = verifyModifiedFile(baseLeft[0], leftResult[0], baseRight[0], rightResult[0])
+			statusAdded = verifyAddedDeletedFile(baseLeft[1], leftResult[1], baseRight[1], rightResult[1])
+			statusDeleted = verifyAddedDeletedFile(baseLeft[2], leftResult[2], baseRight[2], rightResult[2])
+
+			if (!statusModified or !statusAdded or !statusDeleted)
+				#	conflictCauses.getCausesConflict().each do |conflictCause|
+				#		conflictingContributions.push(true)
+				#	end
+				#	return conflictingContributions, true, true
+				#else
+				allIntegratedContributions = false
+			end
 		end
 
 		brokenBuild = true
 		indexValue = 0
 		conflictCauses.getCausesConflict().each do |conflictCause|
 			if(conflictCause == "unimplementedMethod" || conflictCause == "unimplementedMethodSuperType")
-				bcUnimplementedMethod = BCUnimplementedMethod.new()
-				if (bcUnimplementedMethod.verifyBuildConflict(baseLeft[0], leftResult[0], baseRight[0], rightResult[0], conflictCauses.getFilesConflict()[indexValue]) == false)
-					conflictingContributions[indexValue] = false
-				else
+				bcDependency[indexValue] = false
+				if (allIntegratedContributions)
 					conflictingContributions[indexValue] = true
+				else
+					bcUnimplementedMethod = BCUnimplementedMethod.new()
+					if (bcUnimplementedMethod.verifyBuildConflict(baseLeft[0], leftResult[0], baseRight[0], rightResult[0], conflictCauses.getFilesConflict()[indexValue]) == false)
+						conflictingContributions[indexValue] = false
+						bcDependency[indexValue] = false
+					else
+						conflictingContributions[indexValue] = true
+						bcDependency[indexValue] = false
+					end
 				end
 			elsif (conflictCause == "unavailableSymbolMethod" || conflictCause == "unavailableSymbolVariable" || conflictCause == "unavailableSymbolFile")
 				bcUnavailableSymbol = BCUnavailableSymbol.new()
+				bcMethodUpdate = BCMethodUpdate.new(getGumTreePath())
 				if (bcUnavailableSymbol.verifyBuildConflict(baseLeft, leftResult, baseRight, rightResult, conflictCauses.getFilesConflict()[indexValue], leftPath, rightPath) == false)
-					conflictingContributions[indexValue] = false
+					if (conflictCause == "unavailableSymbolFile" and bcUnavailableSymbol.verifyBCDependency(leftPath, rightPath, conflictCauses.getFilesConflict()[indexValue], baseLeft[0], baseRight[0], leftResult[0], rightResult[0]))
+						conflictingContributions[indexValue] = true
+						bcDependency[indexValue] = true
+					elsif (conflictCause == "unavailableSymbolMethod" and bcUnavailableSymbol.verifyBCDependencyMethod(leftPath, rightPath, conflictCauses.getFilesConflict()[indexValue], bcMethodUpdate))
+						conflictingContributions[indexValue] = true
+						bcDependency[indexValue] = true
+					else
+						conflictingContributions[indexValue] = false
+						bcDependency[indexValue] = false
+					end
+
+					#brokenBuild = false
 				else
 					conflictingContributions[indexValue] = true
+					bcDependency[indexValue] = false
 				end
 			elsif (conflictCause == "statementDuplication")
-				bcStatementDuplication = BCStatementDuplication.new()
-				if (bcStatementDuplication.verifyBuildConflict(baseLeft, leftResult, baseRight, rightResult, conflictCauses.getFilesConflict()[indexValue]) == false)
-					conflictingContributions[indexValue] = false
-				else
+				bcDependency[indexValue] = false
+				if (allIntegratedContributions)
 					conflictingContributions[indexValue] = true
+				else
+					bcStatementDuplication = BCStatementDuplication.new()
+					if (bcStatementDuplication.verifyBuildConflict(baseLeft, leftResult, baseRight, rightResult, conflictCauses.getFilesConflict()[indexValue]) == false)
+						conflictingContributions[indexValue] = false
+					else
+						conflictingContributions[indexValue] = true
+					end
 				end
 			elsif (conflictCause == "methodParameterListSize")
 				bcMethodUpdate = BCMethodUpdate.new(getGumTreePath())
 				if (bcMethodUpdate.verifyBuildConflict(leftPath, rightPath, conflictCauses.getFilesConflict()[indexValue]) == false)
-					conflictingContributions[indexValue] = false
+					if (bcMethodUpdate.verifyBCDependency(leftPath, rightPath, conflictCauses.getFilesConflict()[indexValue]) == false)
+						conflictingContributions[indexValue] = false
+						bcDependency[indexValue] = false
+					else
+						conflictingContributions[indexValue] = true
+						bcDependency[indexValue] = true
+					end
 				else
 					conflictingContributions[indexValue] = true
+					bcDependency[indexValue] = false
 				end
 			elsif (conflictCause == "dependencyProblem")
-				bcDependency = BCDependency.new()
-				if (bcDependency.verifyBuildConflict(baseLeft[0], leftResult[0], baseRight[0], rightResult[0], conflictCauses.getFilesConflict()[indexValue]) == true)
+				bcDependencyAnalisis = BCDependency.new()
+				if (bcDependencyAnalisis.verifyBuildConflict(baseLeft[0], leftResult[0], baseRight[0], rightResult[0], conflictCauses.getFilesConflict()[indexValue]) == true)
 					conflictingContributions[indexValue] = false
+					bcDependency[indexValue] = false
 				else
 					conflictingContributions[indexValue] = true
+					bcDependency[indexValue] = true
+				end
+			elsif (conflictCause == "alternativeStatment")
+				bcDependency[indexValue] = false
+				if (allIntegratedContributions)
+					conflictingContributions[indexValue] = true
+				else
+					bcAlternative = BCAlternativeStatement.new()
+					if (bcAlternative.verifyBuildConflict(baseLeft[0], leftResult[0], baseRight[0], rightResult[0], conflictCauses.getFilesConflict()[indexValue]) == false)
+						conflictingContributions[indexValue] = false
+					else
+						conflictingContributions[indexValue] = true
+					end
 				end
 			elsif (conflictCause == "malformedExpression")
-				conflictingContributions[indexValue] = false
+				bcDependency[indexValue] = false
+				if (allIntegratedContributions)
+					conflictingContributions = true
+				else
+					conflictingContributions[indexValue] = false
+				end
 			elsif (conflictCause == "incompatibleTypes")
-				conflictingContributions[indexValue] = false
-				brokenBuild = false
+				bcDependency[indexValue] = false
+				if (allIntegratedContributions)
+					conflictingContributions[indexValue] = true
+				else
+					conflictingContributions[indexValue] = false
+					brokenBuild = false
+				end
 			else
+				bcDependency[indexValue] = false
 				conflictingContributions[indexValue] = true
 			end
 			indexValue += 1
 		end
 		
-		return conflictingContributions, allIntegratedContributions, brokenBuild
+		return conflictingContributions, allIntegratedContributions, brokenBuild, bcDependency
 
 	end
 
