@@ -7,14 +7,20 @@ class FixUnavailableSymbol
     index = 0
     fixPattern = []
     filesConflictsInfo.each do |fileConflictBuild|
-      if (diffErrorFix[0][fileConflictBuild[0]].to_s.match(/Insert QualifiedName: [\s\S]*#{fileConflictBuild[1]}[\s\S]* into ImportDeclaration/) or diffErrorFix[0][fileConflictBuild[0]].to_s.match(/Update QualifiedName: [a-zA-Z0-9\.\(\) ]*\.#{fileConflictBuild[1]}/))
+      if (diffErrorFix[0].size == 1 and diffErrorFix[0]['pom.xml'] != nil )
+        fixPattern[index] = "DEPENDENCY-CHANGE"
+      elsif (diffErrorFix[0][fileConflictBuild[0]].to_s.match(/Insert SimpleName: [a-zA-Z0-9]*#{fileConflictBuild[1]}[\(\)0-9]* into MethodDeclaration/))
+        fixPattern[index] = "REINTRODUCE-MISSING-METHOD"
+      elsif (diffErrorFix[0][fileConflictBuild[0]].to_s.match(/Insert QualifiedName: [\s\S]*#{fileConflictBuild[1]}[\s\S]* into ImportDeclaration/) or diffErrorFix[0][fileConflictBuild[0]].to_s.match(/Update QualifiedName: [a-zA-Z0-9\.\(\) ]*\.#{fileConflictBuild[1]}/) or diffErrorFix[0][fileConflictBuild[0]].to_s.match(/Update QualifiedName: [a-zA-Z0-9\.\(\) ]*/))
         fixPattern[index] = "IMPORT-UPDATE"
-      elsif (diffErrorFix[0][fileConflictBuild[0]].to_s.match(/Delete QualifiedName: [\s\S]*#{fileConflictBuild[1]}/))
+      elsif (diffErrorFix[0][fileConflictBuild[0]].to_s.match(/Delete (QualifiedName:|SimpleName:SimpleType:) [\s\S]*#{fileConflictBuild[1]}/))
         fixPattern[index] = "DELETE-IMPORT"
       elsif (diffErrorFix[0][fileConflictBuild[0]].to_s.match(/Update SimpleName: [\s\S]*#{fileConflictBuild[1]}[\s\S]* to [\s\S]*\n/) or diffErrorFix[0][fileConflictBuild[2]].to_s.match(/Update SimpleName: [\s\S]*#{fileConflictBuild[1]}[\s\S]* to [\s\S]*\n/))
           fixPattern[index] = "METHOD-NAME-UPDATE"
-      elsif (diffErrorFix[0][fileConflictBuild[2]].to_s.match(/Delete QualifiedName: [\s\S]*#{fileConflictBuild[1]}(\n)?/))
+      elsif (diffErrorFix[0][fileConflictBuild[2]].to_s.match(/Delete QualifiedName: [\s\S]*#{fileConflictBuild[1]}(\n)?/) or diffErrorFix[0][fileConflictBuild[2]].to_s.match(/Delete SimpleName: #{fileConflictBuild[1]}[\(\)0-9]*/))
         fixPattern[index] = "MISSING-ELEMENT-REMOVAL"
+      elsif (diffErrorFix[0][fileConflictBuild[2]].to_s.match(/Update QualifiedName: [a-zA-Z0-9\.\_]*#{fileConflictBuild[1]}[\(\)0-9]* to [a-zA-Z0-9\.\_]*/))
+          fixPattern[index] = "UPDATE-VARIABLE"
       else
         fixPattern[index] = "OTHER"
       end

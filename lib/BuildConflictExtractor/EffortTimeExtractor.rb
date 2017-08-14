@@ -41,6 +41,9 @@ class EffortTimeExtractor
 							elsif (key == "unimplementedMethod")
 								fixUnimplementedMethod = FixUnimplementedMethod.new
 								fixPatterns[index] = fixUnimplementedMethod.verfyFixPattern(value, resultRunDiff)
+							elsif (key == "methodParameterListSize")
+								fixMethodUpdate = FixMethodUpdate.new
+								fixPatterns[index] = fixMethodUpdate.verifyFixPattern(value, resultRunDiff)
 							end
 							index += 1
 						end
