@@ -112,10 +112,14 @@ class MainAnalysisProjects
 					getWriteCSVForkBuilt().writeResultsAll(mainProjectAnalysisBuilt)
 				end
 			else
-				mainGitProject.getCloneProject().deleteProject()
-				cloneProject.getCloneProject().deleteProject()
-				extractorCLI.deleteProject()
-				print "PROJECT DOES NOT HAVE POM AVAILABLE"
+				begin
+					mainGitProject.getCloneProject().deleteProject()
+					cloneProject.getCloneProject().deleteProject()
+					extractorCLI.deleteProject()
+					print "PROJECT DOES NOT HAVE POM AVAILABLE"
+				rescue
+					print "NOT POSSIBLE TO DELETE FILES \n"
+				end
 			end
 			index += 1
 		end
