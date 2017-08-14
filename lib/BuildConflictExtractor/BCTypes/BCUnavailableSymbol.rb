@@ -49,20 +49,21 @@ class BCUnavailableSymbol
 		return false
 	end
 
-  def verifyBCDependency(pathLeft, pathRight, filesConflicting, baseLeft, baseRight, leftResult, rightResult)
+	def verifyBCDependency(pathLeft, pathRight, filesConflicting, baseLeft, baseRight, leftResult, rightResult)
+		#verificando se import feito por um parent foi removido pelo outro
 		count = 0
 		begin
 			while(count < filesConflicting.size)
 				if(leftResult[filesConflicting[count][0]] != nil and leftResult[filesConflicting[count][0]].to_s.match(/(Delete|Update) (SimpleName|QualifiedName): [a-zA-Z\.]*?#{filesConflicting[count][1]}[\n\r]?/) and rightResult[filesConflicting[count][0]] != nil and rightResult[filesConflicting[count][0]].to_s.match(/(Delete|Update) (SimpleName|QualifiedName): [a-zA-Z\.]*?#{filesConflicting[count][1]}[\n\r]?/))
 					return false
 				end
-				if((baseLeft[filesConflicting[count][0]] != nil and baseLeft[filesConflicting[count][0]].to_s.match(/(Insert|Update) (ImportDeclaration\([0-9]*\)|QualifiedName:) [a-zA-Z0-9\.]*#{filesConflicting[count][1]}[\n\r]?/)) and (rightResult[filesConflicting[count][0]] == nil or !rightResult[filesConflicting[count][0]].to_s.match(/(Delete|Update) (ImportDeclaration|QualifiedName:) [a-zA-Z0-9\.]*#{filesConflicting[count][1]}[\n\r]?/)))
+				if((baseLeft[filesConflicting[count][0]] != nil and baseLeft[filesConflicting[count][0]].to_s.match(/(Insert|Update) (ImportDeclaration\([0-9]*\)|QualifiedName:) [a-zA-Z0-9\.]*#{filesConflicting[count][1]}[\n\r]?/)) and (rightResult[filesConflicting[count][0]] != nil and rightResult[filesConflicting[count][0]].to_s.match(/(Delete|Update) (ImportDeclaration|QualifiedName:) [a-zA-Z0-9\.]*#{filesConflicting[count][1]}[\n\r]?/)))
 					return false
 				end
-				if((baseRight[filesConflicting[count][0]] != nil and baseRight[filesConflicting[count][0]].to_s.match(/(Insert|Update) (ImportDeclaration\([0-9]*\)|QualifiedName:) [a-zA-Z0-9\.]*#{filesConflicting[count][1]}[\n\r]?/)) and (leftResult[filesConflicting[count][0]] == nil or !leftResult[filesConflicting[count][0]].to_s.match(/(Delete|Update) (ImportDeclaration|QualifiedName:) [a-zA-Z0-9\.]*#{filesConflicting[count][1]}[\n\r]?/)))
+				if((baseRight[filesConflicting[count][0]] != nil and baseRight[filesConflicting[count][0]].to_s.match(/(Insert|Update) (ImportDeclaration\([0-9]*\)|QualifiedName:) [a-zA-Z0-9\.]*#{filesConflicting[count][1]}[\n\r]?/)) and (leftResult[filesConflicting[count][0]] != nil and leftResult[filesConflicting[count][0]].to_s.match(/(Delete|Update) (ImportDeclaration|QualifiedName:) [a-zA-Z0-9\.]*#{filesConflicting[count][1]}[\n\r]?/)))
 					return false
 				end
-				if(leftResult[filesConflicting[count][0]].to_s.match(/(Delete|Update) (ImportDeclaration\([0-9]*\)|QualifiedName:) [a-zA-Z0-9\.]*#{filesConflicting[count][1]}[\n\r]?/) or rightResult[filesConflicting[count][0]].to_s.match(/(Delete|Update) (ImportDeclaration|QualifiedName:) [a-zA-Z0-9\.]*#{filesConflicting[count][1]}[\n\r]?/))
+				if((leftResult[filesConflicting[count][0]].to_s.match(/(Delete|Update) (ImportDeclaration\([0-9]*\)|QualifiedName:) [a-zA-Z0-9\.]*#{filesConflicting[count][1]}[\n\r]?/) or rightResult[filesConflicting[count][0]].to_s.match(/(Delete|Update) (ImportDeclaration|QualifiedName:) [a-zA-Z0-9\.]*#{filesConflicting[count][1]}[\n\r]?/)) and (!baseLeft[filesConflicting[count][0]].to_s.match(/(Insert|Update) (ImportDeclaration\([0-9]*\)|QualifiedName:) [a-zA-Z0-9\.]*#{filesConflicting[count][1]}[\n\r]?/) or !baseRight[filesConflicting[count][0]].to_s.match(/(Insert|Update) (ImportDeclaration\([0-9]*\)|QualifiedName:) [a-zA-Z0-9\.]*#{filesConflicting[count][1]}[\n\r]?/)))
 					return false
 				end
 				count += 1
@@ -77,12 +78,14 @@ class BCUnavailableSymbol
 			pathFileLeft = %x(find -name #{filesConflicting[count][1]}.java)
 			Dir.chdir pathRight
 			pathFileRight = %x(find -name #{filesConflicting[count][1]}.java})
-			if (pathFileLeft == "" or pathFileRight == "")
-				return true
+			if (pathFileLeft != "" or pathFileRight != "")
+				#if (pathFileLeft == "" or pathFileRight == "")
+				#return true
+				return false
 			end
 			count += 1
 		end
-		return false
+		return true
 	end
 
 	def verifyBCDependencyMethod(pathLeft, pathRight, filesConflicting, bcMethodUpdate)

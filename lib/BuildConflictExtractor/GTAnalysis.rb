@@ -73,12 +73,6 @@ class GTAnalysis
 	def gumTreeDiffByBranch(mergeCommit, result, left, right, base, conflictCauses, pathProject, parents, cloneProject)
 		statusModified = cloneProject.verifyBadlyMergeScenario(parents[0], parents[1], mergeCommit)
 		conflictingContributions = []
-		#if (statusModified == true)
-		#	conflictCauses.getCausesConflict().each do |conflictCause|
-		#		conflictingContributions.push(true)
-		#	end
-		#	return conflictingContributions, true, true
-		#end
 
 		baseLeft = @parentMSDiff.runAllDiff(base, left)
 		baseRight = @parentMSDiff.runAllDiff(base, right)
@@ -114,7 +108,7 @@ class GTAnalysis
 
 	def verifyModificationStatus(mergeCommit, baseLeft, leftResult, baseRight, rightResult, conflictCauses, leftPath, rightPath, pathProject, parents, cloneProject, contributionsState)
 		conflictingContributions = []
-		allIntegratedContributions = false
+		allIntegratedContributions = true
 		bcDependency = []
 		if (!contributionsState)
 			statusModified = verifyModifiedFile(baseLeft[0], leftResult[0], baseRight[0], rightResult[0])
@@ -122,11 +116,6 @@ class GTAnalysis
 			statusDeleted = verifyAddedDeletedFile(baseLeft[2], leftResult[2], baseRight[2], rightResult[2])
 
 			if (!statusModified or !statusAdded or !statusDeleted)
-				#	conflictCauses.getCausesConflict().each do |conflictCause|
-				#		conflictingContributions.push(true)
-				#	end
-				#	return conflictingContributions, true, true
-				#else
 				allIntegratedContributions = false
 			end
 		end
@@ -162,8 +151,6 @@ class GTAnalysis
 						conflictingContributions[indexValue] = false
 						bcDependency[indexValue] = false
 					end
-
-					#brokenBuild = false
 				else
 					conflictingContributions[indexValue] = true
 					bcDependency[indexValue] = false
