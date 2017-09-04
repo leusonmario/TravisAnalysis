@@ -49,6 +49,42 @@ class ExtractorCLI
 		return changeOnHead
 	end
 
+	def commitAndPushRebuiltMergeScenario(mergeCommit, leftParent, rightParent)
+		Dir.chdir getDownloadDir()
+		Dir.chdir getName()
+		print Dir.pwd
+		checkTravis = %x(find -name '.travis.yml')
+		mergeResult = false
+		if (checkTravis != "")
+			mainBranch =  %x(git remote show origin).match(/HEAD branch: [\s\S]*  Remote branches/).to_s.match(/HEAD branch: [\s\S]*(\n)/).to_s.gsub("HEAD branch: ","").gsub("\n","")
+			%x(git checkout #{mainBranch})
+			%x(git clean -f)
+			%x(git checkout -b leftParent #{leftParent})
+			%x(git checkout #{mainBranch})
+			%x(git checkout -b rightParent #{rightParent})
+			merge = %x(git merge leftParent --no-edit)
+			if (!merge.match(/Automatic merge failed; fix conflicts and then commit the result/) and !merge.match(/not something we can merge/) and merge != "")
+				%x(git commit -a -m "Rebuilt : #{mergeCommit}")
+				%x(git push origin)
+				mergeResult = true
+			else
+				if (merge.match(/not something we can merge/))
+					print "NO REFERENCE AVAILABLE\n"
+				elsif (merge.match(/Automatic merge failed; fix conflicts and then commit the result/))
+					print "UNRESOVABLE CONFLICT"
+				end
+				%x(git reset --merge)
+			end
+			%x(git checkout -f #{mainBranch})
+			%x(git branch -D rightParent)
+			%x(git checkout -f #{mainBranch})
+			%x(git branch -D leftParent)
+		end
+
+		Dir.chdir getDownloadDir()
+		return mergeResult
+	end
+
 	def setName()
 		parts = @originalRepo.split("/")
 		@name = parts[1]

@@ -86,10 +86,23 @@ class GitProject
 		@mergeScenarios = Array.new
 		commitTravisInput = getDateFirstBuild()
 		if (commitTravisInput != nil)
-			merges = %x(git log --pretty=format:'%H' --merges --since="#{commitTravisInput}")
-			merges.each_line do |mergeScenario|
-				@mergeScenarios.push(mergeScenario.gsub("\n",""))
+			listRemoteBranches = %x(git branch -r)
+			mainBranch =  %x(git remote show origin).match(/HEAD branch: [\s\S]*  Remote branches/).to_s.match(/HEAD branch: [\s\S]*(\n)/).to_s.gsub("HEAD branch: ","").gsub("\n","")
+			listRemoteBranches.each_line do |remoteBranch|
+				checkoutNewBranch = %x(git checkout #{remoteBranch})
+				mergeActualBranch = %x(git log --pretty=format:'%H' --merges --since="#{commitTravisInput}")
+				mergeActualBranch.each_line do |oneMerge|
+					if (!(@mergeScenarios.include? oneMerge.gsub("\n",'')))
+						@mergeScenarios.push(oneMerge.gsub("\n",''))
+					end
+				end
+				sleep 1
+				checkoutMaster = %x(git checkout #{mainBranch})
 			end
+			#merges = %x(git log --pretty=format:'%H' --merges --since="#{commitTravisInput}")
+			#merges.each_line do |mergeScenario|
+			#	@mergeScenarios.push(mergeScenario.gsub("\n",""))
+			#end
 		end
 	end
 
