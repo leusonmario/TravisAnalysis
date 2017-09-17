@@ -25,10 +25,10 @@ class ParentsMSDiff
 			sleep(5)
 			thr = Thread.new { diff = system "bash", "-c", "exec -a gumtree ./gumtree webdiff #{firstBranch.gsub("\n","")} #{secondBranch.gsub("\n","")}" }
 			sleep(10)
-			mainDiff = %x(wget http://127.0.0.1:4754/ -q -O -)
-			modifiedFilesDiff = getDiffByModification(mainDiff[/Modified files \((.*?)\)/m, 1])
-			addedFiles = getDiffByAddedFile(mainDiff[/Added files \((.*?)\)/m, 1])
-			deletedFiles = getDiffByDeletedFile(mainDiff[/Deleted files \((.*?)\)/m, 1])
+			mainDiff = %x(wget http://127.0.0.1:4567/ -q -O -)
+			modifiedFilesDiff = getDiffByModification(mainDiff[/Modified files <span class="badge">(.*?)<\/span>/m, 1])
+			addedFiles = getDiffByAddedFile(mainDiff[/Added files <span class="badge">(.*?)<\/span>/m, 1])
+			deletedFiles = getDiffByDeletedFile(mainDiff[/Deleted files <span class="badge">(.*?)<\/span>/m, 1])
 			
 			kill = %x(pkill -f gumtree)
 			sleep(5)
@@ -87,7 +87,7 @@ class ParentsMSDiff
 		index = 0
 		result = Hash.new()
 		while(index < numberOcorrences.to_i)
-			gumTreePage = Nokogiri::HTML(RestClient.get("http://127.0.0.1:4754/script?id=#{index}"))
+			gumTreePage = Nokogiri::HTML(RestClient.get("http://127.0.0.1:4567/script/#{index}"))
 			file = gumTreePage.css('div.col-lg-12 h3 small').text[/(.*?) \-\>/m, 1].gsub(".java", "")
 			script = gumTreePage.css('div.col-lg-12 pre').text
 			result[file.to_s] = script.gsub('"', "\"")
@@ -100,9 +100,14 @@ class ParentsMSDiff
 		index = 0
 		result = []
 		while(index < numberOcorrences.to_i)
-			gumTreePage = Nokogiri::HTML(RestClient.get("http://127.0.0.1:4754/"))
-			gumTreePage.css('div#collapse-deleted-files table tr td').each do |element|
-				result.push(element.text)
+			begin
+				gumTreePage = Nokogiri::HTML(RestClient.get("http://127.0.0.1:4567/"))
+				tableDeleted = gumTreePage.to_s.match(/Deleted files[\s\S]*Added files/)[0].match(/<table [\s\S]*<\/table>/)
+				Nokogiri::HTML(tableDeleted[0]).css('table tr td').each do |element|
+					result.push(element.text)
+				end
+			rescue
+
 			end
 			index += 1
 		end
@@ -113,8 +118,9 @@ class ParentsMSDiff
 		index = 0
 		result = []
 		while(index < numberOcorrences.to_i)
-			gumTreePage = Nokogiri::HTML(RestClient.get("http://127.0.0.1:4754/"))
-			gumTreePage.css('div#collapse-added-files table tr td').each do |element|
+			gumTreePage = Nokogiri::HTML(RestClient.get("http://127.0.0.1:4567/"))
+			tableDeleted = gumTreePage.to_s.match(/Added files[\s\S]*<\/table>/)[0].match(/<table [\s\S]*<\/table>/)
+			Nokogiri::HTML(tableDeleted[0]).css('table tr td').each do |element|
 				result.push(element.text)
 			end
 			index += 1
