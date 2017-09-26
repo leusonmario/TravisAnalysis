@@ -51,7 +51,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 		confErroredForkBuilt = ConflictCategoryErrored.new(projectName, getPathLocalClone())
 		confForkIntervalErrored = ConflictCategoryErrored.new(projectName, getPathLocalClone())
 		confForkAllErrored = ConflictCategoryErrored.new(projectName, getPathLocalClone())
-		#confFailedBuilt = ConflictCategoryFailed.new(pathGumTree, projectName, cloneProject)
+		confFailedBuilt = ConflictCategoryFailed.new(pathGumTree, projectName, cloneProject, extractorCLI)
 
 		projectBuildsMap = Hash.new()
 
@@ -179,7 +179,10 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 												builtMergeScenarios.delete(build.commit.sha)
 											end
 										end
-=begin									elsif (status == "failed")
+									elsif (status == "failed")
+										if (!extractorCLI.getProjectActive)
+											extractorCLI.activeForkProject()
+										end
 										validMergeScenario.push(build.commit.sha)
 										totalMSFailed += 1
 										if (verifyDateDifference(lastScenarioDateFailed, getDataMergeScenario(build.commit.sha)) and validScenarioProjectFailed < 100)
@@ -194,7 +197,6 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 												lastScenarioDateFailed = getDataMergeScenario(build.commit.sha)
 											end
 										end
-=end
 									else
 										totalMSCanceled += 1
 										confBuild.conflictAnalysisCategories(canceledConflicts, type, result[0])
@@ -299,8 +301,10 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 													builtMergeScenarios.delete(build.commit.sha)
 												end
 											end
-=begin
 										elsif (status == "failed")
+											if (!extractorCLI.getProjectActive)
+												extractorCLI.activeForkProject()
+											end
 											totalMSFailed += 1
 											if (verifyDateDifference(lastScenarioDateFailed, getDataMergeScenario(build.commit.sha)) and validScenarioProjectFailed < 100)
 												resultFailed = result = @gitProject.conflictScenarioFailed(mergeCommit, allBuilds)
@@ -314,7 +318,6 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 													validScenarioProjectFailed += 1
 												end
 											end
-=end
 										else
 											totalMSCanceled += 1
 											confBuild.conflictAnalysisCategories(canceledConflicts, type, result[0])
@@ -397,7 +400,10 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 									end
 								elsif (extractorCLI.checkStatusBuild() == "passed")
 									totalMSPassed += 1
-=begin							elsif (extractorCLI.checkStatusBuild() == "failed")
+							elsif (extractorCLI.checkStatusBuild() == "failed")
+								if (!extractorCLI.getProjectActive)
+									extractorCLI.activeForkProject()
+								end
 								totalMSFailed += 1
 								mergeCommit = mergeScenariosAnalysisCommit(mergeScenario)
 								result = @gitProject.conflictScenario(mergeCommit, allBuilds)
@@ -408,7 +414,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 									validScenarioProjectList.push(mergeScenario)
 								else
 									if (result[1] == nil)
-										resultBuildProcess = verifyBuildCurrentState(extractorCLI, mergeCommit[0])
+										resultBuildProcess = verifyBuildCurrentState(extractorCLI, mergeScenario, mergeCommit)
 										if (resultBuildProcess != nil)
 											forkAllBuilds[mergeCommit[0]] = [resultBuildProcess[0], resultBuildProcess[1], resultBuildProcess[2]]
 										else
@@ -417,7 +423,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 										firstParentStatus = extractorCLI.checkStatusBuild()
 									end
 									if (result[2] == nil and firstParentStatus == "passed")
-										resultBuildProcess = verifyBuildCurrentState(extractorCLI, mergeCommit[1])
+										resultBuildProcess = verifyBuildCurrentState(extractorCLI, mergeScenario, mergeCommit)
 										if (resultBuildProcess != nil)
 											forkAllBuilds[mergeCommit[1]] = [resultBuildProcess[0], resultBuildProcess[1], resultBuildProcess[2]]
 										else
@@ -430,8 +436,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 										validScenarioProjectList.push(mergeScenario)
 									end
 								end
-=end
-								elsif (extractorCLI.checkStatusBuild() == "canceled")
+							elsif (extractorCLI.checkStatusBuild() == "canceled")
 									totalMSCanceled += 1
 								end
 							end
@@ -464,7 +469,10 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 											validScenarioProject += 1
 											lastScenarioDate = getDataMergeScenario(build.commit.sha)
 										end
-=begin									elsif (status == "failed")
+									elsif (status == "failed")
+										if (!extractorCLI.getProjectActive)
+											extractorCLI.activeForkProject()
+										end
 										totalMSFailed += 1
 										isConflict = confBuild.conflictAnalysisCategories(failedConflicts, type, result[0])
 										if (isConflict and result[0] == true)
@@ -472,7 +480,6 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 											resultFailedBuild = confFailedBuilt.findConflictCause(build, getPathProject())
 											writeCSVBuilt.printConflictTest(build, result[1][0], result[2][0], resultFailedBuild[0][0], projectNameFile, effort, resultFailedBuild[0][1], resultFailedBuild[2][0], resultFailedBuild[2][1], resultFailedBuild[2][2], resultFailedBuild[2][3], resultFailedBuild[2][4], resultFailedBuild[2][5])
 										end
-=end
 									end
 								end
 							end
@@ -498,7 +505,10 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 									end
 									writeCSVBuilt.printConflictBuild(@gitProject.getBuildID(mergeScenario, allBuilds, forkAllBuilds), result[1], result[2], stateBC, projectNameFile, effort)
 								end
-=begin							elsif (infoValidScenario[0] == "failed")
+							elsif (infoValidScenario[0] == "failed")
+								if (!extractorCLI.getProjectActive)
+									extractorCLI.activeForkProject()
+								end
 								totalMSFailed += 1
 								if (verifyDateDifference(lastScenarioDateFailed, getDataMergeScenario(mergeCommit)) and validScenarioProjectFailed < 100)
 									resultFailed = result = @gitProject.conflictScenarioFailed(mergeCommit, allBuilds)
@@ -511,7 +521,6 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 										validScenarioProjectFailed += 1
 									end
 								end
-=end
 							end
 						end
 					end

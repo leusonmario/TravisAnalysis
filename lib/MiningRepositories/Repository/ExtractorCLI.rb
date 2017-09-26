@@ -8,19 +8,62 @@ class ExtractorCLI
 		@travisLocation = travis
 		@downloadDir = download
 		@originalRepo = originalRepo
+		@tagID = 0
 		setName()
 		setFork()
 		setForkDir()
+		@projectActive = false
+		@apiKey = ""
+	end
+
+  def getApiKey()
+		@apiKey
+	end
+
+  def setApiKey(newApi)
+		@apiKey = newApi
+	end
+
+  def getProjectActive()
+		@projectActive
+	end
+
+  def setProjectActive(newState)
+		@projectActive = newState
+	end
+
+  def addEncryptedKeyOnTravis()
+		Dir.chdir getDownloadDir()
+		Dir.chdir getName()
+		setApiKey(%x(travis encrypt #{@token}))
+		Dir.chdir getDownloadDir()
 	end
 
 	def activeForkProject()
 		createFork()
 		cloneForkLocally()
 		activateTravis()
+		setProjectActive(true)
 	end
 
 	def replayBuildOnTravis(commit, branch)
 		return commitAndPush(commit, branch)
+	end
+
+  def checkoutHardOnCommit(commit)
+		Dir.chdir getDownloadDir()
+		Dir.chdir getName()
+		#checkTravis = %x(find -name '.travis.yml')
+		#if (checkTravis != "")
+			begin
+				head = "git rev-parse HEAD"
+				reset = "git reset --hard " + commit
+				%x(#{head})
+				%x(#{reset})
+			rescue
+					print "IT DID NOT WORK\n"
+			end
+		#end
 	end
 
 	def commitAndPush(commit, branch)
@@ -172,6 +215,35 @@ class ExtractorCLI
 		Dir.chdir getDownloadDir()
 	end
 
+  def buildStatusAfterCoverage()
+		logs = getLogsBuild()
+		logs.each do |log|
+			if (log.to_s.match('Failures: [1-9]+') or log.to_s.match('Failed tests'))
+				return "failed"
+			end
+		end
+		return ""
+	end
+
+	def commitChanges()
+		Dir.chdir getDownloadDir()
+		Dir.chdir getName()
+		commitStatus = false
+    begin
+			addFiles = %x(git add pom.xml)
+			addFiles = %x(git add .travis.yml)
+			commit = %x(git commit -m TA#{@tagID})
+			tag = %x(git tag -m TA#{@tagID} TA#{@tagID})
+			push = %x(git push --tags)
+			setTagID()
+			commitStatus = true
+		rescue
+			print "IT WAS NOT POSSIBLE TO COMMIT\n"
+		end
+		Dir.chdir getDownloadDir()
+		return commitStatus
+	end
+
 	def checkIdLastBuild()
 		idBuild = ""
 		begin
@@ -207,6 +279,31 @@ class ExtractorCLI
 		rescue
 			print "PULL IS NOT POSSIBLE"
 		end
+	end
+
+  def getLogsBuild()
+		Dir.chdir getDownloadDir()
+		Dir.chdir getName()
+		logs = []
+		begin
+			infoBuild = %x(travis show)
+			if (infoBuild.match(/Build #[0-9\.]*:/))
+				buildId = infoBuild.match(/Build #[0-9\.]*:/).to_s.match(/#[0-9]*/).to_s.gsub("#","")
+				numberJobs = infoBuild.scan(/\#[0-9\.]* #{status}/)
+
+				numberJobs.each do |job|
+					jobId = job.to_s.match(/\.[0-9]*/).to_s.gsub(".","")
+					logs.push(%x(travis logs .#{jobId}))
+				end
+
+			elsif (infoBuild.match(/Job #[0-9\.]*:/))
+				buildId = infoBuild.match(/Job #[0-9\.]*:/).to_s.match(/#[0-9]*/).to_s.gsub("#","")
+				logs.push(%x(travis logs))
+			end
+		rescue
+			print "IT DID NOT WORK - GET INFO LAST BUILD"
+		end
+		return logs
 	end
 
 	def getInfoLastBuild()
@@ -258,6 +355,14 @@ class ExtractorCLI
 
 	def getDownloadDir()
 		@downloadDir
+	end
+
+  def getTagID()
+		@tagID
+	end
+
+  def setTagID()
+		@tagID += 1
 	end
 
 	def getPathProject()

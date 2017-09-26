@@ -132,9 +132,25 @@ class ParentsMSDiff
 	def getDiffByModificationAndMethods(modifiedFiles, pathBranchOne, pathBranchTwo)
 		changedMethods = Hash.new
 		modifiedFiles.each do |key, value|
-		 	changedMethods[key]	= methodsModifiedOnFile(getParsedFile(pathBranchOne, key), getParsedFile(pathBranchTwo, key))
+		 	#changedMethods[key]	= methodsModifiedOnFile(getParsedFile(pathBranchOne, key), getParsedFile(pathBranchTwo, key))
+			changedMethods[key]	= methodsModifiedByFile(value)
 		end
 		return changedMethods
+	end
+
+	def methodsModifiedByFile(fileDiff)
+		methodNames = Array.new
+		information = fileDiff.to_enum(:scan, /on Method [a-zA-Z0-9\-]*/).map { Regexp.last_match }
+		count = 0
+		while (count < information.size)
+			methodName = information[count].to_s.split("on Method ").last
+			print methodName
+			if (!methodNames.include? methodName)
+				methodNames.push(methodName)
+			end
+			count += 1
+		end
+		return methodNames
 	end
 
 	def methodsModifiedOnFile(parsedFileOne, parsedFileTwo)

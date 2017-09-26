@@ -6,7 +6,7 @@ require_all '././TestConflictsExtractor'
 class ConflictCategoryFailed
 	include ConflictCategories
 
-	def initialize(pathGumTree, projectName, localClone)
+	def initialize(pathGumTree, projectName, localClone, extractorCLI)
 		@projectName = projectName
 		@pathGumTree = pathGumTree
 		@localClone = localClone
@@ -16,7 +16,7 @@ class ConflictCategoryFailed
 		@permission = 0
 		@failed = 0
 		@gtAnalysis = GTAnalysis.new(@pathGumTree, @projectName, @localClone)
-		@testCaseCoverge = TestCaseCoverage.new(@localClone.getCloneProject().getLocalClone())
+		@testCaseCoverge = TestCaseCoverage.new(@localClone.getCloneProject().getLocalClone(), extractorCLI)
 		@tcAnalyzer = TestConflictsAnalyzer.new()
 	end
 
