@@ -36,6 +36,7 @@ class ExtractorCLI
 		Dir.chdir getDownloadDir()
 		Dir.chdir getName()
 		setApiKey(%x(travis encrypt #{@token}))
+		sleep(10)
 		Dir.chdir getDownloadDir()
 	end
 
@@ -232,8 +233,11 @@ class ExtractorCLI
     begin
 			addFiles = %x(git add pom.xml)
 			addFiles = %x(git add .travis.yml)
+			sleep(5)
 			commit = %x(git commit -m TA#{@tagID})
+			sleep(5)
 			tag = %x(git tag -m TA#{@tagID} TA#{@tagID})
+			sleep(5)
 			push = %x(git push --tags)
 			setTagID()
 			commitStatus = true

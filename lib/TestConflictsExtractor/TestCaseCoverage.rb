@@ -39,7 +39,7 @@ class TestCaseCoverage
       print "NOT A VALID CASE\n"
     end
     Dir.chdir actualPath
-    return coverageResult
+    return coverageResult, @extractorCLI.checkIdLastBuild()
   end
 
   def verifyBuildCurrentState(state)
@@ -206,7 +206,9 @@ class TestCaseCoverage
         newText += deployText
       end
       out_file = File.new(".travis.yml", "w")
+      sleep(5)
       out_file.puts(newText)
+      sleep(5)
       out_file.close
       finalResult = true
     rescue
@@ -223,6 +225,7 @@ class TestCaseCoverage
     Dir.chdir @extractorCLI.getName
     begin
       file = File.read("pom.xml")
+      sleep (5)
       pluginsOnPom = "  <plugin>
         <groupId>org.eluder.coveralls</groupId>
         <artifactId>coveralls-maven-plugin</artifactId>
@@ -253,9 +256,11 @@ class TestCaseCoverage
         if (aux.match(/<\/plugins>[\s\S]*<\/build>/))
           aux = aux.to_s.gsub(/<\/plugins>/, pluginsOnPom)
           file = File.open("pom.xml", "w")
+          sleep(5)
           file.write(first)
           file.write(aux)
           file.write(second)
+          sleep(5)
           file.close
         end
       end
@@ -265,6 +270,7 @@ class TestCaseCoverage
       pluginSurefire = false
       newText = ""
       file = File.read("pom.xml")
+      sleep (5)
       file.each_line do |line|
         newText += line
         if (line.match("<plugin>"))
@@ -287,6 +293,7 @@ class TestCaseCoverage
       end
 
       out_file = File.new("pom.xml", "w")
+      sleep(5)
       out_file.puts(newText)
       out_file.close
 
@@ -340,6 +347,7 @@ class TestCaseCoverage
       actualFile = package[1].to_s.gsub("\.", "\$")
       begin
         doc = File.open("#{actualFile}.html") { |f| Nokogiri::XML(f) }
+        sleep(2)
         #dormir aqui
         values = Array.new
         doc.css('table tbody tr').each do |element|

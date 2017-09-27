@@ -21,18 +21,14 @@ class TestConflictsAnalyzer
 
     sameMethodsModified = checkChangesOnSameMethods(changedCoveragedMethodsParentOne, changedCoveragedMethodsParentTwo)
     changesOnSameMethod = false
-    dependentChangesParentOne = false
-    dependentChangesParentTwo = false
+    dependentChanges = false
     if (sameMethodsModified[0].size > 0)
       changesOnSameMethod = true
     end
-    if (sameMethodsModified[1].size > 0)
-      dependentChangesParentOne = true
+    if (sameMethodsModified[1].size > 0 and sameMethodsModified[2].size > 0)
+      dependentChanges = true
     end
-    if (sameMethodsModified[2].size > 0)
-      dependentChangesParentTwo = true
-    end
-    return changesOnSameMethod, dependentChangesParentOne, dependentChangesParentTwo
+    return changesOnSameMethod, dependentChanges
   end
 
   def converagedMethodsByFile(methodsCoverage, changedMethodsByParent)
@@ -66,7 +62,7 @@ class TestConflictsAnalyzer
     differentModifiedParentOne = Hash.new
     differentModifiedParentTwo = Hash.new
     auxMethods = Array.new
-    auxAllKeys = Array.new
+    auxAllKeys = changedConveragedMethodsParentTwo.keys
     sameFile = false
     changedCoveragedMethodsParentOne.each do |key, value|
       sameFile = false
@@ -111,7 +107,7 @@ class TestConflictsAnalyzer
       end
     end
     auxAllKeys.each do |oneKey|
-      differentModifiedParentTwo[oneKey] = changedFilesTwo[oneKey]
+      differentModifiedParentTwo[oneKey] = changedConveragedMethodsParentTwo[oneKey]
     end
 
     return sameMethodsModified, differentModifiedParentOne, differentModifiedParentTwo
