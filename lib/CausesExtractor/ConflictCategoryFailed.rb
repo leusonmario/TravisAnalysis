@@ -101,25 +101,29 @@ class ConflictCategoryFailed
 		dependentChanges = []
 		buildIDs = []
 		coverageAnalysis = nil
-		resultByJobs[0][2].each do |filesInfo|
-			resultTC = testConflictsExtractor.getInfoTestConflicts(diffsMergeScenario[0], diffsMergeScenario[1], filesInfo, getPathGumTree())
-			newTestFileArray.push(resultTC[0])
-			newTestCaseArray.push(resultTC[1])
-			updateTestArray.push(resultTC[2])
-			#add uma classe responsável por fazer a análise
-			#esta iria receber apenas as iformações relacionadas
-			#Já tenho essa informação em diffMergeScenario : [1]LeftResult e [3]RightResult
-			addModFilesLeftResult = @gtAnalysis.getParentsMFDiff.runOnlyModifiedAddFiles(diffsMergeScenario[0][1][0], diffsMergeScenario[1][2], diffsMergeScenario[1][1])
-			addModFilesRightResult = @gtAnalysis.getParentsMFDiff.runOnlyModifiedAddFiles(diffsMergeScenario[0][3][0], diffsMergeScenario[1][3], diffsMergeScenario[1][1])
-			coverageAnalysis = @testCaseCoverge.runTestCase(filesInfo[0], filesInfo[1], sha)
-			resultCoverageAnalysis = @tcAnalyzer.runTCAnalysis(coverageAnalysis[0], addModFilesLeftResult, addModFilesRightResult)
-			changesSameMethod.push(resultCoverageAnalysis[0])
-			dependentChanges.push(resultCoverageAnalysis[1])
-			buildIDs.push(coverageAnalysis[1])
+		begin
+			resultByJobs[0][2].each do |filesInfo|
+				resultTC = testConflictsExtractor.getInfoTestConflicts(diffsMergeScenario[0], diffsMergeScenario[1], filesInfo, getPathGumTree())
+				newTestFileArray.push(resultTC[0])
+				newTestCaseArray.push(resultTC[1])
+				updateTestArray.push(resultTC[2])
+				#add uma classe responsável por fazer a análise
+				#esta iria receber apenas as iformações relacionadas
+				#Já tenho essa informação em diffMergeScenario : [1]LeftResult e [3]RightResult
+				addModFilesLeftResult = @gtAnalysis.getParentsMFDiff.runOnlyModifiedAddFiles(diffsMergeScenario[0][1][0], diffsMergeScenario[1][2], diffsMergeScenario[1][1])
+				addModFilesRightResult = @gtAnalysis.getParentsMFDiff.runOnlyModifiedAddFiles(diffsMergeScenario[0][3][0], diffsMergeScenario[1][3], diffsMergeScenario[1][1])
+				coverageAnalysis = @testCaseCoverge.runTestCase(filesInfo[0], filesInfo[1], sha)
+				resultCoverageAnalysis = @tcAnalyzer.runTCAnalysis(coverageAnalysis[0], addModFilesLeftResult, addModFilesRightResult)
+				changesSameMethod.push(resultCoverageAnalysis[0])
+				dependentChanges.push(resultCoverageAnalysis[1])
+				buildIDs.push(coverageAnalysis[1])
+			end
+			#ainda tenho o caminho em diffMergeScenario[1]
+			@gtAnalysis.deleteProjectCopies(diffsMergeScenario[1])
+			return newTestFileArray, newTestCaseArray, updateTestArray, changesSameMethod, dependentChanges, buildIDs, coverageAnalysis[0]
+		rescue
+			return newTestFileArray, newTestCaseArray, updateTestArray, changesSameMethod, dependentChanges, buildIDs, nil
 		end
-		#ainda tenho o caminho em diffMergeScenario[1]
-		@gtAnalysis.deleteProjectCopies(diffsMergeScenario[1])
-		return newTestFileArray, newTestCaseArray, updateTestArray, changesSameMethod, dependentChanges, buildIDs, coverageAnalysis[0]
 	end
 
 	def getCauseByJob(log)

@@ -22,7 +22,7 @@ class TestCaseCoverage
     coverageResult = nil
     begin
       @extractorCLI.checkoutHardOnCommit(sha)
-      resultPluginPom = addPluginOnPom(nil)
+      resultPluginPom = addPluginOnPom()
       if (@extractorCLI.getApiKey == "")
         @extractorCLI.addEncryptedKeyOnTravis()
       end
@@ -87,6 +87,7 @@ class TestCaseCoverage
       overwrite = false
       skipCleanup = false
       fileAdd = false
+      branches = false
 
       file.each_line do |line|
         if (line.match('sudo: false') or line.match('sudo: required'))
@@ -96,20 +97,29 @@ class TestCaseCoverage
           beforeDeploy = true
           lines += line
           lines += "\n- tar -zcvf coverage-result.tar.gz /home/travis/build/#{@extractorCLI.getUsername}/#{@extractorCLI.getName}/target/site\n"
-        elsif (line.match('deploy'))
+        elsif (line.match('deploy:(?!$)'))
           deploy = true
           lines += line
+        elsif (line.match('branches'))
+          branches = true
+        elsif (branches == true)
+          if (line.match('only:') or line.match(/[\s]+\-/))
+            branches = true
+          else
+            branches = false
+            lines += line
+          end
         elsif (line.match('script:'))
           script = true
           lines += line
         elsif (script and !testScript)
           if (line.match('mvn (clean)? test'))
-            lines += "\n  - mvn clean -Dtest=#{testFileName}##{testCaseName} test jacoco:report coveralls:report\n"
+            lines += "\n  - mvn clean -Dtest=#{testFileName}##{testCaseName} test jacoco:report\n"
             testScript = true
           elsif ((line == "\n" or line == "") and testScript)
             script = true
             testScript = true
-            lines += "\n  - mvn clean -Dtest=#{testFileName}##{testCaseName} test jacoco:report coveralls:report\n"
+            lines += "\n  - mvn clean -Dtest=#{testFileName}##{testCaseName} test jacoco:report\n"
           else
             lines += line
           end
@@ -148,7 +158,7 @@ class TestCaseCoverage
       scriptText = ""
 
       if (!script)
-        scriptText = "\nscript:\n- mvn clean -Dtest=#{testFileName}##{testCaseName} test jacoco:report coveralls:report\n"
+        scriptText = "\nscript:\n- mvn clean -Dtest=#{testFileName}##{testCaseName} test jacoco:report\n"
       end
       #if (!testScript)
       #  scriptText = "\n- mvn clean -Dtest=#{testFileName}##{testCaseName} test jacoco:report coveralls:report\n"
@@ -218,22 +228,14 @@ class TestCaseCoverage
     return finalResult
   end
 
-  def addPluginOnPom(coverallsID)
-    coverallsID = "0LB8D9FfE1FwmYHkWiVLVg4TFsI5gX64k"
+  def addPluginOnPom()
     actualPath = Dir.pwd
     Dir.chdir @extractorCLI.getDownloadDir
     Dir.chdir @extractorCLI.getName
     begin
       file = File.read("pom.xml")
       sleep (5)
-      pluginsOnPom = "  <plugin>
-        <groupId>org.eluder.coveralls</groupId>
-        <artifactId>coveralls-maven-plugin</artifactId>
-        <version>4.3.0</version>
-        <configuration>
-            <repoToken>#{coverallsID}</repoToken>
-        </configuration>
-      </plugin>
+      pluginsOnPom = "
       <plugin>
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
@@ -283,7 +285,7 @@ class TestCaseCoverage
           pluginSurefire = true
         end
         if (line.match('<configuration>') and pluginSurefire and pluginTag)
-          newText += "<testFailureIgnore>true</testFailureIgnore>"
+          newText += "<testFailureIgnore>true</testFailureIgnore>\n"
           configTag = false
           pluginSurefire = false
         end
