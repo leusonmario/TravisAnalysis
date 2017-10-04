@@ -219,7 +219,7 @@ class ExtractorCLI
   def buildStatusAfterCoverage()
 		logs = getLogsBuild()
 		logs.each do |log|
-			if (log.to_s.match('Failures: [1-9]+') or log.to_s.match('Failed tests'))
+			if (log.to_s.match('Failures: [1-9]+') or log.to_s.match('Failed tests') or log.to_s.match('There are test failures'))
 				return "failed"
 			end
 		end
@@ -292,14 +292,11 @@ class ExtractorCLI
 		begin
 			infoBuild = %x(travis show)
 			if (infoBuild.match(/Build #[0-9\.]*:/))
-				buildId = infoBuild.match(/Build #[0-9\.]*:/).to_s.match(/#[0-9]*/).to_s.gsub("#","")
-				numberJobs = infoBuild.scan(/\#[0-9\.]* #{status}/)
-
+				numberJobs = infoBuild.scan(/\#[0-9]*\.[0-9]*/)
 				numberJobs.each do |job|
 					jobId = job.to_s.match(/\.[0-9]*/).to_s.gsub(".","")
 					logs.push(%x(travis logs .#{jobId}))
 				end
-
 			elsif (infoBuild.match(/Job #[0-9\.]*:/))
 				buildId = infoBuild.match(/Job #[0-9\.]*:/).to_s.match(/#[0-9]*/).to_s.gsub("#","")
 				logs.push(%x(travis logs))

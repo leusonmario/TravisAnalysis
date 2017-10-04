@@ -137,7 +137,7 @@ class ConflictCategoryFailed
 		if (log[/Errors: [0-9]*/])
 			@failed += 1
 			result = "failed"
-		elsif (log[/#{stringBuildFail}\s*([^\n\r]*)\s*([^\n\r]*)\s*([^\n\r]*)failed/] || log[/#{stringTheCommand}("mvn|"\.\/mvnw)+(.*)failed(.*)/])
+		elsif (log[/#{stringBuildFail}\s*([^\n\r]*)\s*([^\n\r]*)\s*([^\n\r]*)failed/] || log[/#{stringTheCommand}("mvn|"\.\/mvnw)+(.*)failed(.*)/] || log[/There are test failures/])
 			@failed += 1
 			result = "failed"
 		elsif (log[/#{stringTheCommand}("git clone |"git checkout)(.*?)failed(.*)[\n]*/])
@@ -163,6 +163,16 @@ class ConflictCategoryFailed
 				generalInfo = occurence.to_s.split("\(")
 				methodName = generalInfo[0]
 				file = generalInfo[1].split("\)")[0].to_s.split("\.").last
+				filesInfo.push([file, methodName])
+			end
+		end
+		if(log[/There are test failures/])
+			numberOccurences = log.to_s.to_enum(:scan, /Tests in error:[\s\S]*Tests run/).map { Regexp.last_match }
+			numberOccurences.each do |occurence|
+				numberFailures += 1
+				generalInfo = occurence.to_s.match(/[a-zA-Z0-9]+\.[a-zA-Z0-9]+/)
+				methodName = generalInfo.to_s.split("\.").last
+				file = generalInfo.to_s.split("\.")[0]
 				filesInfo.push([file, methodName])
 			end
 		end
