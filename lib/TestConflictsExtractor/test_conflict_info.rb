@@ -43,8 +43,45 @@ class TestConflictInfo
     return newTestFile, newTestCase, updatedTest
   end
 
+  def getInfoTestConflictsByParent(gumTreeDiff, pathCopies, buildsInfo, pathGumTree)
+    newTestFile = []
+    newTestCase = []
+    updatedTest = []
+
+    parentOneInfo = getInfoParent(gumTreeDiff[3], buildsInfo)
+    newTestFile[0] = parentOneInfo[0]
+    newTestCase[0] = parentOneInfo[1]
+    updatedTest[0] = parentOneInfo[2]
+
+    parentTwoInfo = getInfoParent(gumTreeDiff[1], buildsInfo)
+    newTestFile[1] = parentTwoInfo[0]
+    newTestCase[1] = parentTwoInfo[1]
+    updatedTest[1] = parentTwoInfo[2]
+
+    return newTestFile, newTestCase, updatedTest
+  end
+
+  def getInfoParent(diff, buildsInfo)
+    newTestFile = false
+    newTestCase = false
+    updatedTest = false
+    if (!verifyIfNewTestFile(diff, buildsInfo))
+      if (verifyIfNewTestCase(diff, buildsInfo))
+        newTestCase = true
+        updatedTest = true
+      else
+        updatedTest = verifyChangesMethod(diff, buildsInfo[0], buildsInfo[1])
+      end
+    else
+      newTestFile = true
+      newTestCase = true
+      updatedTest = true
+    end
+    return newTestFile, newTestCase, updatedTest
+  end
+
   def verifyIfNewTestFile(gumTreeDiff, buildInfo)
-    if (gumTreeDiff[1] == nil)
+    if (gumTreeDiff[1].size == 0)
       return false
     end
     gumTreeDiff[1].each do |fileName|
@@ -58,10 +95,12 @@ class TestConflictInfo
   def verifyIfNewTestCase(gumTreeDiff, buildInfo)
     if (gumTreeDiff[0][buildInfo[0]] == nil)
       return false
-    elsif (gumTreeDiff[0][buildInfo[0]].to_s.match(/Insert SimpleName: #{buildInfo[1]}\([0-9]*\) into MethodDeclaration\([0-9]*\)/))
-      return true
     else
-      return false
+      if (gumTreeDiff[0][buildInfo[0]].to_s.match(/Insert SimpleName: #{buildInfo[1]}\([0-9]*\) into MethodDeclaration\([0-9]*\)/))
+        return true
+      else
+        return false
+      end
     end
   end
 
@@ -80,6 +119,14 @@ class TestConflictInfo
       return false
     else
       return true
+    end
+  end
+
+  def verifyChangesMethod(diff, fileName, caseTest)
+    if (diff[0][fileName] != nil and diff[0][fileName].to_s.include? "on Method #{caseTest}")
+      return true
+    else
+      return false
     end
   end
 

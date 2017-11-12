@@ -57,7 +57,7 @@ class WriteCSVWithForks < WriteCSVs
  	def createMergeScenariosAnalysisFile
  		Dir.chdir getPathMergeScenariosAnalysis()
 		CSV.open("MergeScenariosProjects.csv", "wb") do |csv|
-			csv << ["Project", "TotalMS", "TotalMSNoBuilt","TotalMSParentPassed", "TotalMSParentsNoPassed", "TotalParentNoBuilt", "TotalRepeatedMSB", "AllBuilds", "ValidBuilds", "TotalMSPassed", "TotalMSErrored", "TotalMSFailed", "TotalMSCanceled"]
+			csv << ["Project", "TotalMS", "TotalMSNoBuilt","TotalMSParentPassed", "TotalMSParentsNoPassed", "TotalParentNoBuilt", "TotalRepeatedMSB", "AllBuilds", "ValidBuilds", "TotalMSPassed", "TotalErroredMS", "TotalMSErrored", "TotalMSErroredWithoutExternal", "TotalMSErroredParentsPreservation", "TotalMSErroredParentsNoPreservation", "TotalFailedMS", "TotalMSFailed", "TotalMSFailedWithoutExternal", "TotalMSErroredParentsPreservation", "TotalMSErroredParentsNoPreservation", "TotalMSCanceled"]
 		end
  	end
 
@@ -76,12 +76,12 @@ class WriteCSVWithForks < WriteCSVs
 		end
  	end
 
- 	def writeMergeScenariosFinal(projectName, allMergeScenariosProject, noBuiltMergeScenario, builtPassedParentMergeScenarios, noBuiltPassedParentMergeScenarios, noParentBuilt, totalRepeatedBuilds, totalBuilds, validBuilds, totalMSPassed, totalMSErrored, 
-								totalMSFailed, totalMSCanceled)
+ 	def writeMergeScenariosFinal(projectName, allMergeScenariosProject, noBuiltMergeScenario, builtPassedParentMergeScenarios, noBuiltPassedParentMergeScenarios, noParentBuilt, totalRepeatedBuilds, totalBuilds, validBuilds, totalMSPassed, totalErroredBuildsMS,
+		totalMSErrored, totalMSErroredWithoutExternal, totalMSErroredParentsPreservation, totalMSErroredParentsNoPreservation, totalFailedBuildsMS, totalMSFailed, totalMSFailedWithoutExternal, totalMSFailedParentsPreservation, totalMSFailedParentsNoPreservation, totalMSCanceled)
 		Dir.chdir getPathMergeScenariosAnalysis()
 		CSV.open("MergeScenariosProjects.csv", "a+") do |csv|
-			csv << [projectName, allMergeScenariosProject, noBuiltMergeScenario, builtPassedParentMergeScenarios, noBuiltPassedParentMergeScenarios, noParentBuilt, totalRepeatedBuilds, totalBuilds, validBuilds, totalMSPassed, totalMSErrored, totalMSFailed, 
-					totalMSCanceled]
+			csv << [projectName, allMergeScenariosProject, noBuiltMergeScenario, builtPassedParentMergeScenarios, noBuiltPassedParentMergeScenarios, noParentBuilt, totalRepeatedBuilds, totalBuilds, validBuilds, totalMSPassed, totalErroredBuildsMS, totalMSErrored,
+							totalMSErroredWithoutExternal, totalMSErroredParentsPreservation, totalMSErroredParentsNoPreservation, totalFailedBuildsMS, totalMSFailed, totalMSFailedWithoutExternal, totalMSFailedParentsPreservation, totalMSFailedParentsNoPreservation, totalMSCanceled]
 		end
 	end
 

@@ -109,7 +109,7 @@ class ExtractorCLI
 			merge = %x(git merge leftParent --no-edit)
 			if (!merge.match(/Automatic merge failed; fix conflicts and then commit the result/) and !merge.match(/not something we can merge/) and merge != "")
 				%x(git commit -a -m "Rebuilt : #{mergeCommit}")
-				%x(git push origin)
+				%x(git push -f origin)
 				mergeResult = true
 			else
 				if (merge.match(/not something we can merge/))
@@ -234,9 +234,9 @@ class ExtractorCLI
 			addFiles = %x(git add pom.xml)
 			addFiles = %x(git add .travis.yml)
 			sleep(5)
-			commit = %x(git commit -m TA#{@tagID})
+			commit = %x(git commit -m TT#{@tagID})
 			sleep(5)
-			tag = %x(git tag -m TA#{@tagID} TA#{@tagID})
+			tag = %x(git tag -m TT#{@tagID} TT#{@tagID})
 			sleep(5)
 			push = %x(git push --tags)
 			setTagID()

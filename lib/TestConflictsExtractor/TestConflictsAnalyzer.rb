@@ -15,20 +15,50 @@ class TestConflictsAnalyzer
 
   end
 
+  def runTCAnalysisErrorCases(addModFilesRightResult, addModFilesLeftResult)
+    numberChangesByFile = Hash.new
+    addModFilesLeftResult.each do |key, methodsLeft|
+      if (addModFilesRightResult[key] != nil)
+        numberChangesByFile[key] = checkSameMethodsOnParentsFiles(methodsLeft, addModFilesRightResult[key])
+      end
+    end
+    if (numberChangesByFile.size > 0)
+      return true, false
+    else
+      return false,false
+    end
+  end
+
+  def checkSameMethodsOnParentsFiles(methodsLeft, methodsRight)
+    sameMethodChanges = 0
+    methodsLeft.each do |methodLeft|
+      methodsRight.each do |methodRight|
+        if (methodLeft == methodRight)
+          sameMethodChanges += 1
+        end
+      end
+    end
+    return sameMethodChanges
+  end
+
   def runTCAnalysis(coverageAnalysis, addModFilesRightResult, addModFilesLeftResult)
     changedCoveragedMethodsParentOne = converagedMethodsByFile(coverageAnalysis, addModFilesLeftResult[0])
     changedCoveragedMethodsParentTwo = converagedMethodsByFile(coverageAnalysis, addModFilesRightResult[0])
 
     sameMethodsModified = checkChangesOnSameMethods(changedCoveragedMethodsParentOne, changedCoveragedMethodsParentTwo)
     changesOnSameMethod = false
-    dependentChanges = false
+    dependentChangesParentOne = false
+    dependentChangesParentTwo = false
     if (sameMethodsModified[0].size > 0)
       changesOnSameMethod = true
     end
-    if (sameMethodsModified[1].size > 0 and sameMethodsModified[2].size > 0)
-      dependentChanges = true
+    if (sameMethodsModified[1].size)
+      dependentChangesParentOne = true
     end
-    return changesOnSameMethod, dependentChanges
+    if (sameMethodsModified[2].size > 0)
+      dependentChangesParentTwo = true
+    end
+    return changesOnSameMethod, dependentChangesParentOne, dependentChangesParentTwo
   end
 
   def converagedMethodsByFile(methodsCoverage, changedMethodsByParent)
@@ -39,13 +69,14 @@ class TestConflictsAnalyzer
           auxOne = Array.new
           value.each do |methodName|
             changedMethodsByParent[key].each do |methodNameOne|
-              if(methodName[/#{methodNameOne}\([a-zA-Z0-9\, ]*\)/])
+              #if(methodName[/#{methodNameOne}\([a-zA-Z0-9\, ]*\)/])
+              if(methodName == methodNameOne)
                 if (!auxOne.include? methodNameOne)
                   auxOne.push(methodName)
                 end
               end
             end
-            if (auxOne.size > 1)
+            if (auxOne.size > 0)
               changedCoveragedMethods[key] = auxOne
             end
           end

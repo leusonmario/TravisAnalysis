@@ -15,6 +15,7 @@ class ConflictCategoryFailed
 		@otherError = 0
 		@permission = 0
 		@failed = 0
+		@errored = 0
 		@gtAnalysis = GTAnalysis.new(@pathGumTree, @projectName, @localClone)
 		@testCaseCoverge = TestCaseCoverage.new(@localClone.getCloneProject().getLocalClone(), extractorCLI)
 		@tcAnalyzer = TestConflictsAnalyzer.new()
@@ -50,6 +51,10 @@ class ConflictCategoryFailed
 
 	def getFailed()
 		@failed
+	end
+
+	def getErrored()
+		@errored
 	end
 
 	def getTotal()
@@ -98,12 +103,13 @@ class ConflictCategoryFailed
 		newTestCaseArray = []
 		updateTestArray = []
 		changesSameMethod = []
-		dependentChanges = []
+		dependentChangesParentOne = []
+		dependentChangesParentTwo = []
 		buildIDs = []
 		coverageAnalysis = nil
 		begin
 			resultByJobs[0][2].each do |filesInfo|
-				resultTC = testConflictsExtractor.getInfoTestConflicts(diffsMergeScenario[0], diffsMergeScenario[1], filesInfo, getPathGumTree())
+				resultTC = testConflictsExtractor.getInfoTestConflictsByParent(diffsMergeScenario[0], diffsMergeScenario[1], filesInfo, getPathGumTree())
 				newTestFileArray.push(resultTC[0])
 				newTestCaseArray.push(resultTC[1])
 				updateTestArray.push(resultTC[2])
@@ -113,16 +119,23 @@ class ConflictCategoryFailed
 				addModFilesLeftResult = @gtAnalysis.getParentsMFDiff.runOnlyModifiedAddFiles(diffsMergeScenario[0][1][0], diffsMergeScenario[1][2], diffsMergeScenario[1][1])
 				addModFilesRightResult = @gtAnalysis.getParentsMFDiff.runOnlyModifiedAddFiles(diffsMergeScenario[0][3][0], diffsMergeScenario[1][3], diffsMergeScenario[1][1])
 				coverageAnalysis = @testCaseCoverge.runTestCase(filesInfo[0], filesInfo[1], sha)
-				resultCoverageAnalysis = @tcAnalyzer.runTCAnalysis(coverageAnalysis[0], addModFilesLeftResult, addModFilesRightResult)
+				resultCoverageAnalysis = []
+				if (coverageAnalysis[0] != nil)
+					resultCoverageAnalysis = @tcAnalyzer.runTCAnalysis(coverageAnalysis[0], addModFilesLeftResult, addModFilesRightResult)
+				else
+					resultCoverageAnalysis = @tcAnalyzer.runTCAnalysisErrorCases(addModFilesLeftResult, addModFilesRightResult)
+				end
 				changesSameMethod.push(resultCoverageAnalysis[0])
-				dependentChanges.push(resultCoverageAnalysis[1])
+				dependentChangesParentOne.push(resultCoverageAnalysis[1])
+				dependentChangesParentTwo.push(resultCoverageAnalysis[2])
 				buildIDs.push(coverageAnalysis[1])
 			end
 			#ainda tenho o caminho em diffMergeScenario[1]
 			@gtAnalysis.deleteProjectCopies(diffsMergeScenario[1])
-			return newTestFileArray, newTestCaseArray, updateTestArray, changesSameMethod, dependentChanges, buildIDs, coverageAnalysis[0]
+			return newTestFileArray, newTestCaseArray, updateTestArray, changesSameMethod, dependentChangesParentOne, dependentChangesParentTwo, buildIDs, coverageAnalysis[0], diffsMergeScenario[0][5]
 		rescue
-			return newTestFileArray, newTestCaseArray, updateTestArray, changesSameMethod, dependentChanges, buildIDs, nil
+			@gtAnalysis.deleteProjectCopies(diffsMergeScenario[1])
+			return newTestFileArray, newTestCaseArray, updateTestArray, changesSameMethod, dependentChangesParentOne, dependentChangesParentTwo, buildIDs, nil, diffsMergeScenario[0][5]
 		end
 	end
 
@@ -137,9 +150,12 @@ class ConflictCategoryFailed
 		if (log[/Errors: [0-9]*/])
 			@failed += 1
 			result = "failed"
-		elsif (log[/#{stringBuildFail}\s*([^\n\r]*)\s*([^\n\r]*)\s*([^\n\r]*)failed/] || log[/#{stringTheCommand}("mvn|"\.\/mvnw)+(.*)failed(.*)/] || log[/There are test failures/])
+		elsif (log[/#{stringBuildFail}\s*([^\n\r]*)\s*([^\n\r]*)\s*([^\n\r]*)failed/] || log[/#{stringTheCommand}("mvn|"\.\/mvnw)+(.*)failed(.*)/])
 			@failed += 1
 			result = "failed"
+		elsif (log[/There are test failures/])
+			@errored += 1
+			result = "errored"
 		elsif (log[/#{stringTheCommand}("git clone |"git checkout)(.*?)failed(.*)[\n]*/])
 			@gitProblem += 1
 			result = "gitProblem"
@@ -164,16 +180,52 @@ class ConflictCategoryFailed
 				methodName = generalInfo[0]
 				file = generalInfo[1].split("\)")[0].to_s.split("\.").last
 				filesInfo.push([file, methodName])
-			end
-		end
-		if(log[/There are test failures/])
-			numberOccurences = log.to_s.to_enum(:scan, /Tests in error:[\s\S]*Tests run/).map { Regexp.last_match }
-			numberOccurences.each do |occurence|
 				numberFailures += 1
-				generalInfo = occurence.to_s.match(/[a-zA-Z0-9]+\.[a-zA-Z0-9]+/)
-				methodName = generalInfo.to_s.split("\.").last
-				file = generalInfo.to_s.split("\.")[0]
-				filesInfo.push([file, methodName])
+			end
+		elsif (log[/Failed tests: (\n)*[\s\S\:\)\(]*\nTests run:/])
+			result = "errored"
+			numberOccurences = log.to_s.to_enum(:scan, /Failed tests: (\n)*[\s\S\:\)\(]*\nTests run:/).map { Regexp.last_match }
+			numberOccurences[0].to_s.each_line do |occurrenceLine|
+				if (!occurrenceLine.to_s.match('Tests in error|Tests run') and occurrenceLine != "\n")
+					methodName = ""
+					file = ""
+					if (occurrenceLine.match('\('))
+						generalInfo = occurrenceLine.match('[a-zA-Z0-9\(]*\.[a-zA-Z0-9\.\_]*')
+						methodName = generalInfo.to_s.split("\(")[0]
+						file = generalInfo.to_s.split("\.").last
+					else
+						generalInfo = occurrenceLine.match('[a-zA-Z0-9]*\.[a-zA-Z0-9\_\.]*')
+						file = generalInfo.to_s.split("\.")[0]
+						methodName = generalInfo.to_s.split("\.").last
+					end
+				end
+			end
+		elsif(log[/There are test failures/])
+			result = "errored"
+			numberOccurences = log.to_s.to_enum(:scan, /Tests in error:[\s\S]*Tests run/).map { Regexp.last_match }
+			numberOccurences[0].to_s.each_line do |occurrenceLine|
+			#numberOccurences.each do |occurrenceLine|
+				if (!occurrenceLine.to_s.match('Tests in error|Tests run') and occurrenceLine != "\n")
+				#if (occurrenceLine != "\n")
+					#methodName = occurrenceLine.to_s.match('Tests in error:[a-zA-Z0-9 \\n\.]*').to_s.split("\.").last
+					methodName = ""
+					file = ""
+					if (occurrenceLine.match('\('))
+						generalInfo = occurrenceLine.match('[a-zA-Z0-9\(]*\.[a-zA-Z0-9\.\_]*')
+						methodName = generalInfo.to_s.split("\(")[0]
+						file = generalInfo.to_s.split("\.").last
+					else
+						#talvez seja melhor usar generalInfo[0]
+						generalInfo = occurrenceLine.match('[a-zA-Z0-9]*\.[a-zA-Z0-9\_\.]*')
+						file = generalInfo.to_s.split("\.")[0]
+						methodName = generalInfo.to_s.split("\.").last
+					end
+					#file = occurrenceLine.to_s.match('Tests in error:[a-zA-Z0-9 \\n\.\[\]\=\(]*').to_s.split("\.").last
+					if (methodName != nil and file != nil)
+						filesInfo.push([file, methodName])
+						numberFailures += 1
+					end
+				end
 			end
 		end
 		return result, numberFailures, filesInfo

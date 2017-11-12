@@ -96,7 +96,8 @@ class TestCaseCoverage
         elsif (line.match('before_deploy:'))
           beforeDeploy = true
           lines += line
-          lines += "\n- tar -zcvf coverage-result.tar.gz /home/travis/build/#{@extractorCLI.getUsername}/#{@extractorCLI.getName}/target/site\n"
+          lines += "\n- tar -zcvf coverage-result.tar.gz /home/travis/build/#{@extractorCLI.getUsername}/#{@extractorCLI.getName}/target/site/cobertura\n"
+          #lines += "\n- tar -zcvf coverage-result.tar.gz /home/travis/build/#{@extractorCLI.getUsername}/#{@extractorCLI.getName}/target/site\n"
         elsif (line.match('deploy:(?!$)'))
           deploy = true
           lines += line
@@ -113,15 +114,22 @@ class TestCaseCoverage
           script = true
           lines += line
         elsif (script and !testScript)
-          if (line.match('mvn (clean)? test'))
-            lines += "\n  - mvn clean -Dtest=#{testFileName}##{testCaseName} test jacoco:report\n"
+          if (line.match('jacoco:report'))
+            lines += "\n  - mvn clean cobertura:cobertura -Dtest=#{testFileName}##{testCaseName} -DfailIfNoTests=false\n"
+            #lines += "\n  - mvn clean -Dtest=#{testFileName}##{testCaseName} test jacoco:report\n"
             testScript = true
-          elsif ((line == "\n" or line == "") and testScript)
-            script = true
-            testScript = true
-            lines += "\n  - mvn clean -Dtest=#{testFileName}##{testCaseName} test jacoco:report\n"
+          #if (line.match('mvn (clean)? test'))
+           # lines += "\n  - mvn clean -Dtest=#{testFileName}##{testCaseName} test jacoco:report\n"
+            #testScript = true
+          #elsif ((line == "\n" or line == "") and testScript)
+           # script = true
+            #testScript = true
+            #lines += "\n  - mvn clean -Dtest=#{testFileName}##{testCaseName} test jacoco:report\n"
           else
             lines += line
+            testScript = true
+            lines += "\n  - mvn clean cobertura:cobertura -Dtest=#{testFileName}##{testCaseName} -DfailIfNoTests=false\n"
+            #lines += "\n  - mvn clean -Dtest=#{testFileName}##{testCaseName} test jacoco:report\n"
           end
         elsif (deploy)
           if (line.match('provider:'))
@@ -147,6 +155,8 @@ class TestCaseCoverage
           else
             lines += line
           end
+        elsif (line.match('mvn clean') or line.match('mvn test'))
+          print "DO NOT CONSIDER THIS LINE"
         else
           lines += line
         end
@@ -158,14 +168,16 @@ class TestCaseCoverage
       scriptText = ""
 
       if (!script)
-        scriptText = "\nscript:\n- mvn clean -Dtest=#{testFileName}##{testCaseName} test jacoco:report\n"
+        #scriptText = "\nscript:\n- mvn clean -Dtest=#{testFileName}##{testCaseName} test jacoco:report\n"
+        scriptText = "\nscript:\n- mvn clean cobertura:cobertura -Dtest=#{testFileName}##{testCaseName} -DfailIfNoTests=false\n"
       end
       #if (!testScript)
       #  scriptText = "\n- mvn clean -Dtest=#{testFileName}##{testCaseName} test jacoco:report coveralls:report\n"
       #end
 
       if (!beforeDeploy)
-        beforeDeployText = "\n\nbefore_deploy:\n- tar -zcvf coverage-result.tar.gz /home/travis/build/#{@extractorCLI.getUsername}/#{@extractorCLI.getName}/target/site\n"
+        beforeDeployText = "\n\nbefore_deploy:\n- tar -zcvf coverage-result.tar.gz /home/travis/build/#{@extractorCLI.getUsername}/#{@extractorCLI.getName}/target/site/cobertura\n"
+        #beforeDeployText = "\n\nbefore_deploy:\n- tar -zcvf coverage-result.tar.gz /home/travis/build/#{@extractorCLI.getUsername}/#{@extractorCLI.getName}/target/site\n"
       end
 
       if (!requiredSudo)
@@ -251,12 +263,26 @@ class TestCaseCoverage
       </plugin>
     <\/plugins>"
 
+      pluginCoverage="<plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>cobertura-maven-plugin</artifactId>
+          <version>2.7</version>
+          <configuration>
+              <format>xml</format>
+              <maxmem>256m</maxmem>
+              <!-- aggregated reports for multi-module projects -->
+              <aggregate>true</aggregate>
+          </configuration>
+         </plugin>
+        <\/plugins>"
+
       if (file.match('<build>[\s\S]*<plugins>[\s\S]*<\/build>'))
         first = file.split(/<build>[\s\S]*<plugins>[\s\S]*<\/build>/)[0]
         second = file.split(/<build>[\s\S]*<plugins>[\s\S]*<\/build>/)[1]
         aux = file.match(/<build>[\s\S]*<plugins>[\s\S]*<\/build>/)[0]
         if (aux.match(/<\/plugins>[\s\S]*<\/build>/))
-          aux = aux.to_s.gsub(/<\/plugins>/, pluginsOnPom)
+          #aux = aux.to_s.gsub(/<\/plugins>/, pluginsOnPom)
+          aux = aux.to_s.gsub(/<\/plugins>/, pluginCoverage)
           file = File.open("pom.xml", "w")
           sleep(5)
           file.write(first)
@@ -270,6 +296,7 @@ class TestCaseCoverage
       configTag = false
       closeConfigTag = false
       pluginSurefire = false
+      checkAddProperty = false
       newText = ""
       file = File.read("pom.xml")
       sleep (5)
@@ -283,20 +310,55 @@ class TestCaseCoverage
         end
         if (line.match("<artifactId>maven-surefire-plugin</artifactId>"))
           pluginSurefire = true
+          checkAddProperty = true
         end
         if (line.match('<configuration>') and pluginSurefire and pluginTag)
           newText += "<testFailureIgnore>true</testFailureIgnore>\n"
-          configTag = false
+          #configTag = false
           pluginSurefire = false
         end
-        if (line.match("</configuration>"))
-          configTag = false
+        #if (line.match("</configuration>"))
+        #  configTag = false
+        #end
+      end
+
+
+      tagBuild = false
+      pluginsTag = false
+      finalPomText = ""
+      if (!checkAddProperty)
+        newText.each_line do |line|
+          finalPomText += line
+          if (line.match("<build>"))
+            tagBuild = true
+          end
+          if (line.match("<plugins>"))
+            pluginsTag = true
+          end
+          if(pluginsTag and tagBuild)
+            pluginsTag = false
+            tagBuild = false
+            finalPomText += "<plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <testFailureIgnore>true</testFailureIgnore>
+          <classpathDependencyExcludes>
+            <exclude>javax.measure:jsr-275</exclude>
+          </classpathDependencyExcludes>
+        </configuration>
+      </plugin>"
+          end
         end
       end
 
       out_file = File.new("pom.xml", "w")
       sleep(5)
-      out_file.puts(newText)
+      if (finalPomText == "")
+        out_file.puts(newText)
+      else
+        out_file.puts(finalPomText)
+      end
       out_file.close
 
       Dir.chdir actualPath
@@ -320,9 +382,19 @@ class TestCaseCoverage
     begin
       pathReport = checkoutFilesLastBuild(pathDownload)
 
-      #Dir.chdir pathReport.gsub('jacoco.csv','').gsub('./','').gsub("\n",'').to_s
-      Dir.chdir pathReport.split('jacoco.csv')[0]
+      #coverageResult = coverageAnalysisWithJacoco(pathReport)
+      coverageResult = coverageAnalysisWithCoverage(pathReport)
+      deleteFilesLastBuild(pathDownload)
+    rescue
+      print "0NOT AVAILABLE INFORMATION\n"
+    end
+    return coverageResult
+  end
 
+  def coverageAnalysisWithJacoco(pathReport)
+    coverageResult = nil
+    begin
+      Dir.chdir pathReport.split('jacoco.csv')[0]
       packagesCovered = []
       csvCoverageFile = File.read('jacoco.csv')
       csv = CSV.parse(csvCoverageFile, :headers => true)
@@ -334,9 +406,34 @@ class TestCaseCoverage
       end
       #dormir aqui
       coverageResult = coveragedMethodsByFile(packagesCovered)
-      deleteFilesLastBuild(pathDownload)
     rescue
-      print "0NOT AVAILABLE INFORMATION\n"
+
+    end
+    return coverageResult
+  end
+
+  def coverageAnalysisWithCoverage(pathReport)
+    Dir.chdir pathReport.split('coverage.xml')[0]
+    coverageResult = Hash.new()
+    begin
+      doc = File.open("coverage.xml") { |f| Nokogiri::XML(f) }
+      classes = doc.xpath("//packages//classes//class")
+      classes.each do |oneClass|
+        if(oneClass["line-rate"] != "0.0")
+          methods = oneClass.css("methods method")
+          methodsByClass = Array.new
+          methods.each do |method|
+            if (method["line-rate"] != "0.0")
+              methodsByClass.push(method["name"])
+            end
+          end
+          if (methodsByClass.size > 0)
+            coverageResult[oneClass["filename"].split("\/").last.gsub(".java", "")] = methodsByClass
+          end
+        end
+      end
+    rescue
+
     end
     return coverageResult
   end
@@ -389,11 +486,20 @@ class TestCaseCoverage
       result = %x(curl -vLJO -H 'Accept: application/octet-stream' 'https://api.github.com/repos/#{@extractorCLI.getUsername}/#{@extractorCLI.getName}/releases/assets/#{assetID}')
       sleep(20)
       unzip = %x(tar xvzf coverage-result.tar.gz)
-      jacocoPath = %x(find -name jacoco.csv)
+      #jacocoPath = getPathJacocoReport()
+      jacocoPath = getPathCoverageReport()
     rescue
       print "NOT AVAILABLE INFORMATION\n"
     end
     return jacocoPath
+  end
+
+  def getPathJacocoReport()
+    return %x(find -name jacoco.csv)
+  end
+
+  def getPathCoverageReport()
+    return %x(find -name coverage.xml)
   end
 
 end
