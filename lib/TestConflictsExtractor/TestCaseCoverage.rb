@@ -90,75 +90,79 @@ class TestCaseCoverage
       branches = false
 
       file.each_line do |line|
-        if (line.match('sudo: false') or line.match('sudo: required'))
-          lines += "\nsudo: required\n"
-          requiredSudo = true
-        elsif (line.match('before_deploy:'))
-          beforeDeploy = true
-          lines += line
-          lines += "\n- tar -zcvf coverage-result.tar.gz /home/travis/build/#{@extractorCLI.getUsername}/#{@extractorCLI.getName}/target/site/cobertura\n"
-          #lines += "\n- tar -zcvf coverage-result.tar.gz /home/travis/build/#{@extractorCLI.getUsername}/#{@extractorCLI.getName}/target/site\n"
-        elsif (line.match('deploy:(?!$)'))
-          deploy = true
-          lines += line
-        elsif (line.match('branches'))
-          branches = true
-        elsif (branches == true)
-          if (line.match('only:') or line.match(/[\s]+\-/))
-            branches = true
-          else
-            branches = false
+        if (!line.match('mvn clean|mvn test|clean test|clean|test|deploy.sh|echo'))
+          if (line.match('sudo: false') or line.match('sudo: required'))
+            lines += "\nsudo: required\n"
+            requiredSudo = true
+          elsif (line.match('before_deploy:'))
+            beforeDeploy = true
             lines += line
-          end
-        elsif (line.match('script:'))
-          script = true
-          lines += line
-        elsif (script and !testScript)
-          if (line.match('jacoco:report'))
-            lines += "\n  - mvn clean cobertura:cobertura -Dtest=#{testFileName}##{testCaseName} -DfailIfNoTests=false\n"
-            #lines += "\n  - mvn clean -Dtest=#{testFileName}##{testCaseName} test jacoco:report\n"
-            testScript = true
-          #if (line.match('mvn (clean)? test'))
-           # lines += "\n  - mvn clean -Dtest=#{testFileName}##{testCaseName} test jacoco:report\n"
-            #testScript = true
-          #elsif ((line == "\n" or line == "") and testScript)
-           # script = true
-            #testScript = true
-            #lines += "\n  - mvn clean -Dtest=#{testFileName}##{testCaseName} test jacoco:report\n"
-          else
-            lines += line
-            testScript = true
-            lines += "\n  - mvn clean cobertura:cobertura -Dtest=#{testFileName}##{testCaseName} -DfailIfNoTests=false\n"
-            #lines += "\n  - mvn clean -Dtest=#{testFileName}##{testCaseName} test jacoco:report\n"
-          end
-        elsif (deploy)
-          if (line.match('provider:'))
-            lines += "\nprovider: releases"
-            providerRelease = true
-          elsif (line.match('file_glob:'))
-            lines += "\nfile_glob: true"
-            fileGlob = true
-          elsif (line.match('overwrite:'))
-            lines += "\noverwrite: true"
-            overwrite = true
-          elsif (line.match('skip_cleanup:'))
-            lines += "\nskip_cleanup: true"
-            skipCleanup = true
-          elsif (line.match("file:"))
+            lines += "\n- tar -zcvf coverage-result.tar.gz /home/travis/build/#{@extractorCLI.getUsername}/#{@extractorCLI.getName}/target/site/cobertura\n"
+            #lines += "\n- tar -zcvf coverage-result.tar.gz /home/travis/build/#{@extractorCLI.getUsername}/#{@extractorCLI.getName}/target/site\n"
+          elsif (line.match('deploy:(?!$)'))
             deploy = true
-            lines +=  line
-            lines += "\nfile: coverage-result.tar.gz"
-            fileAdd = true
-          elsif (line.match('on:'))
-            lines += "\non:\ttags: true"
-            onTags = true
+            lines += line
+          elsif (line.match('branches'))
+            branches = true
+          elsif (branches == true)
+            if (line.match('only:') or line.match(/[\s]+\-/))
+              branches = true
+            else
+              branches = false
+              lines += line
+            end
+          elsif (line.match('script:'))
+            script = true
+            testScript = true
+            lines += line
+            lines += "\n  - mvn clean cobertura:cobertura -Dtest=#{testFileName}##{testCaseName} -DfailIfNoTests=false\n"
+          elsif (script and !testScript)
+            if (line.match('jacoco:report'))
+              lines += "\n  - mvn clean cobertura:cobertura -Dtest=#{testFileName}##{testCaseName} -DfailIfNoTests=false\n"
+              #lines += "\n  - mvn clean -Dtest=#{testFileName}##{testCaseName} test jacoco:report\n"
+              testScript = true
+              #if (line.match('mvn (clean)? test'))
+              # lines += "\n  - mvn clean -Dtest=#{testFileName}##{testCaseName} test jacoco:report\n"
+              #testScript = true
+              #elsif ((line == "\n" or line == "") and testScript)
+              # script = true
+              #testScript = true
+              #lines += "\n  - mvn clean -Dtest=#{testFileName}##{testCaseName} test jacoco:report\n"
+            else
+              lines += line
+              testScript = true
+              lines += "\n  - mvn clean cobertura:cobertura -Dtest=#{testFileName}##{testCaseName} -DfailIfNoTests=false\n"
+              #lines += "\n  - mvn clean -Dtest=#{testFileName}##{testCaseName} test jacoco:report\n"
+            end
+          elsif (deploy)
+            if (line.match('provider:'))
+              lines += "\nprovider: releases"
+              providerRelease = true
+            elsif (line.match('file_glob:'))
+              lines += "\nfile_glob: true"
+              fileGlob = true
+            elsif (line.match('overwrite:'))
+              lines += "\noverwrite: true"
+              overwrite = true
+            elsif (line.match('skip_cleanup:'))
+              lines += "\nskip_cleanup: true"
+              skipCleanup = true
+            elsif (line.match("file:"))
+              deploy = true
+              lines +=  line
+              lines += "\nfile: coverage-result.tar.gz"
+              fileAdd = true
+            elsif (line.match('on:'))
+              lines += "\non:\ttags: true"
+              onTags = true
+            else
+              lines += line
+            end
+          elsif (line.match('mvn clean') or line.match('mvn test'))
+            print "DO NOT CONSIDER THIS LINE"
           else
             lines += line
           end
-        elsif (line.match('mvn clean') or line.match('mvn test'))
-          print "DO NOT CONSIDER THIS LINE"
-        else
-          lines += line
         end
       end
 

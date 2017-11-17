@@ -20,6 +20,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 		notBuiltParents = Array.new
 		builtMergeScenarios = Array.new
 		rebuiltMergeScenarios = Array.new
+		failedBCConflicts = Hash.new
 		totalPushesNoBuilt = 0
 		totalParentsNoPassed = 0
 		totalPushes = 0
@@ -216,7 +217,8 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 											if (isConflict and resultFailed[0] and verifyDateDifference(lastScenarioDateFailed, getDataMergeScenario(build.commit.sha)))
 												effort = effortTimeExtractor.checkFixedBuildFailed(build.commit.sha, mergeCommit)
 												resultFailedBuild = confFailedBuilt.findConflictCause(build, getPathProject())
-												if (resultFailed[2][8] == true)
+												verifyCompilationProblem(resultFailedBuild[0][0], build, failedBCConflicts)
+												if (resultFailedBuild[2][8] == true)
 													totalMSFailedParentsPreservation += 1
 												else
 													totalMSFailedParentsNoPreservation += 1
@@ -368,7 +370,8 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 													#writeCSVBuilt.printConflictTest(build, result[1][0], result[2][0], resultFailedBuild[0][0], projectNameFile, effort, resultFailedBuild[0][1], resultFailedBuild[2][0], resultFailedBuild[2][1], resultFailedBuild[2][2], resultFailedBuild[2][3], resultFailedBuild[2][4], resultFailedBuild[2][5])
 													#lastScenarioDateFailed = getDataMergeScenario(build.commit.sha)
 													#validScenarioProjectFailed += 1
-													if (resultFailed[2][8] == true)
+													verifyCompilationProblem(resultFailedBuild[0][0], build, failedBCConflicts)
+													if (resultFailedBuild[2][8] == true)
 														totalMSFailedParentsPreservation += 1
 													else
 														totalMSFailedParentsNoPreservation += 1
@@ -586,6 +589,31 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 					end
 				end
 
+				failedBCConflicts.each do |mergeFailedBC, build|
+					mergeCommit = mergeScenariosAnalysisCommit(mergeFailedBC)
+					if (verifyDateDifference(lastScenarioDate, getDataMergeScenario(mergeFailedBC)))
+						if (!verifyEmptyBuildLogs(build))
+							if (validScenarioProject < 100)
+								type = confBuild.typeConflict(mergeFailedBC)
+								result = @gitProject.conflictScenario(mergeCommit, allBuilds)
+								isConflict = confBuild.conflictAnalysisCategories(erroredConflicts, type, result[0])
+								if (isConflict and result[0] == true)
+									stateBC = confErroredForkBuilt.findConflictCauseFromFailedScenario(build, getPathProject(), pathGumTree, type, true, cloneProject)
+									effort = nil
+									if (stateBC.size > 2)
+										effort = effortTimeExtractor.checkFixedBuild(build.commit.sha, mergeCommit, getPathProject(), pathGumTree, stateBC[3])
+									end
+									writeCSVBuilt.printConflictBuildFromFailedBuils(build.id, result[1][0], result[2][0], stateBC, projectNameFile, effort)
+									validScenarioProject += 1
+									lastScenarioDate = getDataMergeScenario(build.commit.sha)
+								end
+							end
+						else
+							builtMergeScenarios.delete(build.commit.sha)
+						end
+					end
+				end
+
 				validScenarioProjectList.each do |mergeScenario|
 					if (@projectMergeScenarios.include? mergeScenario+"\n" or @projectMergeScenarios.include? mergeScenario)
 						mergeCommit = mergeScenariosAnalysisCommit(mergeScenario)
@@ -772,6 +800,18 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 			end
 		end
 		return externalCause
+	end
+
+	def verifyCompilationProblem(problem, build, failedBCConflicts)
+		begin
+			problem.each do |oneProblem|
+				if (oneProblem == "CompilationProblem")
+					failedBCConflicts[build.commit.sha] = build
+				end
+			end
+		rescue
+
+		end
 	end
 
 end

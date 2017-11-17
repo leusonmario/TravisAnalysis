@@ -150,6 +150,55 @@ class ConflictCategoryErrored
 		end
 	end
 
+	def findConflictCauseFromFailedScenario(build, pathProject, pathGumTree, type, mergeScenario, cloneProject)
+		localUnavailableSymbol = 0
+		localMethodUpdate = 0
+		localMalformedExp = 0
+		localDuplicateStatement = 0
+		localDependencyProblem = 0
+		localUnimplementedMethod = 0
+		localOtherCase = 0
+		localAlternativeStatement = 0
+
+		indexJob = 0
+		causesFilesConflicts = CausesFilesConflicting.new()
+		while (indexJob < build.job_ids.size)
+			if (build.jobs[indexJob].state == "failed")
+				if (build.jobs[indexJob].log != nil)
+					build.jobs[indexJob].log.body do |bodyJob|
+						if (bodyJob != nil)
+							body = ""
+							otherCase = true
+							if (bodyJob.include?('Retrying, 3 of 3'))
+								body = bodyJob[/Retrying, 3 of 3[\s\S]*/]
+							else
+								body = bodyJob
+							end
+							otherCase = getCauseByBuild(body, bodyJob, causesFilesConflicts, localUnavailableSymbol, localMethodUpdate, localMalformedExp, localDuplicateStatement, localDependencyProblem, localUnimplementedMethod, localAlternativeStatement)
+							localUnavailableSymbol = otherCase[1]
+							localMethodUpdate = otherCase[2]
+							localMalformedExp = otherCase[3]
+							localDuplicateStatement = otherCase[4]
+							localDependencyProblem = otherCase[5]
+							localUnimplementedMethod = otherCase[6]
+							localAlternativeStatement = otherCase[7]
+							causesFilesConflicts = otherCase[8]
+							if (otherCase[0])
+								localOtherCase += 1
+							end
+						end
+					end
+				end
+			end
+			indexJob += 1
+		end
+		if (mergeScenario)
+			return causesFilesConflicts.getCausesConflict(), getFinalStatus(pathGumTree, pathProject, build.commit.sha, causesFilesConflicts, localMethodUpdate, localUnavailableSymbol, localDuplicateStatement, localUnimplementedMethod, localDependencyProblem, localMalformedExp, localAlternativeStatement, cloneProject), causesFilesConflicts.getCausesNumber(), causesFilesConflicts
+		else
+			return causesFilesConflicts.getCausesConflict()
+		end
+	end
+
 	def getCauseByBuild(body, bodyJob, causesFilesConflicts, localUnavailableSymbol, localMethodUpdate, localMalformedExp, localDuplicateStatement, localDependencyProblem, localUnimplementedMethod, localAlternativeStatemnt)
 		otherCase = true
 
