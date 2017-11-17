@@ -152,95 +152,98 @@ class ConflictCategoryFailed
 		result = ""
 		numberFailures = 0
 		filesInfo = []
-		if (log[/Errors: [1-9][0-9]*/])
-			@failed += 1
-			result = "failed"
-		elsif (log[/#{stringBuildFail}\s*([^\n\r]*)\s*([^\n\r]*)\s*([^\n\r]*)failed/] || log[/#{stringTheCommand}("mvn|"\.\/mvnw)+(.*)failed(.*)/])
-			@failed += 1
-			result = "failed"
-		elsif (log[/There are test failures/])
-			@errored += 1
-			result = "errored"
-		elsif (log[/#{stringTheCommand}("git clone |"git checkout)(.*?)failed(.*)[\n]*/])
-			@gitProblem += 1
-			result = "gitProblem"
-		elsif (log[/#{stringNoOutput}(.*)wrong(.*)[\n]*#{stringTerminated}|Could not transfer artifact|Could not find artifact/])
-			@remoteError += 1
-			result = "CompilationProblem"
-		elsif (log[/#{stringTheCommand}("cd|"sudo|"echo|"eval)+ (.*)failed(.*)/])
-			@permission += 1
-			result = "permission"
-		elsif (log[/reason: actual and formal argument lists differ in length|cannot find symbol/])
-			@cmpProblem += 1
-			result = "CompilationProblem"
-		else
-			@otherError += 1
-			result = "otherError"
+		if (log != nil)
+			if (log[/Errors: [1-9][0-9]*/])
+				@failed += 1
+				result = "failed"
+			elsif (log[/#{stringBuildFail}\s*([^\n\r]*)\s*([^\n\r]*)\s*([^\n\r]*)failed/] || log[/#{stringTheCommand}("mvn|"\.\/mvnw)+(.*)failed(.*)/])
+				@failed += 1
+				result = "failed"
+			elsif (log[/There are test failures/])
+				@errored += 1
+				result = "errored"
+			elsif (log[/#{stringTheCommand}("git clone |"git checkout)(.*?)failed(.*)[\n]*/])
+				@gitProblem += 1
+				result = "gitProblem"
+			elsif (log[/#{stringNoOutput}(.*)wrong(.*)[\n]*#{stringTerminated}/] || log[/404 Not Found/])
+				@remoteError += 1
+				result = "CompilationProblem"
+			elsif (log[/#{stringTheCommand}("cd|"sudo|"echo|"eval)+ (.*)failed(.*)/])
+				@permission += 1
+				result = "permission"
+			elsif (log[/reason: actual and formal argument lists differ in length|cannot find symbol/] || log[/is already defined in/])
+				@cmpProblem += 1
+				result = "CompilationProblem"
+			else
+				@otherError += 1
+				result = "otherError"
+			end
+
+			if (log[/Failed tests: (\n)*[\s\S\:\)\(]*\nTests run: [\s\S\:\,\-\.0-9\n ]* Failures: [1-9][0-9]*[\s\S\n]* BUILD FAILURE/])
+				numberFailures = log.to_s.match(/Failed tests: (\n)*[\s\S\:\)\(]*\nTests run: [\s\S\:\,\-\.0-9\n ]* Failures: [1-9][0-9]*[\s\S\n]* BUILD FAILURE/).to_s.match(/Failed tests: (\n)*[\s\S]*(\n)*Skipped:/).to_s.match(/Failures: [0-9]*/).to_s.split("Failures: ")[1].to_i
+			end
+			if (log[/Failures: [1-9][0-9]*[\s\S]* <<< FAILURE!/])
+				numberOccurences = log.to_enum(:scan, /[a-zA-Z0-9]*\([a-zA-Z.0-9]*\)  Time elapsed: [0-9.]* sec  <<< FAILURE!/).map { Regexp.last_match }
+				numberOccurences.each do |occurence|
+					generalInfo = occurence.to_s.split("\(")
+					methodName = generalInfo[0]
+					file = generalInfo[1].split("\)")[0].to_s.split("\.").last
+					filesInfo.push([file, methodName])
+					numberFailures += 1
+				end
+			end
+			if (log[/Failed tests: (\n)*[\s\S\:\)\(]*\nTests run:/])
+				result = "errored"
+				numberOccurences = log.to_s.to_enum(:scan, /Failed tests: (\n)*[\s\S\:\)\(]*\nTests run:/).map { Regexp.last_match }
+				numberOccurences[0].to_s.each_line do |occurrenceLine|
+					if (!occurrenceLine.to_s.match('Tests in error|Tests run|there were zero|->|not invoked|();') and occurrenceLine != "\n")
+						methodName = ""
+						file = ""
+						if (occurrenceLine.match('\('))
+							generalInfo = occurrenceLine.match('[a-zA-Z0-9\(]*\.[a-zA-Z0-9\.\_]*')
+							methodName = generalInfo.to_s.split("\(")[0]
+							file = generalInfo.to_s.split("\.").last
+						else
+							generalInfo = occurrenceLine.match('[a-zA-Z0-9]*\.[a-zA-Z0-9\_\.]*')
+							file = generalInfo.to_s.split("\.")[0]
+							methodName = generalInfo.to_s.split("\.").last
+						end
+						if (methodName != nil and file != nil)
+							filesInfo.push([file, methodName])
+							numberFailures += 1
+						end
+					end
+				end
+			elsif(log[/There are test failures/])
+				result = "errored"
+				numberOccurences = log.to_s.to_enum(:scan, /Tests in error:[\s\S]*Tests run/).map { Regexp.last_match }
+				numberOccurences[0].to_s.each_line do |occurrenceLine|
+					#numberOccurences.each do |occurrenceLine|
+					if (!occurrenceLine.to_s.match('Tests in error|Tests run|Run|there were zero|->|not invoked|();') and occurrenceLine != "\n")
+						#if (occurrenceLine != "\n")
+						#methodName = occurrenceLine.to_s.match('Tests in error:[a-zA-Z0-9 \\n\.]*').to_s.split("\.").last
+						methodName = ""
+						file = ""
+						if (occurrenceLine.match('\('))
+							generalInfo = occurrenceLine.match('[a-zA-Z0-9\(]*\.[a-zA-Z0-9\.\_]*')
+							methodName = generalInfo.to_s.split("\(")[0]
+							file = generalInfo.to_s.split("\.").last
+						else
+							#talvez seja melhor usar generalInfo[0]
+							generalInfo = occurrenceLine.match('[a-zA-Z0-9]*\.[a-zA-Z0-9\_\.]*')
+							file = generalInfo.to_s.split("\.")[0]
+							methodName = generalInfo.to_s.split("\.").last
+						end
+						#file = occurrenceLine.to_s.match('Tests in error:[a-zA-Z0-9 \\n\.\[\]\=\(]*').to_s.split("\.").last
+						if (methodName != nil and file != nil)
+							filesInfo.push([file, methodName])
+							numberFailures += 1
+						end
+					end
+				end
+			end
 		end
 
-		if (log[/Failed tests: (\n)*[\s\S\:\)\(]*\nTests run: [\s\S\:\,\-\.0-9\n ]* Failures: [1-9][0-9]*[\s\S\n]* BUILD FAILURE/])
-			numberFailures = log.to_s.match(/Failed tests: (\n)*[\s\S\:\)\(]*\nTests run: [\s\S\:\,\-\.0-9\n ]* Failures: [1-9][0-9]*[\s\S\n]* BUILD FAILURE/).to_s.match(/Failed tests: (\n)*[\s\S]*(\n)*Skipped:/).to_s.match(/Failures: [0-9]*/).to_s.split("Failures: ")[1].to_i
-		end
-		if (log[/Failures: [1-9][0-9]*[\s\S]* <<< FAILURE!/])
-			numberOccurences = log.to_enum(:scan, /[a-zA-Z0-9]*\([a-zA-Z.0-9]*\)  Time elapsed: [0-9.]* sec  <<< FAILURE!/).map { Regexp.last_match }
-			numberOccurences.each do |occurence|
-				generalInfo = occurence.to_s.split("\(")
-				methodName = generalInfo[0]
-				file = generalInfo[1].split("\)")[0].to_s.split("\.").last
-				filesInfo.push([file, methodName])
-				numberFailures += 1
-			end
-		end
-		if (log[/Failed tests: (\n)*[\s\S\:\)\(]*\nTests run:/])
-			result = "errored"
-			numberOccurences = log.to_s.to_enum(:scan, /Failed tests: (\n)*[\s\S\:\)\(]*\nTests run:/).map { Regexp.last_match }
-			numberOccurences[0].to_s.each_line do |occurrenceLine|
-				if (!occurrenceLine.to_s.match('Tests in error|Tests run|there were zero|->|not invoked|();') and occurrenceLine != "\n")
-					methodName = ""
-					file = ""
-					if (occurrenceLine.match('\('))
-						generalInfo = occurrenceLine.match('[a-zA-Z0-9\(]*\.[a-zA-Z0-9\.\_]*')
-						methodName = generalInfo.to_s.split("\(")[0]
-						file = generalInfo.to_s.split("\.").last
-					else
-						generalInfo = occurrenceLine.match('[a-zA-Z0-9]*\.[a-zA-Z0-9\_\.]*')
-						file = generalInfo.to_s.split("\.")[0]
-						methodName = generalInfo.to_s.split("\.").last
-					end
-					if (methodName != nil and file != nil)
-						filesInfo.push([file, methodName])
-						numberFailures += 1
-					end
-				end
-			end
-		elsif(log[/There are test failures/])
-			result = "errored"
-			numberOccurences = log.to_s.to_enum(:scan, /Tests in error:[\s\S]*Tests run/).map { Regexp.last_match }
-			numberOccurences[0].to_s.each_line do |occurrenceLine|
-			#numberOccurences.each do |occurrenceLine|
-				if (!occurrenceLine.to_s.match('Tests in error|Tests run|Run|there were zero|->|not invoked|();') and occurrenceLine != "\n")
-				#if (occurrenceLine != "\n")
-					#methodName = occurrenceLine.to_s.match('Tests in error:[a-zA-Z0-9 \\n\.]*').to_s.split("\.").last
-					methodName = ""
-					file = ""
-					if (occurrenceLine.match('\('))
-						generalInfo = occurrenceLine.match('[a-zA-Z0-9\(]*\.[a-zA-Z0-9\.\_]*')
-						methodName = generalInfo.to_s.split("\(")[0]
-						file = generalInfo.to_s.split("\.").last
-					else
-						#talvez seja melhor usar generalInfo[0]
-						generalInfo = occurrenceLine.match('[a-zA-Z0-9]*\.[a-zA-Z0-9\_\.]*')
-						file = generalInfo.to_s.split("\.")[0]
-						methodName = generalInfo.to_s.split("\.").last
-					end
-					#file = occurrenceLine.to_s.match('Tests in error:[a-zA-Z0-9 \\n\.\[\]\=\(]*').to_s.split("\.").last
-					if (methodName != nil and file != nil)
-						filesInfo.push([file, methodName])
-						numberFailures += 1
-					end
-				end
-			end
-		end
 		return result, numberFailures, filesInfo
 	end
 end
