@@ -97,9 +97,13 @@ class MainAnalysisProjects
 		
 		@projectsList.each do |project|
 			printProjectInformation(index, project)
+			begin
 			mainGitProject = GitProject.new(project, getLocalCLone(), getLoginUser(), getPasswordUser())
 			cloneProject = BadlyMergeScenarioExtractor.new(project, "", getLocalCLone())
 			extractorCLI = ExtractorCLI.new(getLoginUser(), getPasswordUser(), getTravisToken(), "travis", getLocalCLone(), project)
+			rescue
+				print "\nPROJECT NOT FOUND\n"
+			end
 			if(mainGitProject.getProjectAvailable() and mainGitProject.getCloneProject().checkPomFile)
 				projectName = mainGitProject.getProjectName()
 				buildTravis = BuildTravis.new(projectName, mainGitProject, getLocalCLone())

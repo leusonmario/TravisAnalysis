@@ -11,7 +11,7 @@ class FixUnavailableSymbol
         fixPattern[index] = "DEPENDENCY-CHANGE"
       elsif (diffErrorFix[0][fileConflictBuild[0]].to_s.match(/Insert SimpleName: [a-zA-Z0-9]*#{fileConflictBuild[1]}[\(\)0-9]* into MethodDeclaration/))
         fixPattern[index] = "REINTRODUCE-MISSING-METHOD"
-      elsif (diffErrorFix[0][fileConflictBuild[0]].to_s.match(/Insert QualifiedName: [\s\S]*#{fileConflictBuild[1]}[\s\S]* into ImportDeclaration/) or diffErrorFix[0][fileConflictBuild[0]].to_s.match(/Update QualifiedName: [a-zA-Z0-9\.\(\) ]*\.#{fileConflictBuild[1]}/) or diffErrorFix[0][fileConflictBuild[0]].to_s.match(/Update QualifiedName: [a-zA-Z0-9\.\(\) ]*/))
+      elsif (diffErrorFix[0][fileConflictBuild[0]].to_s.match(/Update QualifiedName: [a-zA-Z0-9\.\_]*#{fileConflictBuild[1]}[\(\)0-9]* to [a-zA-Z0-9\.\_]*#{fileConflictBuild[1]}/) or diffErrorFix[0][fileConflictBuild[0]].to_s.match(/Insert QualifiedName: [\s\S]*#{fileConflictBuild[1]}[\s\S]* into ImportDeclaration/) or diffErrorFix[0][fileConflictBuild[0]].to_s.match(/Update QualifiedName: [a-zA-Z0-9\.\(\) ]*\.#{fileConflictBuild[1]}/) or diffErrorFix[0][fileConflictBuild[0]].to_s.match(/Update QualifiedName: [a-zA-Z0-9\.\(\) ]*/))
         fixPattern[index] = "IMPORT-UPDATE"
       elsif (diffErrorFix[0][fileConflictBuild[0]].to_s.match(/Delete (QualifiedName:|SimpleName:SimpleType:) [\s\S]*#{fileConflictBuild[1]}/))
         fixPattern[index] = "DELETE-IMPORT"
