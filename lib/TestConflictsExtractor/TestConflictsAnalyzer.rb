@@ -16,43 +16,43 @@ class TestConflictsAnalyzer
   end
 
   def runTCAnalysis(coverageAnalysis, addModFilesRightResult, addModFilesLeftResult)
-    changedCoveragedMethodsParentOne = converagedMethodsByFile(coverageAnalysis, addModFilesLeftResult)
-    changedCoveragedMethodsParentTwo = converagedMethodsByFile(coverageAnalysis, addModFilesRightResult)
+    changedCoveragedMethodsParentOne = converagedMethodsByFile(coverageAnalysis, addModFilesLeftResult[0])
+    changedCoveragedMethodsParentTwo = converagedMethodsByFile(coverageAnalysis, addModFilesRightResult[0])
 
     sameMethodsModified = checkChangesOnSameMethods(changedCoveragedMethodsParentOne, changedCoveragedMethodsParentTwo)
     changesOnSameMethod = false
-    dependentChangesParentOne = false
-    dependentChangesParentTwo = false
+    dependentChanges = false
     if (sameMethodsModified[0].size > 0)
       changesOnSameMethod = true
     end
-    if (sameMethodsModified[1].size > 0)
-      dependentChangesParentOne = true
+    if (sameMethodsModified[1].size > 0 and sameMethodsModified[2].size > 0)
+      dependentChanges = true
     end
-    if (sameMethodsModified[2].size > 0)
-      dependentChangesParentTwo = true
-    end
-    return changesOnSameMethod, dependentChangesParentOne, dependentChangesParentTwo
+    return changesOnSameMethod, dependentChanges
   end
 
   def converagedMethodsByFile(methodsCoverage, changedMethodsByParent)
     changedCoveragedMethods = Hash.new
-    methodsCoverage.each do |key, value|
-      if (changedMethodsByParent[key] != nil)
-        auxOne = Array.new
-        value.each do |methodName|
-          changedMethodsByParent[key].each do |methodNameOne|
-            if(methodName[/#{methodNameOne}\([a-zA-Z0-9\, ]*\)/])
-              if (!auxOne.include? methodNameOne)
-                auxOne.push(methodName)
+    begin
+      methodsCoverage.each do |key, value|
+        if (changedMethodsByParent[key] != nil)
+          auxOne = Array.new
+          value.each do |methodName|
+            changedMethodsByParent[key].each do |methodNameOne|
+              if(methodName[/#{methodNameOne}\([a-zA-Z0-9\, ]*\)/])
+                if (!auxOne.include? methodNameOne)
+                  auxOne.push(methodName)
+                end
               end
             end
-          end
-          if (auxOne.size > 1)
-            changedCoveragedMethods[key] = auxOne
+            if (auxOne.size > 1)
+              changedCoveragedMethods[key] = auxOne
+            end
           end
         end
       end
+    rescue
+      print "METHODS COVERAGE WAS NULL"
     end
     return changedCoveragedMethods
   end
@@ -62,6 +62,7 @@ class TestConflictsAnalyzer
     differentModifiedParentOne = Hash.new
     differentModifiedParentTwo = Hash.new
     auxMethods = Array.new
+    auxAllKeys = changedConveragedMethodsParentTwo.keys
     sameFile = false
     changedCoveragedMethodsParentOne.each do |key, value|
       sameFile = false
@@ -106,7 +107,7 @@ class TestConflictsAnalyzer
       end
     end
     auxAllKeys.each do |oneKey|
-      differentModifiedParentTwo[oneKey] = changedFilesTwo[oneKey]
+      differentModifiedParentTwo[oneKey] = changedConveragedMethodsParentTwo[oneKey]
     end
 
     return sameMethodsModified, differentModifiedParentOne, differentModifiedParentTwo
