@@ -30,6 +30,7 @@ class CloneProjectGit
 		actualPath = Dir.pwd
 		Dir.chdir @localClone
 		checkPom = %x(find -name 'pom.xml')
+		checkPom += %x(find -name 'pom.xml.in')
 		sleep 3
 		checkGradle = %x(find -name 'build.gradle')
 		Dir.chdir actualPath
