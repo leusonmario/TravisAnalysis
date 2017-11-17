@@ -97,9 +97,9 @@ class ParentsMSDiff
 	end
 
 	def getDiffByDeletedFile(numberOcorrences)
-		index = 0
-		result = []
-		while(index < numberOcorrences.to_i)
+		#index = 0
+		result = Array.new
+		#while(index < numberOcorrences.to_i)
 			begin
 				gumTreePage = Nokogiri::HTML(RestClient.get("http://127.0.0.1:4567/"))
 				tableDeleted = gumTreePage.to_s.match(/Deleted files[\s\S]*Added files/)[0].match(/<table [\s\S]*<\/table>/)
@@ -109,22 +109,26 @@ class ParentsMSDiff
 			rescue
 
 			end
-			index += 1
-		end
+			#index += 1
+		#end
 		return result
 	end
 
 	def getDiffByAddedFile(numberOcorrences)
-		index = 0
-		result = []
-		while(index < numberOcorrences.to_i)
+		#index = 0
+		result = Array.new
+		#while(index < numberOcorrences.to_i)
+		begin
 			gumTreePage = Nokogiri::HTML(RestClient.get("http://127.0.0.1:4567/"))
 			tableDeleted = gumTreePage.to_s.match(/Added files[\s\S]*<\/table>/)[0].match(/<table [\s\S]*<\/table>/)
 			Nokogiri::HTML(tableDeleted[0]).css('table tr td').each do |element|
 				result.push(element.text)
 			end
-			index += 1
+		rescue
+
 		end
+			#index += 1
+		#end
 		return result
 	end
 

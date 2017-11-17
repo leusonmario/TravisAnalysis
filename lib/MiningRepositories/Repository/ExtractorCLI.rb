@@ -109,7 +109,7 @@ class ExtractorCLI
 			merge = %x(git merge leftParent --no-edit)
 			if (!merge.match(/Automatic merge failed; fix conflicts and then commit the result/) and !merge.match(/not something we can merge/) and merge != "")
 				%x(git commit -a -m "Rebuilt : #{mergeCommit}")
-				%x(git push origin)
+				%x(git push -f origin)
 				mergeResult = true
 			else
 				if (merge.match(/not something we can merge/))
@@ -223,7 +223,7 @@ class ExtractorCLI
   def buildStatusAfterCoverage()
 		logs = getLogsBuild()
 		logs.each do |log|
-			if (log.to_s.match('Failures: [1-9]+') or log.to_s.match('Failed tests'))
+			if (log.to_s.match('Failures: [1-9]+') or log.to_s.match('Failed tests') or log.to_s.match('There are test failures'))
 				return "failed"
 			end
 		end
@@ -238,9 +238,9 @@ class ExtractorCLI
 			addFiles = %x(git add pom.xml)
 			addFiles = %x(git add .travis.yml)
 			sleep(5)
-			commit = %x(git commit -m TA#{@tagID})
+			commit = %x(git commit -m TT#{@tagID})
 			sleep(5)
-			tag = %x(git tag -m TA#{@tagID} TA#{@tagID})
+			tag = %x(git tag -m TT#{@tagID} TT#{@tagID})
 			sleep(5)
 			push = %x(git push --tags)
 			setTagID()
@@ -296,14 +296,11 @@ class ExtractorCLI
 		begin
 			infoBuild = %x(travis show)
 			if (infoBuild.match(/Build #[0-9\.]*:/))
-				buildId = infoBuild.match(/Build #[0-9\.]*:/).to_s.match(/#[0-9]*/).to_s.gsub("#","")
-				numberJobs = infoBuild.scan(/\#[0-9\.]* #{status}/)
-
+				numberJobs = infoBuild.scan(/\#[0-9]*\.[0-9]*/)
 				numberJobs.each do |job|
 					jobId = job.to_s.match(/\.[0-9]*/).to_s.gsub(".","")
 					logs.push(%x(travis logs .#{jobId}))
 				end
-
 			elsif (infoBuild.match(/Job #[0-9\.]*:/))
 				buildId = infoBuild.match(/Job #[0-9\.]*:/).to_s.match(/#[0-9]*/).to_s.gsub("#","")
 				logs.push(%x(travis logs))

@@ -95,7 +95,17 @@ class GTAnalysis
 		rightResult = @parentMSDiff.runAllDiff(right, result)
 		# passar como parametro o caminho dos diretorios (base, left, right, result). Por enquanto apenas o left e right
 		#return verifyModificationStatus(mergeCommit, baseLeft, leftResult, baseRight, rightResult, conflictCauses, left, right, pathProject, parents, cloneProject)
-		return baseLeft, leftResult, baseRight, rightResult, conflictingContributions
+
+		statusModified = verifyModifiedFile(baseLeft[0], leftResult[0], baseRight[0], rightResult[0])
+		statusAdded = verifyAddedDeletedFile(baseLeft[1], leftResult[1], baseRight[1], rightResult[1])
+		statusDeleted = verifyAddedDeletedFile(baseLeft[2], leftResult[2], baseRight[2], rightResult[2])
+
+		allIntegratedContributions = true
+		if (!statusModified or !statusAdded or !statusDeleted)
+			allIntegratedContributions = false
+		end
+
+		return baseLeft, leftResult, baseRight, rightResult, conflictingContributions, allIntegratedContributions
 	end
 
 	def deleteProjectCopies(pathCopies)
@@ -125,9 +135,9 @@ class GTAnalysis
 		conflictCauses.getCausesConflict().each do |conflictCause|
 			if(conflictCause == "unimplementedMethod" || conflictCause == "unimplementedMethodSuperType")
 				bcDependency[indexValue] = false
-				if (allIntegratedContributions)
-					conflictingContributions[indexValue] = true
-				else
+				#if (allIntegratedContributions)
+				#	conflictingContributions[indexValue] = true
+				#else
 					bcUnimplementedMethod = BCUnimplementedMethod.new()
 					if (bcUnimplementedMethod.verifyBuildConflict(baseLeft[0], leftResult[0], baseRight[0], rightResult[0], conflictCauses.getFilesConflict()[indexValue]) == false)
 						conflictingContributions[indexValue] = false
@@ -136,7 +146,7 @@ class GTAnalysis
 						conflictingContributions[indexValue] = true
 						bcDependency[indexValue] = false
 					end
-				end
+				#end
 			elsif (conflictCause == "unavailableSymbolMethod" || conflictCause == "unavailableSymbolVariable" || conflictCause == "unavailableSymbolFile")
 				bcUnavailableSymbol = BCUnavailableSymbol.new()
 				bcMethodUpdate = BCMethodUpdate.new(getGumTreePath())
