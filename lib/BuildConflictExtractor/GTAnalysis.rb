@@ -147,6 +147,9 @@ class GTAnalysis
 						bcDependency[indexValue] = false
 					end
 				#end
+			elsif (conflictCause == "unavailableSymbolFileSpecialCase")
+				conflictingContributions[indexValue] = false
+				bcDependency[indexValue] = false
 			elsif (conflictCause == "unavailableSymbolMethod" || conflictCause == "unavailableSymbolVariable" || conflictCause == "unavailableSymbolFile")
 				bcUnavailableSymbol = BCUnavailableSymbol.new()
 				bcMethodUpdate = BCMethodUpdate.new(getGumTreePath())
@@ -228,6 +231,7 @@ class GTAnalysis
 					brokenBuild = false
 				end
 			else
+				#add tratamento para unavailablesymbol "Special Case"
 				bcDependency[indexValue] = false
 				conflictingContributions[indexValue] = true
 			end
