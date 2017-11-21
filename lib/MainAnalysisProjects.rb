@@ -2,6 +2,7 @@ require 'require_all'
 require_all './MiningRepositories'
 require_all './Out'
 require_all './CausesExtractor'
+require_all './R'
 
 class MainAnalysisProjects
 
@@ -153,3 +154,7 @@ project.runAnalysis()
 Dir.chdir actualPath
 Dir.chdir "R"
 %x(Rscript r-analysis.r)
+Dir.chdir actualPath
+bcTypesCount = BCTypesCount.new()
+bcTypesCount.runTypesCount()
+Dir.chdir actualPath
