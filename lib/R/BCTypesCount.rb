@@ -290,7 +290,7 @@ class BCTypesCount
 
     exitString += "TOTAL BC : #{totalClean}"
     exitString += "\nTIME FOR FIXING : "
-    exitString += timeClean#/cleanBC.size
+    exitString += timeClean.to_s#/cleanBC.size
 
     exitString += "\n\nBC : UNCLEAN\n"
     uncleanBC.each do |key, value|
@@ -300,7 +300,7 @@ class BCTypesCount
     end
     exitString += "TOTAL BC : #{totalUnclean}"
     exitString += "\nTIME FOR FIXING : "
-    exitString += timeUnclean#/uncleanBC.size
+    exitString += timeUnclean.to_s#/uncleanBC.size
 
     exitString += "\n\nBC : BADLY - INTEGRATOR (NOT ALL INTEGRATED)\n"
     badlyDeveloperNotAllIntegrated.each do |key, value|
@@ -311,7 +311,7 @@ class BCTypesCount
 
     exitString += "TOTAL BC : #{totalBadly}"
     exitString += "\nTIME FOR FIXING : "
-    exitString += timeBadly#/badlyDeveloperNotAllIntegrated.size
+    exitString += timeBadly.to_s#/badlyDeveloperNotAllIntegrated.size
 
 
     exitString += "\n\nBC : BADLY - INTEGRATOR (ALL INTEGRATED)\n"
@@ -323,7 +323,7 @@ class BCTypesCount
 
     exitString += "TOTAL BC : #{totalBadlyConf}"
     exitString += "\nTIME FOR FIXING : "
-    exitString +=timeBadly#/badlyDeveloperNotAllIntegrated.size
+    exitString +=timeBadly.to_s#/badlyDeveloperNotAllIntegrated.size
 
     exitString += "\n\nTOTAL BC CANDIDATES : #{countCases}\n"
     exitString += "TOTAL BC CASES : #{bcCases}\n"

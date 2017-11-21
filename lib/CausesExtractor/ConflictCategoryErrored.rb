@@ -278,9 +278,11 @@ class ConflictCategoryErrored
 			causesFilesConflicts.insertNewCauseOne("incompatibleTypes", ["incompatibleTypes"])
 		end
 
-		if (body[/\[#{stringErro}\][\s\S]*#{stringDefined}[\s\S]*\[#{stringInfo}\](.*)?[0-9]/])
+		#if (body[/\[#{stringErro}\][\s\S]*#{stringDefined}[\s\S]*\[#{stringInfo}\](.*)?[0-9]/])
+		if (body[/\[#{stringErro}\][\s\S]*#{stringDefined}[\s\S]*(.*)?[0-9]/])
 			otherCase = false
-			localDuplicateStatement = body.scan(/\[#{stringErro}\][\s\S]*#{stringDefined}[\s\S]*\[#{stringInfo}\](.*)?[0-9]/).size
+			#localDuplicateStatement = body.scan(/\[#{stringErro}\][\s\S]*#{stringDefined}[\s\S]*\[#{stringInfo}\](.*)?[0-9]/).size
+			localDuplicateStatement = body.scan(/is already defined/).size
 			extraction = getStatementDuplicationExtractor().extractionFilesInfo(body)
 			getCausesErroredBuild.setStatementDuplication(extraction[2])
 			causesFilesConflicts.insertNewCauseOne(extraction[0], extraction[1])
@@ -335,7 +337,7 @@ class ConflictCategoryErrored
 			end
 		end
 
-		if (body[/\[ERROR\][ \t\r\n\f]Failed to execute goal[\/\-\.\:a-zA-Z\[\]0-9\,\(\) ]*\n\[ERROR\][ \t\r\n\f][\/\-\.\:a-zA-Z\[\]0-9\,\(\) ]*illegal (character)/] || body[/\[ERROR\]?[ \t\r\n\f]*Failed to execute goal[\/\-\.\:a-zA-Z\[\]0-9\,\(\) ]* Some files do not have the expected license header/] || body[/\[ERROR\][ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,]* missing return statement/] || body[/\[ERROR\][ \t\r\n\f]* [a-zA-Z0-9\/\-\.\:\[\]\,\(\)\; ]* \'[a-zA-Z0-9\/\-\.\:\[\]\,\(\)\; ]*\' expected/] || body[/#{stringUnexpectedToken}/]  || body[/\[#{stringErro}\](.*)?(#{stringError}\:)? #{stringMalformed}/] or body[/\[ERROR\](.*)?#{stringError}\:\'(.*)?\'#{stringExpected}/] or body[/\[ERROR\](.*) (is not (preceded with|followed by)+ whitespace|must match pattern|Unused import)+/])
+		if (body[/\[ERROR\][ \t\r\n\f]Failed to execute goal[\/\-\.\:a-zA-Z\[\]0-9\,\(\) ]*\n\[ERROR\][ \t\r\n\f][\/\-\.\:a-zA-Z\[\]0-9\,\(\) ]*illegal (character)/] || body[/\[ERROR\]?[ \t\r\n\f]*Failed to execute goal[\/\-\.\:a-zA-Z\[\]0-9\,\(\) ]* Some files do not have the expected license header/] || body[/\[ERROR\][ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,]* missing return statement/] || body[/\[ERROR\][ \t\r\n\f]* [a-zA-Z0-9\/\-\.\:\[\]\,\(\)\; ]* \'[a-zA-Z0-9\/\-\.\:\[\]\,\(\)\; ]*\' expected/] || body[/#{stringUnexpectedToken}/]  || body[/\[#{stringErro}\](.*)?(#{stringError}\:)? #{stringMalformed}/] or body[/\[ERROR\](.*)?#{stringError}\:\'(.*)?\'#{stringExpected}/] or body[/\[ERROR\](.*) (is not (preceded with|followed by)+ whitespace|must match pattern|Unused import)+/] or body[/error: class, interface, or enum expected/] or body[/illegal start of/])
 			otherCase = false
 			causesFilesConflicts.insertNewCauseOne("malformedExpression",["malformedExpression"])
 			localMalformedExp = body.scan(/\[ERROR\][ \t\r\n\f]Failed to execute goal[\/\-\.\:a-zA-Z\[\]0-9\,\(\) ]*\n\[ERROR\][ \t\r\n\f][\/\-\.\:a-zA-Z\[\]0-9\,\(\) ]*illegal (character)|\[ERROR\]?[ \t\r\n\f]*Failed to execute goal[\/\-\.\:a-zA-Z\[\]0-9\,\(\) ]* Some files do not have the expected license header|\[ERROR\][ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,]* missing return statement|\[ERROR\][ \t\r\n\f]* [a-zA-Z0-9\/\-\.\:\[\]\,\(\)\; ]* \'[a-zA-Z0-9\/\-\.\:\[\]\,\(\)\; ]*\' expected|\[#{stringErro}\](.*)?(#{stringError}\:)? #{stringMalformed}|\[ERROR\](.*)?#{stringError}\:\'(.*)?\'#{stringExpected}|\[ERROR\](.*) (is not (preceded with|followed by)+ whitespace|must match pattern|Unused import)+/).size

@@ -171,7 +171,7 @@ class ConflictCategoryFailed
 			elsif (log[/#{stringTheCommand}("cd|"sudo|"echo|"eval)+ (.*)failed(.*)/])
 				@permission += 1
 				result = "permission"
-			elsif (log[/reason: actual and formal argument lists differ in length|cannot find symbol/] || log[/is already defined in/])
+			elsif (log[/reason: actual and formal argument lists differ in length|cannot find symbol/] || log[/is already defined in/]|| log[/illegal start of type/])
 				@cmpProblem += 1
 				result = "CompilationProblem"
 			else
