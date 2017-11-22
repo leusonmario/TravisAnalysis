@@ -90,7 +90,7 @@ class TestCaseCoverage
       branches = false
 
       file.each_line do |line|
-        if (!line.match('mvn clean|mvn test|clean test|clean|test|deploy.sh|echo'))
+        if (!line.match('mvn clean|mvn test|clean test|clean|test|deploy.sh|echo|grunt'))
           if (line.match('sudo: false') or line.match('sudo: required'))
             lines += "\nsudo: required\n"
             requiredSudo = true
