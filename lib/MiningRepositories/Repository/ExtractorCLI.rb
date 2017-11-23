@@ -149,7 +149,11 @@ class ExtractorCLI
 	def createFork()
 		cmd = "curl -u " + @username + ":" + @password + " -X POST https://api.github.com/repos/" + @originalRepo + "/forks"
 		begin
-			%x(#{cmd})
+			teste = %x(#{cmd})
+			while (teste.to_s.match('Repository was archived so is read-only'))
+				sleep(10)
+				teste = %x(#{cmd})
+			end
 		rescue
 			print "NOT FORKED"
 		end
