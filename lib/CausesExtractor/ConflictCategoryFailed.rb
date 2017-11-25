@@ -227,7 +227,12 @@ class ConflictCategoryFailed
 						if (occurrenceLine.match('\('))
 							generalInfo = occurrenceLine.match('[a-zA-Z0-9\(]*\.[a-zA-Z0-9\.\_]*')
 							methodName = generalInfo.to_s.split("\(")[0]
-							file = generalInfo.to_s.split("\.").last
+							if (methodName.match('.'))
+								methodName = methodName.to_s.split(".").last
+								file = generalInfo.to_s.split("#{methodName}")[0].to_s.split(".").last.to_s.gsub(".","")
+							else
+								file = generalInfo.to_s.split("\.").last
+							end
 						else
 							#talvez seja melhor usar generalInfo[0]
 							generalInfo = occurrenceLine.match('[a-zA-Z0-9]*\.[a-zA-Z0-9\_\.]*')
