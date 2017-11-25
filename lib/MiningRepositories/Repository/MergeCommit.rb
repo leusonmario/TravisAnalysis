@@ -19,9 +19,22 @@ class MergeCommit
 		end
 
 		if (parentsCommit.size > 1)
+			baseCommit = checkIfFastFoward(parentsCommit[0], parentsCommit[1])
+			if (baseCommit != "")
+				parentsCommit.push(baseCommit)
+			end
 			return parentsCommit
 		else
 			return nil
+		end
+	end
+
+  def checkIfFastFoward(parentOne, parentTwo)
+		baseCommit = %x(git merge-base #{parentOne} #{parentTwo}).gsub("\n","")
+		if (baseCommit == parentOne or baseCommit == parentTwo)
+			return ""
+		else
+			return baseCommit
 		end
 	end
 
