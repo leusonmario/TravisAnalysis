@@ -200,7 +200,7 @@ class ConflictCategoryFailed
 						methodName = ""
 						file = ""
 						if (occurrenceLine.match('\('))
-							generalInfo = occurrenceLine.match('[a-zA-Z0-9\(]*\.[a-zA-Z0-9\.\_]*')
+							generalInfo = occurrenceLine.match('[a-zA-Z0-9\(\_]*\.[a-zA-Z0-9\.\_]*')
 							methodName = generalInfo.to_s.split("\(")[0]
 							file = generalInfo.to_s.split("\.").last
 						else
