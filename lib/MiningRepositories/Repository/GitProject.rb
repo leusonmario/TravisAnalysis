@@ -202,7 +202,7 @@ class GitProject
 				buildTwo = projectBuilds[parentsMerge[1]][2]
 			end
 			
-			if (parentOne==true and parentTwo==true)
+			if (parentOne==true and parentTwo==true and parentsMerge.size > 2)
 				return true, buildOne, buildTwo
 			end
 		end

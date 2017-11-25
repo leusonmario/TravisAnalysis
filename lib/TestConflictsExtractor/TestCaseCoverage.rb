@@ -26,7 +26,8 @@ class TestCaseCoverage
       if (@extractorCLI.getApiKey == "")
         @extractorCLI.addEncryptedKeyOnTravis()
       end
-      resultTravisFile = addInfoOnTravisFile(testFileName, testCaseName, @extractorCLI.getApiKey)
+      #resultTravisFile = addInfoOnTravisFile(testFileName, testCaseName, @extractorCLI.getApiKey)
+      resultTravisFile = changeOnTravisFile(testFileName, testCaseName, @extractorCLI.getApiKey)
       #@extractorCLI.addEncryptedKeyOnTravis()
       if (resultPluginPom and resultTravisFile)
         state = @extractorCLI.commitChanges()
@@ -68,6 +69,78 @@ class TestCaseCoverage
     return nil
   end
 
+  def changeOnTravisFile(testFileName, testCaseName, apiKey)
+    actualPath = Dir.pwd
+    Dir.chdir @extractorCLI.getDownloadDir
+    Dir.chdir @extractorCLI.getName
+
+    finalResult = false
+    jdkInformation = readTravisForEnvironmentInfo()
+    newTravisFile = "
+sudo: required
+language: java
+
+jdk:
+#{jdkInformation}
+
+script:
+  - mvn clean cobertura:cobertura -Dtest=#{testFileName}##{testCaseName} -DfailIfNoTests=false
+
+before_deploy:
+- tar -zcvf coverage-result.tar.gz /home/travis/build/#{@extractorCLI.getUsername}/#{@extractorCLI.getName}/target/site/cobertura
+
+deploy:
+  provider: releases
+  api_key:
+    secure: #{apiKey}
+
+  file: coverage-result.tar.gz
+  file_glob: true
+  overwrite: true
+  skip_cleanup: true
+  on:
+    tags: true
+"
+    begin
+      removeFile = %x(rm .travis.yml)
+      out_file = File.new(".travis.yml", "w")
+      sleep(5)
+      out_file.puts(newTravisFile)
+      out_file.close
+      finalResult = true
+    rescue
+      print "IT WAS NOT POSSIBLE TO CONCLUDE THE PROCESS\n"
+    end
+    Dir.chdir actualPath
+    return finalResult
+  end
+
+  def readTravisForEnvironmentInfo()
+    jdkInformation = ""
+    jdkLine = false
+    begin
+      file = File.read(".travis.yml")
+      file.each_line do |line|
+        if (line.match(':') and jdkLine == true)
+          break
+        end
+        if(jdkLine)
+          jdkInformation += line
+        end
+        if (line.match(/jdk\:/))
+          jdkLine = true
+        end
+      end
+      file.close
+    rescue
+
+    end
+    if (jdkInformation == "")
+      jdkInformation = "  - oraclejdk8"
+    end
+    return jdkInformation
+  end
+
   def addInfoOnTravisFile(testFileName, testCaseName, apiKey)
     actualPath = Dir.pwd
     Dir.chdir @extractorCLI.getDownloadDir
@@ -90,7 +163,7 @@ class TestCaseCoverage
       branches = false
 
       file.each_line do |line|
-        if (!line.match('mvn clean|mvn test|clean test|clean|test|deploy.sh|echo|verify'))
+        if (!line.match('mvn clean|mvn test|clean test|clean|test|deploy.sh|echo|grunt'))
           if (line.match('sudo: false') or line.match('sudo: required'))
             lines += "\nsudo: required\n"
             requiredSudo = true

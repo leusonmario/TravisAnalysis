@@ -13,7 +13,12 @@ class StatementDuplicationExtractor
 			count = 0
 			while(count < information.size)
 				classFile = information[count].to_s.match(/\[ERROR\] [a-zA-Z0-9\/\-\.\:\[\]\,\s]*.java:/)[0].split("/").last.gsub('.java:','')
-				variableName = information[count].to_s.match(/\[ERROR\] [a-zA-Z0-9\/\-\.\:\[\,]*\]\s[a-zA-Z0-9\/\-\_]*/)[0].split(" ").last
+				variableName = ""
+				if (information[count].to_s.match(/variable/) and information[count].to_s.match(/defined in method/))
+					variableName = information[count].to_s.match(/\[ERROR\] [a-zA-Z0-9\/\-\.\:\[\,]*\]\s[a-zA-Z0-9\/\-\_]*/)[0].split(" ").last
+				else
+					variableName = "method"
+				end
 				methodName = information[count].to_s.match(/\[ERROR\] [a-zA-Z0-9\/\-\.\:\[\,\]\s\_]*/)[0].split(" ").last
 				count += 1
 				filesInformation.push([classFile, variableName, methodName])
