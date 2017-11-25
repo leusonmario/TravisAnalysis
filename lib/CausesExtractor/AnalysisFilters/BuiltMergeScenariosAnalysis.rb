@@ -231,7 +231,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 													if (externalCause)
 														totalMSFailedWithoutExternal += 1
 													end
-													writeCSVBuilt.printConflictTest(build.id, result[1][0], result[2][0], resultFailedBuild[0][0], projectNameFile, effort, resultFailedBuild[0][1], resultFailedBuild[2][0], resultFailedBuild[2][1], resultFailedBuild[2][2], resultFailedBuild[2][3], resultFailedBuild[2][4], resultFailedBuild[2][5], resultFailedBuild[2][6])
+													writeCSVBuilt.printConflictTest(build.id, result[1][0], result[2][0], resultFailedBuild[0][0], projectNameFile, effort, resultFailedBuild[0][1], resultFailedBuild[2][0], resultFailedBuild[2][1], resultFailedBuild[2][2], resultFailedBuild[2][3], resultFailedBuild[2][4], resultFailedBuild[2][5], resultFailedBuild[2][6], resultFailedBuild[2][8])
 													validScenarioProjectFailed += 1
 													lastScenarioDateFailed = getDataMergeScenario(build.commit.sha)
 												end
@@ -386,7 +386,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 														if (externalCause)
 															totalMSFailedWithoutExternal += 1
 														end
-														writeCSVBuilt.printConflictTest(build.id, result[1][0], result[2][0], resultFailedBuild[0][0], projectNameFile, effort, resultFailedBuild[0][1], resultFailedBuild[2][0], resultFailedBuild[2][1], resultFailedBuild[2][2], resultFailedBuild[2][3], resultFailedBuild[2][4], resultFailedBuild[2][5], resultFailedBuild[2][6])
+														writeCSVBuilt.printConflictTest(build.id, result[1][0], result[2][0], resultFailedBuild[0][0], projectNameFile, effort, resultFailedBuild[0][1], resultFailedBuild[2][0], resultFailedBuild[2][1], resultFailedBuild[2][2], resultFailedBuild[2][3], resultFailedBuild[2][4], resultFailedBuild[2][5], resultFailedBuild[2][6], resultFailedBuild[2][8])
 														validScenarioProjectFailed += 1
 														lastScenarioDateFailed = getDataMergeScenario(build.commit.sha)
 													end
@@ -576,7 +576,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 											resultFailedBuild = confFailedBuilt.findConflictCause(build, getPathProject())
 											writeCSVBuilt.printAllConflictTest(build.id, result[1][0], result[2][0], projectNameFile)
 											#writeCSVBuilt.printConflictTest(build, result[1][0], result[2][0], resultFailedBuild[0][0], projectNameFile, effort, resultFailedBuild[0][1], resultFailedBuild[2][0], resultFailedBuild[2][1], resultFailedBuild[2][2], resultFailedBuild[2][3], resultFailedBuild[2][4], resultFailedBuild[2][5])
-											if (resultFailed[2][8] == true)
+											if (resultFailedBuild[2][8] == true)
 												totalMSFailedParentsPreservation += 1
 											else
 												totalMSFailedParentsNoPreservation += 1
@@ -586,7 +586,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 												if (externalCause)
 													totalMSFailedWithoutExternal += 1
 												end
-												writeCSVBuilt.printConflictTest(build.id, result[1][0], result[2][0], resultFailedBuild[0][0], projectNameFile, effort, resultFailedBuild[0][1], resultFailedBuild[2][0], resultFailedBuild[2][1], resultFailedBuild[2][2], resultFailedBuild[2][3], resultFailedBuild[2][4], resultFailedBuild[2][5], resultFailedBuild[2][6])
+												writeCSVBuilt.printConflictTest(build.id, result[1][0], result[2][0], resultFailedBuild[0][0], projectNameFile, effort, resultFailedBuild[0][1], resultFailedBuild[2][0], resultFailedBuild[2][1], resultFailedBuild[2][2], resultFailedBuild[2][3], resultFailedBuild[2][4], resultFailedBuild[2][5], resultFailedBuild[2][6], resultFailedBuild[2][8])
 											end
 										end
 #=end
@@ -672,7 +672,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 										#writeCSVBuilt.printConflictTest(build, result[1][0], result[2][0], resultFailedBuild[0][0], projectNameFile, effort, resultFailedBuild[0][1], resultFailedBuild[2][0], resultFailedBuild[2][1], resultFailedBuild[2][2], resultFailedBuild[2][3], resultFailedBuild[2][4], resultFailedBuild[2][5])
 										#lastScenarioDateFailed = getDataMergeScenario(mergeScenario)
 										#validScenarioProjectFailed += 1
-										if (resultFailed[2][8] == true)
+										if (resultFailedBuild[2][8] == true)
 											totalMSFailedParentsPreservation += 1
 										else
 											totalMSFailedParentsNoPreservation += 1
@@ -682,7 +682,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 											if (externalCause)
 												totalMSFailedWithoutExternal += 1
 											end
-											writeCSVBuilt.printConflictTest(@gitProject.getBuildID(mergeScenario, allBuilds, forkAllBuilds), result[1][0], result[2][0], resultFailedBuild[0][0], projectNameFile, effort, resultFailedBuild[0][1], resultFailedBuild[2][0], resultFailedBuild[2][1], resultFailedBuild[2][2], resultFailedBuild[2][3], resultFailedBuild[2][4], resultFailedBuild[2][5], resultFailedBuild[2][5])
+											writeCSVBuilt.printConflictTest(@gitProject.getBuildID(mergeScenario, allBuilds, forkAllBuilds), result[1][0], result[2][0], resultFailedBuild[0][0], projectNameFile, effort, resultFailedBuild[0][1], resultFailedBuild[2][0], resultFailedBuild[2][1], resultFailedBuild[2][2], resultFailedBuild[2][3], resultFailedBuild[2][4], resultFailedBuild[2][5], resultFailedBuild[2][6], resultFailedBuild[2][8])
 											validScenarioProjectFailed += 1
 										end
 									end
