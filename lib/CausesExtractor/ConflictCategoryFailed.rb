@@ -188,27 +188,34 @@ class ConflictCategoryFailed
 					generalInfo = occurence.to_s.split("\(")
 					methodName = generalInfo[0]
 					file = generalInfo[1].split("\)")[0].to_s.split("\.").last
-					filesInfo.push([file, methodName])
-					numberFailures += 1
+					if (methodName != "" and file != "" and methodName != nil and file != nil)
+						filesInfo.push([file, methodName])
+						numberFailures += 1
+					end
 				end
 			end
 			if (log[/Failed tests: (\n)*[\s\S\:\)\(]*\nTests run:/])
 				result = "errored"
 				numberOccurences = log.to_s.to_enum(:scan, /Failed tests: (\n)*[\s\S\:\)\(]*\nTests run:/).map { Regexp.last_match }
 				numberOccurences[0].to_s.each_line do |occurrenceLine|
-					if (!occurrenceLine.to_s.match('Tests in error|Tests run|there were zero|->|not invoked|();') and occurrenceLine != "\n")
+					if (!occurrenceLine.to_s.match('Tests in error|Tests run|there were zero|not invoked|();') and occurrenceLine != "\n")
 						methodName = ""
 						file = ""
 						if (occurrenceLine.match('\('))
 							generalInfo = occurrenceLine.match('[a-zA-Z0-9\(\_]*\.[a-zA-Z0-9\.\_]*')
 							methodName = generalInfo.to_s.split("\(")[0]
-							file = generalInfo.to_s.split("\.").last
+							if (methodName.match('.'))
+								methodName = methodName.to_s.split(".").last
+								file = generalInfo.to_s.split("#{methodName}")[0].to_s.split(".").last.to_s.gsub(".","")
+							else
+								file = generalInfo.to_s.split("\.").last
+							end
 						else
 							generalInfo = occurrenceLine.match('[a-zA-Z0-9]*\.[a-zA-Z0-9\_\.]*')
 							file = generalInfo.to_s.split("\.")[0]
 							methodName = generalInfo.to_s.split("\.").last
 						end
-						if (methodName != nil and file != nil)
+						if (methodName != "" and file != "" and methodName != nil and file != nil)
 							filesInfo.push([file, methodName])
 							numberFailures += 1
 						end
@@ -240,7 +247,7 @@ class ConflictCategoryFailed
 							methodName = generalInfo.to_s.split("\.").last
 						end
 						#file = occurrenceLine.to_s.match('Tests in error:[a-zA-Z0-9 \\n\.\[\]\=\(]*').to_s.split("\.").last
-						if (methodName != nil and file != nil)
+						if (methodName != "" and file != "" and methodName != nil and file != nil)
 							filesInfo.push([file, methodName])
 							numberFailures += 1
 						end
