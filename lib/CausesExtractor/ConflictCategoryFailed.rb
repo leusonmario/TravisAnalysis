@@ -111,6 +111,7 @@ class ConflictCategoryFailed
 		dependentChangesParentOne = []
 		dependentChangesParentTwo = []
 		buildIDs = []
+		buildStatus = []
 		coverageAnalysis = nil
 		begin
 			resultByJobs[0][2].each do |filesInfo|
@@ -125,22 +126,23 @@ class ConflictCategoryFailed
 				addModFilesRightResult = @gtAnalysis.getParentsMFDiff.runOnlyModifiedAddFiles(diffsMergeScenario[0][3][0], diffsMergeScenario[1][3], diffsMergeScenario[1][1])
 				coverageAnalysis = @testCaseCoverge.runTestCase(filesInfo[0], filesInfo[1], sha)
 				resultCoverageAnalysis = []
+				buildStatus.push(coverageAnalysis[2])
+				buildIDs.push(coverageAnalysis[1])
 				if (coverageAnalysis[0] != nil)
 					resultCoverageAnalysis = @tcAnalyzer.runTCAnalysis(coverageAnalysis[0], addModFilesLeftResult, addModFilesRightResult)
+					changesSameMethod.push(resultCoverageAnalysis[0])
+					dependentChangesParentOne.push(resultCoverageAnalysis[1])
+					dependentChangesParentTwo.push(resultCoverageAnalysis[2])
 				else
 					resultCoverageAnalysis = @tcAnalyzer.runTCAnalysisErrorCases(addModFilesLeftResult, addModFilesRightResult)
 				end
-				changesSameMethod.push(resultCoverageAnalysis[0])
-				dependentChangesParentOne.push(resultCoverageAnalysis[1])
-				dependentChangesParentTwo.push(resultCoverageAnalysis[2])
-				buildIDs.push(coverageAnalysis[1])
 			end
 			#ainda tenho o caminho em diffMergeScenario[1]
 			@gtAnalysis.deleteProjectCopies(diffsMergeScenario[1])
-			return newTestFileArray, newTestCaseArray, updateTestArray, changesSameMethod, dependentChangesParentOne, dependentChangesParentTwo, buildIDs, coverageAnalysis[0], diffsMergeScenario[0][5]
+			return newTestFileArray, newTestCaseArray, updateTestArray, changesSameMethod, dependentChangesParentOne, dependentChangesParentTwo, buildIDs, coverageAnalysis[0], diffsMergeScenario[0][5], buildStatus
 		rescue
 			@gtAnalysis.deleteProjectCopies(diffsMergeScenario[1])
-			return newTestFileArray, newTestCaseArray, updateTestArray, changesSameMethod, dependentChangesParentOne, dependentChangesParentTwo, buildIDs, nil, diffsMergeScenario[0][5]
+			return newTestFileArray, newTestCaseArray, updateTestArray, changesSameMethod, dependentChangesParentOne, dependentChangesParentTwo, buildIDs, nil, diffsMergeScenario[0][5], buildStatus
 		end
 	end
 
@@ -221,7 +223,7 @@ class ConflictCategoryFailed
 						end
 					end
 				end
-			elsif(log[/There are test failures/])
+			elsif(log[/There (are|was) test failures/])
 				result = "errored"
 				numberOccurences = log.to_s.to_enum(:scan, /Tests in error:[\s\S]*Tests run/).map { Regexp.last_match }
 				numberOccurences[0].to_s.each_line do |occurrenceLine|
@@ -232,9 +234,9 @@ class ConflictCategoryFailed
 						methodName = ""
 						file = ""
 						if (occurrenceLine.match('\('))
-							generalInfo = occurrenceLine.match('[a-zA-Z0-9\(]*\.[a-zA-Z0-9\.\_]*')
+							generalInfo = occurrenceLine.match('[a-zA-Z0-9\(\_]*\.[a-zA-Z0-9\.\_]*')
 							methodName = generalInfo.to_s.split("\(")[0]
-							if (methodName.match('.'))
+							if (methodName.match('\.'))
 								methodName = methodName.to_s.split(".").last
 								file = generalInfo.to_s.split("#{methodName}")[0].to_s.split(".").last.to_s.gsub(".","")
 							else

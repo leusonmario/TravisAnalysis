@@ -20,6 +20,7 @@ class TestCaseCoverage
     actualPath = Dir.pwd
     Dir.chdir @pathProject
     coverageResult = nil
+    finalBuildStatus = ""
     begin
       @extractorCLI.checkoutHardOnCommit(sha)
       resultPluginPom = addPluginOnPom()
@@ -32,7 +33,8 @@ class TestCaseCoverage
       if (resultPluginPom and resultTravisFile)
         state = @extractorCLI.commitChanges()
         Dir.chdir @pathProject
-        if (verifyBuildCurrentState(state) == "failed")
+        finalBuildStatus = verifyBuildCurrentState(state)
+        if (finalBuildStatus == "failed")
           coverageResult = coverageAnalysis(@extractorCLI.getUsername, @extractorCLI.getName, @pathProject)
         end
       end
@@ -40,7 +42,7 @@ class TestCaseCoverage
       print "NOT A VALID CASE\n"
     end
     Dir.chdir actualPath
-    return coverageResult, @extractorCLI.checkIdLastBuild()
+    return coverageResult, @extractorCLI.checkIdLastBuild(), finalBuildStatus
   end
 
   def verifyBuildCurrentState(state)

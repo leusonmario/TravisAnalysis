@@ -226,6 +226,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 												else
 													totalMSFailedParentsNoPreservation += 1
 												end
+												checkForBuildsWithExternalProblems(resultFailedBuild[2][9], writeCSVBuilt, build.id, result[1][0], result[2][0], projectNameFile, resultFailedBuild[2][6])
 												if (resultFailedBuild[2][7] != nil)
 													externalCause = verifyExternalCauseConflict(resultFailedBuild[0][0])
 													if (externalCause)
@@ -381,6 +382,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 													else
 														totalMSFailedParentsNoPreservation += 1
 													end
+													checkForBuildsWithExternalProblems(resultFailedBuild[2][9], writeCSVBuilt, build.id, result[1][0], result[2][0], projectNameFile, resultFailedBuild[2][6])
 													if (resultFailedBuild[2][7] != nil)
 														externalCause = verifyExternalCauseConflict(resultFailedBuild[0][0])
 														if (externalCause)
@@ -581,6 +583,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 											else
 												totalMSFailedParentsNoPreservation += 1
 											end
+											checkForBuildsWithExternalProblems(resultFailedBuild[2][9], writeCSVBuilt, build.id, result[1][0], result[2][0], projectNameFile, resultFailedBuild[2][6])
 											if (resultFailedBuild[2][7] != nil)
 												externalCause = verifyExternalCauseConflict(resultFailedBuild[0][0])
 												if (externalCause)
@@ -677,6 +680,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 										else
 											totalMSFailedParentsNoPreservation += 1
 										end
+										checkForBuildsWithExternalProblems(resultFailedBuild[2][9], writeCSVBuilt, @gitProject.getBuildID(mergeScenario, allBuilds, forkAllBuilds), result[1][0], result[2][0], projectNameFile, resultFailedBuild[2][6])
 										if (resultFailedBuild[2][7] != nil)
 											externalCause = verifyExternalCauseConflict(resultFailedBuild[0][0])
 											if (externalCause)
@@ -833,6 +837,18 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 			end
 		rescue
 
+		end
+	end
+
+	def checkForBuildsWithExternalProblems(buildStatus, printer, buildId, buildOneID, buildTwoId, projectName, buildsReport)
+		finalPrinter = false
+		buildStatus.each do |status|
+			if (status == "failed")
+				finalPrinter = true
+			end
+		end
+		if (finalPrinter)
+			printer.printAllConflictTestExternalCauses(buildId, buildOneID, buildTwoId, projectName, buildsReport)
 		end
 	end
 

@@ -219,4 +219,18 @@ class WriteCSVs
 		end
 	end
 
+	def printAllConflictTestExternalCauses(build, buildOne, buildTwo, projectName, reportBuildID)
+		Dir.chdir getPathFailedCases()
+		if (File.exists?("ExternalCases"+projectName+".csv"))
+			CSV.open("ExternalCases"+projectName+".csv", "a+") do |csv|
+				csv << [build, buildOne, buildTwo, reportBuildID]
+			end
+		else
+			CSV.open("ExternalCases"+projectName+".csv", "ab") do |csv|
+				csv << ["BuildID", "BuildParentOne", "BuildParentTwo", "NewBuilds"]
+				csv << [build, buildOne, buildTwo, reportBuildID]
+			end
+		end
+	end
+
 end
