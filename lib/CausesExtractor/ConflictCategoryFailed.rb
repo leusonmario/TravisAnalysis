@@ -200,7 +200,7 @@ class ConflictCategoryFailed
 				result = "errored"
 				numberOccurences = log.to_s.to_enum(:scan, /Failed tests: (\n)*[\s\S\:\)\(]*\nTests run:/).map { Regexp.last_match }
 				numberOccurences[0].to_s.each_line do |occurrenceLine|
-					if (!occurrenceLine.to_s.match('Tests in error|Tests run|there were zero|not invoked|();') and occurrenceLine != "\n")
+					if (!occurrenceLine.to_s.match('Tests in error|Failed tests|there were zero|not invoked|();') and occurrenceLine != "\n")
 						methodName = ""
 						file = ""
 						if (occurrenceLine.match('\('))
@@ -236,7 +236,7 @@ class ConflictCategoryFailed
 						if (occurrenceLine.match('\('))
 							generalInfo = occurrenceLine.match('[a-zA-Z0-9\(\_]*\.[a-zA-Z0-9\.\_]*')
 							methodName = generalInfo.to_s.split("\(")[0]
-							if (methodName.match('\.'))
+							if (methodName != nil and methodName.match('\.'))
 								methodName = methodName.to_s.split(".").last
 								file = generalInfo.to_s.split("#{methodName}")[0].to_s.split(".").last.to_s.gsub(".","")
 							else

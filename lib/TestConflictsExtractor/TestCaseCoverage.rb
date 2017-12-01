@@ -431,6 +431,7 @@ deploy:
         end
       end
 
+
       out_file = File.new("pom.xml", "w")
       sleep(5)
       if (finalPomText == "")
@@ -438,6 +439,36 @@ deploy:
       else
         out_file.puts(finalPomText)
       end
+      out_file.close
+
+      file = File.open("pom.xml", "rb")
+      contents = file.read
+      stringOne = contents.gsub(/[\s]*<plugin>
+[\s]*<groupId>org.codehaus.mojo<\/groupId>
+[\s]*<artifactId>animal-sniffer-maven-plugin<\/artifactId>
+[\s]*<configuration>
+[\s]*<signature>
+[\s]*<groupId>org.codehaus.mojo.signature<\/groupId>
+[\s]*<artifactId>java16<\/artifactId>
+[\s]*<version>1.1<\/version>
+[\s]*<\/signature>
+[\s]*<\/configuration>
+[\s]*<executions>
+[\s]*<execution>
+[\s]*<id>check-java16<\/id>
+[\s]*<phase>test<\/phase>
+[\s]*<goals>
+[\s]*<goal>check<\/goal>
+[\s]*<\/goals>
+[\s]*<\/execution>
+[\s]*<\/executions>
+[\s]*<\/plugin>/,"")
+
+      file.close
+      removeFile = %x(rm pom.xml)
+      out_file = File.new("pom.xml", "w")
+      sleep(5)
+      out_file.puts(stringOne)
       out_file.close
 
       Dir.chdir actualPath

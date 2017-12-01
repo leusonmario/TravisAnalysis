@@ -39,11 +39,11 @@ class CopyFixCommit
     Dir.chdir @pathProject
     checkout = %x(git checkout #{fixCommit} > /dev/null 2>&1)
     clone = %x(cp -R #{@pathProject} #{@pathCopyFix})
-    invalidFiles = %x(find #{@pathCopyFix} -type f -regextype posix-extended -iregex '.*\.(sh|md|yaml|yml|conf|scala|properties|less|txt|gitignore|sql|html|generator|in|am|mk|ac|ico|md5)$' -delete)
+    invalidFiles = %x(find #{@pathCopyFix} -type f -regextype posix-extended -iregex '.*\.(sh|md|yaml|yml|conf|scala|properties|less|txt|gitignore|sql|html|generator|in|am|mk|ac|ico|md5|adoc|xsd)$' -delete)
     invalidFiles = %x(find #{@pathCopyFix} -type f  ! -name "*.?*" -delete)
     checkout = %x(git checkout #{brokenCommit} > /dev/null 2>&1)
     clone = %x(cp -R #{@pathProject} #{@brokenCopyBroken})
-    invalidFiles = %x(find #{@brokenCopyBroken} -type f -regextype posix-extended -iregex '.*\.(sh|md|yaml|yml|conf|scala|properties|less|txt|gitignore|sql|html|generator|in|am|mk|ac|ico|md5)$' -delete)
+    invalidFiles = %x(find #{@brokenCopyBroken} -type f -regextype posix-extended -iregex '.*\.(sh|md|yaml|yml|conf|scala|properties|less|txt|gitignore|sql|html|generator|in|am|mk|ac|ico|md5|adoc|xsd)$' -delete)
     invalidFiles = %x(find #{@brokenCopyBroken} -type f  ! -name "*.?*" -delete)
   end
 
