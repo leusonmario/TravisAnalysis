@@ -227,7 +227,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 													totalMSFailedParentsNoPreservation += 1
 												end
 												checkForBuildsWithExternalProblems(resultFailedBuild[2][9], writeCSVBuilt, build.id, result[1][0], result[2][0], projectNameFile, resultFailedBuild[2][6])
-												if (resultFailedBuild[2][7] != nil)
+												if (resultFailedBuild[2][7])
 													externalCause = verifyExternalCauseConflict(resultFailedBuild[0][0])
 													if (externalCause)
 														totalMSFailedWithoutExternal += 1
@@ -383,7 +383,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 														totalMSFailedParentsNoPreservation += 1
 													end
 													checkForBuildsWithExternalProblems(resultFailedBuild[2][9], writeCSVBuilt, build.id, result[1][0], result[2][0], projectNameFile, resultFailedBuild[2][6])
-													if (resultFailedBuild[2][7] != nil)
+													if (resultFailedBuild[2][7])
 														externalCause = verifyExternalCauseConflict(resultFailedBuild[0][0])
 														if (externalCause)
 															totalMSFailedWithoutExternal += 1
@@ -584,7 +584,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 												totalMSFailedParentsNoPreservation += 1
 											end
 											checkForBuildsWithExternalProblems(resultFailedBuild[2][9], writeCSVBuilt, build.id, result[1][0], result[2][0], projectNameFile, resultFailedBuild[2][6])
-											if (resultFailedBuild[2][7] != nil)
+											if (resultFailedBuild[2][7])
 												externalCause = verifyExternalCauseConflict(resultFailedBuild[0][0])
 												if (externalCause)
 													totalMSFailedWithoutExternal += 1
@@ -681,7 +681,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 											totalMSFailedParentsNoPreservation += 1
 										end
 										checkForBuildsWithExternalProblems(resultFailedBuild[2][9], writeCSVBuilt, @gitProject.getBuildID(mergeScenario, allBuilds, forkAllBuilds), result[1][0], result[2][0], projectNameFile, resultFailedBuild[2][6])
-										if (resultFailedBuild[2][7] != nil)
+										if (resultFailedBuild[2][7])
 											externalCause = verifyExternalCauseConflict(resultFailedBuild[0][0])
 											if (externalCause)
 												totalMSFailedWithoutExternal += 1

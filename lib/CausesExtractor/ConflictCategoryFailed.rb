@@ -16,6 +16,7 @@ class ConflictCategoryFailed
 		@permission = 0
 		@failed = 0
 		@errored = 0
+		@staticAnalysis = 0
 		@cmpProblem = 0
 		@gtAnalysis = GTAnalysis.new(@pathGumTree, @projectName, @localClone)
 		@testCaseCoverge = TestCaseCoverage.new(@localClone.getCloneProject().getLocalClone(), extractorCLI)
@@ -28,6 +29,10 @@ class ConflictCategoryFailed
 
 	def getCmpProblem()
 		@cmpProblem
+	end
+
+	def getStaticAnalysis()
+		@staticAnalysis
 	end
 
 	def getPathGumTree()
@@ -113,7 +118,21 @@ class ConflictCategoryFailed
 		buildIDs = []
 		buildStatus = []
 		coverageAnalysis = nil
+		validCase = false
 		begin
+			resultByJobs.each do |failedCauseJob|
+				if (failedCauseJob[0] == "CoverageError")
+					newTestFileArray.push("NO APLICABLE")
+					newTestCaseArray.push("NO APLICABLE")
+					updateTestArray.push("NO APLICABLE")
+					changesSameMethod.push("NO APLICABLE")
+					dependentChangesParentOne.push("NO APLICABLE")
+					dependentChangesParentTwo.push("NO APLICABLE")
+					buildStatus.push("NO APLICABLE")
+					buildIDs.push("NO APLICABLE")
+					validCase = true
+				end
+			end
 			resultByJobs[0][2].each do |filesInfo|
 				resultTC = testConflictsExtractor.getInfoTestConflictsByParent(diffsMergeScenario[0], diffsMergeScenario[1], filesInfo, getPathGumTree())
 				newTestFileArray.push(resultTC[0])
@@ -129,6 +148,7 @@ class ConflictCategoryFailed
 				buildStatus.push(coverageAnalysis[2])
 				buildIDs.push(coverageAnalysis[1])
 				if (coverageAnalysis[0] != nil)
+					validCase = true
 					resultCoverageAnalysis = @tcAnalyzer.runTCAnalysis(coverageAnalysis[0], addModFilesLeftResult, addModFilesRightResult)
 					changesSameMethod.push(resultCoverageAnalysis[0])
 					dependentChangesParentOne.push(resultCoverageAnalysis[1])
@@ -139,10 +159,10 @@ class ConflictCategoryFailed
 			end
 			#ainda tenho o caminho em diffMergeScenario[1]
 			@gtAnalysis.deleteProjectCopies(diffsMergeScenario[1])
-			return newTestFileArray, newTestCaseArray, updateTestArray, changesSameMethod, dependentChangesParentOne, dependentChangesParentTwo, buildIDs, coverageAnalysis[0], diffsMergeScenario[0][5], buildStatus
+			return newTestFileArray, newTestCaseArray, updateTestArray, changesSameMethod, dependentChangesParentOne, dependentChangesParentTwo, buildIDs, validCase, diffsMergeScenario[0][5], buildStatus
 		rescue
 			@gtAnalysis.deleteProjectCopies(diffsMergeScenario[1])
-			return newTestFileArray, newTestCaseArray, updateTestArray, changesSameMethod, dependentChangesParentOne, dependentChangesParentTwo, buildIDs, nil, diffsMergeScenario[0][5], buildStatus
+			return newTestFileArray, newTestCaseArray, updateTestArray, changesSameMethod, dependentChangesParentOne, dependentChangesParentTwo, buildIDs, validCase, diffsMergeScenario[0][5], buildStatus
 		end
 	end
 
@@ -176,6 +196,9 @@ class ConflictCategoryFailed
 			elsif (log[/reason: actual and formal argument lists differ in length|cannot find symbol/] || log[/is already defined in/]|| log[/illegal start of type/])
 				@cmpProblem += 1
 				result = "CompilationProblem"
+			elsif (log[/Build failed to meet Clover coverage targets: The following coverage targets for null were not met/])
+				@staticAnalysis += 1
+				result = "CoverageError"
 			else
 				@otherError += 1
 				result = "otherError"
