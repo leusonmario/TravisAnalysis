@@ -200,9 +200,14 @@ class ExtractorCLI
 			Dir.chdir getName()
 			%x(#{rmRemote})
 			%x(#{addRemote})
-		rescue 
+			deleteAllTags()
+		rescue
 			print "NOT CLONED"
 		end
+	end
+
+	def deleteAllTags()
+		deleteTags = %x(git tag | xargs git tag -d)
 	end
 
 	def checkStatusBuild()
@@ -241,8 +246,9 @@ class ExtractorCLI
 			commit = %x(git commit -m TT#{@tagID})
 			sleep(5)
 			tag = %x(git tag -m TT#{@tagID} TT#{@tagID})
+			removeRemoteTag = %x(git push origin :TT#{@tagID})
 			sleep(5)
-			push = %x(git push --tags)
+			createRemoteTag = %x(git push origin TT#{@tagID})
 			setTagID()
 			commitStatus = true
 		rescue

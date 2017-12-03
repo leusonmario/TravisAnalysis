@@ -154,7 +154,10 @@ class ConflictCategoryFailed
 					dependentChangesParentOne.push(resultCoverageAnalysis[1])
 					dependentChangesParentTwo.push(resultCoverageAnalysis[2])
 				else
-					resultCoverageAnalysis = @tcAnalyzer.runTCAnalysisErrorCases(addModFilesLeftResult, addModFilesRightResult)
+					changesSameMethod.push("NO APLICABLE")
+					dependentChangesParentOne.push("NO APLICABLE")
+					dependentChangesParentTwo.push("NO APLICABLE")
+					#resultCoverageAnalysis = @tcAnalyzer.runTCAnalysisErrorCases(addModFilesLeftResult, addModFilesRightResult)
 				end
 			end
 			#ainda tenho o caminho em diffMergeScenario[1]
@@ -219,7 +222,7 @@ class ConflictCategoryFailed
 					end
 				end
 			end
-			if (log[/Failed tests: (\n)*[\s\S\:\)\(]*\nTests run:/])
+			if (log[/(Failed tests:)(\n)*[\s\S\:\)\(]*[\n]*Tests run:/])
 				result = "errored"
 				numberOccurences = log.to_s.to_enum(:scan, /Failed tests: (\n)*[\s\S\:\)\(]*\nTests run:/).map { Regexp.last_match }
 				numberOccurences[0].to_s.each_line do |occurrenceLine|
@@ -251,7 +254,7 @@ class ConflictCategoryFailed
 				numberOccurences = log.to_s.to_enum(:scan, /Tests in error:[\s\S]*Tests run/).map { Regexp.last_match }
 				numberOccurences[0].to_s.each_line do |occurrenceLine|
 					#numberOccurences.each do |occurrenceLine|
-					if (!occurrenceLine.to_s.match('Tests in error|Tests run|Run|there were zero|->|not invoked|();') and occurrenceLine != "\n")
+					if (!occurrenceLine.to_s.match('Timeout|Tests in error|Tests run|Run|there were zero|not invoked|();') and occurrenceLine != "\n")
 						#if (occurrenceLine != "\n")
 						#methodName = occurrenceLine.to_s.match('Tests in error:[a-zA-Z0-9 \\n\.]*').to_s.split("\.").last
 						methodName = ""
@@ -265,6 +268,10 @@ class ConflictCategoryFailed
 							else
 								file = generalInfo.to_s.split("\.").last
 							end
+						elsif (occurrenceLine.match('->[a-zA-Z0-9\(\_]*\.[a-zA-Z0-9\.\_]*'))
+							generalInfo = occurrenceLine.match('->[a-zA-Z0-9\(\_]*\.[a-zA-Z0-9\.\_]*')
+							methodName = generalInfo.to_s.split(".").last
+							file = generalInfo.to_s.split(".")[0].to_s.gsub("->","")
 						else
 							#talvez seja melhor usar generalInfo[0]
 							generalInfo = occurrenceLine.match('[a-zA-Z0-9]*\.[a-zA-Z0-9\_\.]*')
