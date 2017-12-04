@@ -590,7 +590,7 @@ deploy:
     Dir.chdir pathCheckoutFiles
     jacocoPath = ""
     begin
-      resultRequestion =%x(curl https://api.github.com/repos/#{@extractorCLI.getUsername}/#{@extractorCLI.getName}/releases/tags/TT#{@extractorCLI.getTagID()})
+      resultRequestion =%x(curl https://api.github.com/repos/#{@extractorCLI.getUsername}/#{@extractorCLI.getName}/releases/latest)
       jsonInfo = JSON.parse(resultRequestion)
       assetID = jsonInfo['assets'][0]['id']
       result = %x(curl -vLJO -H 'Accept: application/octet-stream' 'https://api.github.com/repos/#{@extractorCLI.getUsername}/#{@extractorCLI.getName}/releases/assets/#{assetID}')
