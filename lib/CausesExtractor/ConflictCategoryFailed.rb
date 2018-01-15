@@ -120,8 +120,10 @@ class ConflictCategoryFailed
 		coverageAnalysis = nil
 		validCase = false
 		begin
+			resultToPrint = Array.new
 			resultByJobs.each do |failedCauseJob|
 				if (failedCauseJob[0] == "CoverageError")
+					resultToPrint.push([["",""], ["", "", "", [[""],[""],[""]]], ["", "", "", [[""],[""],[""]]], ["","",""]])
 					newTestFileArray.push("NO APLICABLE")
 					newTestCaseArray.push("NO APLICABLE")
 					updateTestArray.push("NO APLICABLE")
@@ -150,10 +152,12 @@ class ConflictCategoryFailed
 				if (coverageAnalysis[0] != nil)
 					validCase = true
 					resultCoverageAnalysis = @tcAnalyzer.runTCAnalysis(coverageAnalysis[0], addModFilesLeftResult, addModFilesRightResult)
+					resultToPrint.push([filesInfo, coverageAnalysis, resultCoverageAnalysis, resultTC])
 					changesSameMethod.push(resultCoverageAnalysis[0])
 					dependentChangesParentOne.push(resultCoverageAnalysis[1])
 					dependentChangesParentTwo.push(resultCoverageAnalysis[2])
 				else
+					resultToPrint.push([filesInfo, coverageAnalysis, ["", "", "", [[""],[""],[""]]], resultTC])
 					changesSameMethod.push("NO APLICABLE")
 					dependentChangesParentOne.push("NO APLICABLE")
 					dependentChangesParentTwo.push("NO APLICABLE")
@@ -162,10 +166,12 @@ class ConflictCategoryFailed
 			end
 			#ainda tenho o caminho em diffMergeScenario[1]
 			@gtAnalysis.deleteProjectCopies(diffsMergeScenario[1])
-			return newTestFileArray, newTestCaseArray, updateTestArray, changesSameMethod, dependentChangesParentOne, dependentChangesParentTwo, buildIDs, validCase, diffsMergeScenario[0][5], buildStatus
+			#return newTestFileArray, newTestCaseArray, updateTestArray, changesSameMethod, dependentChangesParentOne, dependentChangesParentTwo, buildIDs, validCase, diffsMergeScenario[0][5], buildStatus
+			return resultToPrint, diffsMergeScenario[0][5], validCase, buildStatus, buildIDs
 		rescue
 			@gtAnalysis.deleteProjectCopies(diffsMergeScenario[1])
-			return newTestFileArray, newTestCaseArray, updateTestArray, changesSameMethod, dependentChangesParentOne, dependentChangesParentTwo, buildIDs, validCase, diffsMergeScenario[0][5], buildStatus
+			#return newTestFileArray, newTestCaseArray, updateTestArray, changesSameMethod, dependentChangesParentOne, dependentChangesParentTwo, buildIDs, validCase, diffsMergeScenario[0][5], buildStatus
+			return resultToPrint, diffsMergeScenario[0][5], validCase, buildStatus, buildIDs
 		end
 	end
 
@@ -231,7 +237,7 @@ class ConflictCategoryFailed
 						file = ""
 						if (occurrenceLine.match('\('))
 							generalInfo = occurrenceLine.match('[a-zA-Z0-9\(\_]*\.[a-zA-Z0-9\.\_]*')
-							methodName = generalInfo.to_s.split("\(")[0]
+							methodName = generalInfo.to_s.split("\(")[0].to_s
 							if (methodName.match('.'))
 								methodName = methodName.to_s.split(".").last
 								file = generalInfo.to_s.split("#{methodName}")[0].to_s.split(".").last.to_s.gsub(".","")

@@ -52,17 +52,18 @@ class TestConflictsAnalyzer
     if (sameMethodsModified[0].size > 0)
       changesOnSameMethod = true
     end
-    if (sameMethodsModified[1].size)
+    if (sameMethodsModified[1].size > 0)
       dependentChangesParentOne = true
     end
     if (sameMethodsModified[2].size > 0)
       dependentChangesParentTwo = true
     end
-    return changesOnSameMethod, dependentChangesParentOne, dependentChangesParentTwo
+    return changesOnSameMethod, dependentChangesParentOne, dependentChangesParentTwo, sameMethodsModified
   end
 
   def converagedMethodsByFile(methodsCoverage, changedMethodsByParent)
     changedCoveragedMethods = Hash.new
+    generalChanges = false
     begin
       methodsCoverage.each do |key, value|
         if (changedMethodsByParent[key] != nil)
