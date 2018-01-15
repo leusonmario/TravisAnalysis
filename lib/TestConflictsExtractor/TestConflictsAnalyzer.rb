@@ -77,9 +77,8 @@ class TestConflictsAnalyzer
                 end
               end
             end
-            if (auxOne.size > 0)
-              changedCoveragedMethods[key] = auxOne
-            end
+            #quer dizer que modificações foram feitas para aquele file.
+            changedCoveragedMethods[key] = auxOne
           end
         end
       end
@@ -123,20 +122,20 @@ class TestConflictsAnalyzer
               aux2.push(methodNameOne)
             end
           end
-          if (auxMethods.size > 0)
+          #if (auxMethods.size > 0)
             differentModifiedParentTwo[keyTwo] = auxMethods
-          end
-          if (aux.size > 0)
+          #end
+          #if (aux.size > 0)
             sameMethodsModified[key] = aux
-          end
-          if (aux2.size > 0)
+          #end
+          #if (aux2.size > 0)
             differentModifiedParentOne[key] = aux2
-          end
+          #end
         end
       end
-      if (!sameFile)
+      #if (!sameFile)
         differentModifiedParentOne[key] = value
-      end
+      #end
     end
     auxAllKeys.each do |oneKey|
       differentModifiedParentTwo[oneKey] = changedConveragedMethodsParentTwo[oneKey]
