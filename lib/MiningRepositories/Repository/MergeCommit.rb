@@ -22,8 +22,11 @@ class MergeCommit
 			baseCommit = checkIfFastFoward(parentsCommit[0], parentsCommit[1])
 			if (baseCommit != "")
 				parentsCommit.push(baseCommit)
+				return parentsCommit
+			else
+				return nil
 			end
-			return parentsCommit
+
 		else
 			return nil
 		end
