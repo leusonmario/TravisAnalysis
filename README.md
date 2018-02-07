@@ -1,11 +1,11 @@
 # TravisAnalysis
 
-This is an ongoing project to analyse Java projects that use Travis CI aiming to identify and categorize build and test conflicts. 
+This is an ongoing project to analyze Java projects that use Travis CI aiming to identify and categorize build and test conflicts. 
 
 
 # Running the Analysis
 
-To run this project, you need to follow the instructions: 
+Follow the next instruction to perform a new analysis: 
 
 <ol type="I">
   <li>
@@ -14,11 +14,11 @@ To run this project, you need to follow the instructions:
   <li>
   Set up your information on the <i>properties</i> file.
   <p>
-  First, you need to inform your login and password from GitHub to allow the extraction of GitHub and Travis CI information. Following, inform the local path for GumTree project. 
+  First, you need to inform your login and password from GitHub to allow the extraction of GitHub and Travis CI information. Then, inform the local path for GumTree tool.
    
-We use an improved version of <a href="https://github.com/leusonmario/gumtree" target="_blank" > Gumtree </a>. The improved can be found <a href="https://drive.google.com/file/d/1FUeWWiolUbPysvLjh9KyAT6COJ2-qyy5/view?usp=sharing" target="_blank" > here </a>. Downloand it and unzip the file. Go to the diretory <i>bin</i> and inform the whole local path for the propertity <i>PathGumTree</i>.
+We use an improved version of <a href="https://github.com/leusonmario/gumtree" target="_blank" > Gumtree </a>. The improved tool can be found <a href="https://drive.google.com/file/d/1FUeWWiolUbPysvLjh9KyAT6COJ2-qyy5/view?usp=sharing" target="_blank" >here</a>. Downloand it and unzip the file. Go to the diretory <i>bin</i> and inform the whole local path for the propertity <i>PathGumTree</i>.
 
-During the analysis, some builds will require to deploy coverage information in GitHub. Consequently, it is necessary an OAuth token for doing this. <a href="https://developer.github.com/apps/building-oauth-apps/creating-an-oauth-app/" target="_blank" >Here</a> you can find how to create a new OAuth GitHub token.
+During the analysis, some builds will require to deploy coverage information in GitHub. Consequently, it is necessary to give permission using OAuth GitHub token. <a href="https://developer.github.com/apps/building-oauth-apps/creating-an-oauth-app/" target="_blank" >Here</a> you can find how to create a new OAuth GitHub token.
 
 For example:
 
@@ -46,7 +46,7 @@ For example:
 </table>
   </li>
   <li>
-  On <i>projectsList</i> file, inform the list of projects to be analyzed. These projects will be downloaded and saved temporarily. Each line represents a project formed by:
+  The file <i>projectsList</i> groups the list of projects to be analyzed. These projects will be downloaded and saved temporarily. Each line represents a project formed by:
     <ul>
     <li>
       The project owner, for example "jpds", and
