@@ -188,18 +188,18 @@ class WriteCSVs
 		if (File.exists?("Failed"+projectName+".csv"))
 			CSV.open("Failed"+projectName+".csv", "a+") do |csv|
 				if (effort != nil)
-					csv << [build, buildOne, buildTwo, status, frequency, effort[0], effort[1], effort[2], effort[3], effort[4], effort[5], effort[6], testInformation[0], testInformation[1], infoNewTestFile, infoNewTestCase, updateTestCase, changesSameMethods, changedMethods[0], dependentChangesParentOne, changedMethods[1], dependentChangesParentTwo, changedMethods[2], buildIDs, allContributionsIntegrated]
+					csv << [build, buildOne, buildTwo, status, frequency, effort[0], effort[1], effort[2], effort[3], effort[4], effort[5], effort[6], testInformation[0], testInformation[1], infoNewTestFile, infoNewTestCase, updateTestCase, changesSameMethods, changedMethods[0], dependentChangesParentOne, changedMethods[1], dependentChangesParentTwo, changedMethods[2], buildIDs, allContributionsIntegrated, effort[7], effort[8], effort[9], effort[10], effort[11]]
 				else
-					csv << [build, buildOne, buildTwo, status, frequency, "", "", "", "", "", "", "", testInformation[0], testInformation[1], infoNewTestFile, infoNewTestCase, updateTestCase, changesSameMethods, changedMethods[0], dependentChangesParentOne, changedMethods[1], dependentChangesParentTwo, changedMethods[2], buildIDs, allContributionsIntegrated]
+					csv << [build, buildOne, buildTwo, status, frequency, "", "", "", "", "", "", "", testInformation[0], testInformation[1], infoNewTestFile, infoNewTestCase, updateTestCase, changesSameMethods, changedMethods[0], dependentChangesParentOne, changedMethods[1], dependentChangesParentTwo, changedMethods[2], buildIDs, allContributionsIntegrated, effort[7], effort[8], effort[9], effort[10], effort[11]]
 				end
 			end
 		else
 			CSV.open("Failed"+projectName+".csv", "ab") do |csv|
-				csv << ["BuildID", "BuildParentOne", "BuildParentTwo", "MessageState", "Frequency", "FixBuildID", "FixStatus", "Effort", "NumberBuildsPerformed", "SameAuthor", "SameCommiter", "BestCase", "TestFileName", "FailedTestCase" ,"NewTestFile", "NewTestCase", "UpdateTestCase", "ChangesSameMethod", "SameMethods", "DependentChangesParentOne", "MethodsParentOne", "DependentChangesParentTwo", "MethodsParentTwo","BuildIDs", "AllContributionsIntegrated"]
+				csv << ["BuildID", "BuildParentOne", "BuildParentTwo", "MessageState", "Frequency", "FixBuildID", "FixStatus", "Effort", "NumberBuildsPerformed", "SameAuthor", "SameCommiter", "BestCase", "TestFileName", "FailedTestCase" ,"NewTestFile", "NewTestCase", "UpdateTestCase", "ChangesSameMethod", "SameMethods", "DependentChangesParentOne", "MethodsParentOne", "DependentChangesParentTwo", "MethodsParentTwo","BuildIDs", "AllContributionsIntegrated", "UpdateTestFile", "UpdateTestCase", "UpdateSameMethods", "UpdateDependentOne", "UpdateDependentTwo"]
 				if (effort != nil)
-					csv << [build, buildOne, buildTwo, status, frequency, effort[0], effort[1], effort[2], effort[3], effort[4], effort[5], effort[6], testInformation[0], testInformation[1], infoNewTestFile, infoNewTestCase, updateTestCase, changesSameMethods, changedMethods[0], dependentChangesParentOne, changedMethods[1], dependentChangesParentTwo, changedMethods[2], buildIDs, allContributionsIntegrated]
+					csv << [build, buildOne, buildTwo, status, frequency, effort[0], effort[1], effort[2], effort[3], effort[4], effort[5], effort[6], testInformation[0], testInformation[1], infoNewTestFile, infoNewTestCase, updateTestCase, changesSameMethods, changedMethods[0], dependentChangesParentOne, changedMethods[1], dependentChangesParentTwo, changedMethods[2], buildIDs, allContributionsIntegrated, effort[7], effort[8], effort[9], effort[10], effort[11]]
 				else
-					csv << [build, buildOne, buildTwo, status, frequency, "", "", "", "", "", "", "", testInformation[0], testInformation[1], infoNewTestFile, infoNewTestCase, updateTestCase, changesSameMethods, changedMethods[0], dependentChangesParentOne, changedMethods[1], dependentChangesParentTwo, changedMethods[2], buildIDs, allContributionsIntegrated]
+					csv << [build, buildOne, buildTwo, status, frequency, "", "", "", "", "", "", "", testInformation[0], testInformation[1], infoNewTestFile, infoNewTestCase, updateTestCase, changesSameMethods, changedMethods[0], dependentChangesParentOne, changedMethods[1], dependentChangesParentTwo, changedMethods[2], buildIDs, allContributionsIntegrated, effort[7], effort[8], effort[9], effort[10], effort[11]]
 				end
 			end			
 		end

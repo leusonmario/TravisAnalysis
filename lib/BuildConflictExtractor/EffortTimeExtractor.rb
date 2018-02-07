@@ -63,7 +63,68 @@ class EffortTimeExtractor
 		end
 	end
 
-	def checkFixedBuildFailed(brokenCommit, mergeCommit)
+	def checkFixCommitChangesTestCase(diff, failedTestInfo)
+		testCaseUpdate = false
+		testFileUpdate = false
+		begin
+			if (diff[0][failedTestInfo[0]] != nil)
+				testFileUpdate = true
+				if (diff[0][failedTestInfo[0]].to_s.match(/on Method #{failedTestInfo[1]}/))
+					testCaseUpdate = true
+				end
+			end
+			return testFileUpdate, testCaseUpdate
+		rescue
+			print "\nDiff changes was null\n"
+		end
+		return testFileUpdate, testCaseUpdate
+	end
+
+=begin
+	def checkFixCommitAllCHanges(diff, changedMethods)
+		updateFiles = Hash.new
+		changedMethods.each do |setChangedFiles|
+			setChangedFiles.each do |key, value|
+				if(diff[0][key] != nil)
+					methods = Array.new
+					methods.push("")
+					value.each do |method|
+						if (diff[0][failedTestInfo[0]].to_s.match(/on Method #{method}/))
+							methods.push(method)
+						end
+					end
+					updateFiles[key] = methods
+				end
+			end
+		end
+
+		return updateFiles
+	end
+=end
+	def checkFixCommitAllCHanges(diff, changedMethods)
+		updateFiles = Hash.new
+		begin
+			changedMethods.each do |key, value|
+				if(diff[0][key] != nil)
+					methods = Array.new
+					methods.push("")
+					value.each do |method|
+						if (diff[0][failedTestInfo[0]].to_s.match(/on Method #{method}/))
+							methods.push(method)
+						end
+					end
+					updateFiles[key] = methods
+				end
+			end
+
+			return updateFiles
+		rescue
+			print "\nDiff changes was null\n"
+		end
+		return updateFiles
+	end
+
+	def checkFixedBuildFailed(brokenCommit, mergeCommit, pathProject, failedTestInformation, changedMethods)
 		numberBuilsTillFix = 0
 		buildId = ""
 		@projectBuildsMap.each do |key, value|
@@ -72,18 +133,20 @@ class EffortTimeExtractor
 				buildId = value[1][0]
 				if (value[0][0] == "passed")
 					result = checkTimeEffort(brokenCommit, mergeCommit, key)
-					return value[1][0], value[0][0], result[0], numberBuilsTillFix, result[1], result[2], true
+					fixCommit = CopyFixCommit.new(pathProject, brokenCommit, key)
+					resultRunDiff = fixCommit.runAllDiff(pathProject)
+					updateTestInfo = checkFixCommitChangesTestCase(resultRunDiff, failedTestInformation)
+					sameMethods = checkFixCommitAllCHanges(resultRunDiff, changedMethods[0])
+					dependentParentOne = checkFixCommitAllCHanges(resultRunDiff, changedMethods[1])
+					dependentParentTwo = checkFixCommitAllCHanges(resultRunDiff, changedMethods[2])
+					return value[1][0], value[0][0], result[0], numberBuilsTillFix, result[1], result[2], true, updateTestInfo[0], updateTestInfo[1], sameMethods, dependentParentOne, dependentParentTwo
 				else
 					brokenCommit = key
 				end
 			end
 		end
-		result = checkFixedBuildCommitCloser(brokenCommit, mergeCommit)
-		if (result.size > 2)
-			return result
-		else
-			return result[1], "NO-FIX", "NO-FIX", numberBuilsTillFix+result[0], "NO-FIX", "NO-FIX", false
-		end
+
+		return "NO APPLICABLE", "NO-FIX", "NO-FIX", "NO APPLICABLE", "NO-FIX", "NO-FIX", false, "NO APPLICABLE", "NO APPLICABLE", "NO APPLICABLE", "NO APPLICABLE", "NO APPLICABLE"
 	end
 
 	def checkFailedCommitAsParent(brokenCommit, fixedCommit)

@@ -4,11 +4,16 @@ class TestConflictInfo
 
   end
 
+  #depois criar método para verificar se todas as contribuições de cada um dos parents foi preservada.
+  # pq caso contrário, o integrador pode ter motivado a quebra.
+
   def getInfoTestConflicts(gumTreeDiff, pathCopies, buildsInfo, pathGumTree)
     #baseLeft = gumTreeDiff[0]
+    #na verdade estou verificando com o RigthResult
     baseLeft = gumTreeDiff[3]
     leftResult = gumTreeDiff[1]
     #baseRight = gumTreeDiff[2]
+    #na verdade esstou verificando com o LeftResult
     baseRight = gumTreeDiff[1]
     rightResult = gumTreeDiff[3]
 

@@ -170,16 +170,16 @@ class GTAnalysis
 				end
 			elsif (conflictCause == "statementDuplication")
 				bcDependency[indexValue] = false
-				if (allIntegratedContributions)
-					conflictingContributions[indexValue] = true
-				else
+				#if (allIntegratedContributions)
+				#	conflictingContributions[indexValue] = true
+				#else
 					bcStatementDuplication = BCStatementDuplication.new()
 					if (bcStatementDuplication.verifyBuildConflict(baseLeft, leftResult, baseRight, rightResult, conflictCauses.getFilesConflict()[indexValue]) == false)
 						conflictingContributions[indexValue] = false
 					else
 						conflictingContributions[indexValue] = true
 					end
-				end
+				#end
 			elsif (conflictCause == "methodParameterListSize")
 				bcMethodUpdate = BCMethodUpdate.new(getGumTreePath())
 				if (bcMethodUpdate.verifyBuildConflict(leftPath, rightPath, conflictCauses.getFilesConflict()[indexValue]) == false)
@@ -205,16 +205,16 @@ class GTAnalysis
 				end
 			elsif (conflictCause == "alternativeStatment")
 				bcDependency[indexValue] = false
-				if (allIntegratedContributions)
-					conflictingContributions[indexValue] = true
-				else
+				#if (allIntegratedContributions)
+				#	conflictingContributions[indexValue] = true
+				#else
 					bcAlternative = BCAlternativeStatement.new()
 					if (bcAlternative.verifyBuildConflict(baseLeft[0], leftResult[0], baseRight[0], rightResult[0], conflictCauses.getFilesConflict()[indexValue]) == false)
 						conflictingContributions[indexValue] = false
 					else
 						conflictingContributions[indexValue] = true
 					end
-				end
+				#end
 			elsif (conflictCause == "malformedExpression")
 				bcDependency[indexValue] = false
 				if (allIntegratedContributions)
@@ -223,13 +223,13 @@ class GTAnalysis
 					conflictingContributions[indexValue] = false
 				end
 			elsif (conflictCause == "incompatibleTypes")
-				bcDependency[indexValue] = false
-				if (allIntegratedContributions)
-					conflictingContributions[indexValue] = true
-				else
+				#bcDependency[indexValue] = false
+				#if (allIntegratedContributions)
+				#	conflictingContributions[indexValue] = true
+				#else
 					conflictingContributions[indexValue] = false
 					brokenBuild = false
-				end
+				#end
 			else
 				#add tratamento para unavailablesymbol "Special Case"
 				bcDependency[indexValue] = false
