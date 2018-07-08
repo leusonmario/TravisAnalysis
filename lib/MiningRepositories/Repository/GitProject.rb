@@ -130,21 +130,21 @@ class GitProject
 	  		:login    => getLogin(),
 	  		:password => getPassword()
 		
-		forksProject = client.forks(getProjectName())
-		forksProject.each do |fork|
-			begin  
-				noTravisProject = 0
-				buildProjeto = Travis::Repository.find(fork.html_url.gsub('https://github.com/','')) 
-				newName = fork.html_url.partition('github.com/').last
-				if (buildProjeto != nil)
-					@forksListNames.push(newName)
-				end
-				result.push(buildProjeto)
-				rescue Exception => e  
-				 	noTravisProject += 1
-			end
-		end
-		@numberProjectForks = forksProject.size
+#		forksProject = client.forks(getProjectName())
+#		forksProject.each do |fork|
+#			begin
+#				noTravisProject = 0
+#				buildProjeto = Travis::Repository.find(fork.html_url.gsub('https://github.com/',''))
+#				newName = fork.html_url.partition('github.com/').last
+#				if (buildProjeto != nil)
+#					@forksListNames.push(newName)
+#				end
+#				result.push(buildProjeto)
+#				rescue Exception => e
+#				 	noTravisProject += 1
+#			end
+#		end
+#		@numberProjectForks = forksProject.size
 		return result
 	end
 

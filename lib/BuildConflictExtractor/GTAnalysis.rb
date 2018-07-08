@@ -132,8 +132,8 @@ class GTAnalysis
 
 		brokenBuild = true
 		indexValue = 0
-		conflictCauses.getCausesConflict().each do |conflictCause|
-			if(conflictCause == "unimplementedMethod" || conflictCause == "unimplementedMethodSuperType")
+		conflictCauses.getFilesConflict().each do |conflictCause|
+			if(conflictCause[0] == "unimplementedMethod" || conflictCause[0] == "unimplementedMethodSuperType")
 				bcDependency[indexValue] = false
 				#if (allIntegratedContributions)
 				#	conflictingContributions[indexValue] = true
@@ -147,17 +147,17 @@ class GTAnalysis
 						bcDependency[indexValue] = false
 					end
 				#end
-			elsif (conflictCause == "unavailableSymbolFileSpecialCase")
+			elsif (conflictCause[0] == "unavailableSymbolFileSpecialCase")
 				conflictingContributions[indexValue] = false
 				bcDependency[indexValue] = false
-			elsif (conflictCause == "unavailableSymbolMethod" || conflictCause == "unavailableSymbolVariable" || conflictCause == "unavailableSymbolFile")
+			elsif (conflictCause[0] == "unavailableSymbolMethod" || conflictCause[0] == "unavailableSymbolVariable" || conflictCause[0] == "unavailableSymbolFile")
 				bcUnavailableSymbol = BCUnavailableSymbol.new()
 				bcMethodUpdate = BCMethodUpdate.new(getGumTreePath())
-				if (bcUnavailableSymbol.verifyBuildConflict(baseLeft, leftResult, baseRight, rightResult, conflictCauses.getFilesConflict()[indexValue], leftPath, rightPath) == false)
-					if (conflictCause == "unavailableSymbolFile" and bcUnavailableSymbol.verifyBCDependency(leftPath, rightPath, conflictCauses.getFilesConflict()[indexValue], baseLeft[0], baseRight[0], leftResult[0], rightResult[0]))
+				if (bcUnavailableSymbol.verifyBuildConflict(baseLeft, leftResult, baseRight, rightResult, conflictCause, leftPath, rightPath) == false)
+					if (conflictCause[0] == "unavailableSymbolFile" and bcUnavailableSymbol.verifyBCDependency(leftPath, rightPath, conflictCause, baseLeft[0], baseRight[0], leftResult[0], rightResult[0]))
 						conflictingContributions[indexValue] = true
 						bcDependency[indexValue] = true
-					elsif (conflictCause == "unavailableSymbolMethod" and bcUnavailableSymbol.verifyBCDependencyMethod(leftPath, rightPath, conflictCauses.getFilesConflict()[indexValue], bcMethodUpdate))
+					elsif (conflictCause[0] == "unavailableSymbolMethod" and bcUnavailableSymbol.verifyBCDependencyMethod(leftPath, rightPath, conflictCause, bcMethodUpdate))
 						conflictingContributions[indexValue] = true
 						bcDependency[indexValue] = true
 					else
@@ -168,7 +168,7 @@ class GTAnalysis
 					conflictingContributions[indexValue] = true
 					bcDependency[indexValue] = false
 				end
-			elsif (conflictCause == "statementDuplication")
+			elsif (conflictCause[0] == "statementDuplication")
 				bcDependency[indexValue] = false
 				#if (allIntegratedContributions)
 				#	conflictingContributions[indexValue] = true
@@ -180,7 +180,7 @@ class GTAnalysis
 						conflictingContributions[indexValue] = true
 					end
 				#end
-			elsif (conflictCause == "methodParameterListSize")
+			elsif (conflictCause[0] == "methodParameterListSize")
 				bcMethodUpdate = BCMethodUpdate.new(getGumTreePath())
 				if (bcMethodUpdate.verifyBuildConflict(leftPath, rightPath, conflictCauses.getFilesConflict()[indexValue]) == false)
 					if (bcMethodUpdate.verifyBCDependency(leftPath, rightPath, conflictCauses.getFilesConflict()[indexValue]) == false)
@@ -194,7 +194,7 @@ class GTAnalysis
 					conflictingContributions[indexValue] = true
 					bcDependency[indexValue] = false
 				end
-			elsif (conflictCause == "dependencyProblem")
+			elsif (conflictCause[0] == "dependencyProblem")
 				bcDependencyAnalisis = BCDependency.new()
 				if (bcDependencyAnalisis.verifyBuildConflict(baseLeft[0], leftResult[0], baseRight[0], rightResult[0], conflictCauses.getFilesConflict()[indexValue]) == true)
 					conflictingContributions[indexValue] = false
@@ -203,7 +203,7 @@ class GTAnalysis
 					conflictingContributions[indexValue] = true
 					bcDependency[indexValue] = true
 				end
-			elsif (conflictCause == "alternativeStatment")
+			elsif (conflictCause[0] == "alternativeStatment")
 				bcDependency[indexValue] = false
 				#if (allIntegratedContributions)
 				#	conflictingContributions[indexValue] = true
@@ -215,14 +215,14 @@ class GTAnalysis
 						conflictingContributions[indexValue] = true
 					end
 				#end
-			elsif (conflictCause == "malformedExpression")
+			elsif (conflictCause[0] == "malformedExpression")
 				bcDependency[indexValue] = false
 				if (allIntegratedContributions)
 					conflictingContributions = true
 				else
 					conflictingContributions[indexValue] = false
 				end
-			elsif (conflictCause == "incompatibleTypes")
+			elsif (conflictCause[0] == "incompatibleTypes")
 				#bcDependency[indexValue] = false
 				#if (allIntegratedContributions)
 				#	conflictingContributions[indexValue] = true

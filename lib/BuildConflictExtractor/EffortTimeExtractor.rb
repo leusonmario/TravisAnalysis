@@ -31,17 +31,17 @@ class EffortTimeExtractor
 					index = 0
 					fixPatterns = []
 					if causesConflicts != nil
-						causesConflicts.getCausesFilesInfoConflicts().each do |key, value|
-							if (key == "statementDuplication")
+						causesConflicts.getCausesFilesInfoConflicts().each do |conflictsCauses|
+							if (conflictsCauses[0] == "statementDuplication")
 								fixStatementDuplication = FixStatementDuplication.new
-								fixPatterns[index] = fixStatementDuplication.verfyFixPattern(value, resultRunDiff)
-							elsif (key == "unavailableSymbol" or key == "unavailableSymbolFile" or key == "unavailableSymbolMethod" or key=="unavailableSymbolVariable")
+								fixPatterns[index] = fixStatementDuplication.verfyFixPattern(conflicts, resultRunDiff)
+							elsif (conflictsCauses[0] == "unavailableSymbol" or conflictsCauses[0] == "unavailableSymbolFile" or conflictsCauses[0] == "unavailableSymbolMethod" or conflictsCauses[0] =="unavailableSymbolVariable")
 								fixUnavailableSymbol = FixUnavailableSymbol.new
 								fixPatterns[index] = fixUnavailableSymbol.verfyFixPattern(value, resultRunDiff)
-							elsif (key == "unimplementedMethod")
+							elsif (conflictsCauses[0] == "unimplementedMethod")
 								fixUnimplementedMethod = FixUnimplementedMethod.new
 								fixPatterns[index] = fixUnimplementedMethod.verfyFixPattern(value, resultRunDiff)
-							elsif (key == "methodParameterListSize")
+							elsif (conflictsCauses[0] == "methodParameterListSize")
 								fixMethodUpdate = FixMethodUpdate.new
 								fixPatterns[index] = fixMethodUpdate.verifyFixPattern(value, resultRunDiff)
 							end

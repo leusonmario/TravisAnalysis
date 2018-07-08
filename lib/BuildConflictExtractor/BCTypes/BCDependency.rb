@@ -6,9 +6,9 @@ class BCDependency
 
 	def verifyBuildConflict(baseLeft, leftResult, baseRight, rightResult, filesConflicting)
 		begin
-			version = filesConflicting[3].to_s.match(/[0-9\.]*/)
+			version = filesConflicting[4].to_s.match(/[0-9\.]*/)
 			if ((baseLeft["pom.xml"] == rightResult["pom.xml"] and baseRight["pom.xml"] == leftResult["pom.xml"]) or (baseLeft["pom.xml"] != nil and baseRight["pom.xml"] != nil))
-				urlMavenRep = "http://search.maven.org/solrsearch/select?q=g:#{filesConflicting[0]}%20AND%20a:#{filesConflicting[1]}%20AND%20v:#{version}%20AND%20p:#{filesConflicting[2]}&rows=20&wt=json"
+				urlMavenRep = "http://search.maven.org/solrsearch/select?q=g:#{filesConflicting[1]}%20AND%20a:#{filesConflicting[2]}%20AND%20v:#{version}%20AND%20p:#{filesConflicting[3]}&rows=20&wt=json"
 				uriMavenRep = URI.parse(URI.encode(urlMavenRep.strip))
 				req = Net::HTTP::Get.new(urlMavenRep.to_s)
 				res = Net::HTTP.start(uriMavenRep.host, uriMavenRep.port) {|http|

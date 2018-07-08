@@ -44,6 +44,7 @@ class UnavailableSymbolExtractor
 		filesInformation = []
 		count = 0
 		while (count < classFiles.size)
+			#fazer chamada de categorySymbol aqui... não precisa mudar mais nada no método methodNames[count]
 			methodName = methodNames[count].to_s.match(/symbol[ \t\r\n\f]*:[ \t\r\n\f]*(method|variable|class|constructor|static)[ \t\r\n\f]*[a-zA-Z0-9\_]*/)[0].split(" ").last
 			classFile = classFiles[count].to_s.match(/location[ \t\r\n\f]*:[ \t\r\n\f]*(@)?(variable (request|instance) of type|class|interface)?[ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,\(\)]*/)[0].split(".").last.gsub("\r", "").to_s
 			callClassFile = ""
@@ -52,8 +53,9 @@ class UnavailableSymbolExtractor
 			else
 				callClassFile = callClassFiles[count].to_s.match(/\[ERROR\]?[ \t\r\n\f]*[\/\-\.\:a-zA-Z0-9\,\_]*/)[0].split("/").last.gsub(".java:", "").gsub("\r", "").to_s
 			end
+			categoryMissingSymbol = getTypeUnavailableSymbol(methodNames[count])
 			count += 1
-			filesInformation.push([classFile, methodName, callClassFile])
+			filesInformation.push([categoryMissingSymbol, classFile, methodName, callClassFile])
 		end
 		return categoryMissingSymbol, filesInformation, filesInformation.size
 	end
@@ -72,7 +74,7 @@ class UnavailableSymbolExtractor
 			count = 0
 			while(count < classFiles.size)
 				classFile = classFiles[count].to_s.split(".java")[0].to_s.split('\/').last
-				filesInformation.push(classFile)
+				filesInformation.push(["unavailableSymbolFileSpecialCase", classFile])
 				count += 1
 			end
 		end
@@ -90,7 +92,7 @@ class UnavailableSymbolExtractor
 		while (count < methodNames.size)
 			packageName = methodNames[count].to_s.split("package ").last.to_s.gsub(" does not exist")
 			count += 1
-			filesInformation.push([packageName])
+			filesInformation.push([categoryMissingSymbol, packageName])
 		end
 		return categoryMissingSymbol, filesInformation, filesInformation.size
 	end
@@ -105,6 +107,7 @@ class UnavailableSymbolExtractor
 	end
 
 	def getTypeUnavailableSymbol(methodNames)
+		#update aqui - Receber um array, e retornar todos os valores possíveis
 		if (methodNames.to_s.match(/symbol[ \t\r\n\f]*:[ \t\r\n\f]*(method|constructor)[ \t\r\n\f]*[a-zA-Z0-9\_]*/))
 			return "unavailableSymbolMethod"
 		elsif (methodNames.to_s.match(/symbol[ \t\r\n\f]*:[ \t\r\n\f]*(variable)[ \t\r\n\f]*[a-zA-Z0-9\_]*/))

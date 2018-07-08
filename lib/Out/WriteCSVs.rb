@@ -137,26 +137,35 @@ class WriteCSVs
 		end
 	end
 
-	def printConflictBuild(build, buildOne, buildTwo, state, projectName, effort)
+	def printConflictBuild(build, hash, buildOne, buildTwo, state, projectName, effort)
 		Dir.chdir getPathErroredCases()
+		state[0].each do |oneExit|
+
+		end
+		count = 0
 		if (File.exists?("Errored"+projectName+".csv"))
 			CSV.open("Errored"+projectName+".csv", "a+") do |csv|
-				if (effort != nil)
-					csv << [build, buildOne, buildTwo, state[0], state[2], state[1][0], state[1][1], state[1][2], state[1][3], effort[0], effort[1], effort[2], effort[3], effort[4], effort[5], effort[6], effort[7]]
-				else
-					csv << [build, buildOne, buildTwo, state[0], state[2], state[1][0], state[1][1], state[1][2], state[1][3], "", "", "", "", "", "", "", ""]
+				state[0].each do |oneExit|
+					if (effort != nil)
+						csv << [build, hash, buildOne, buildTwo, oneExit[0], state[2], state[1][0][count], state[1][1], state[1][2], state[1][3][count], effort[0], effort[1], effort[2], effort[3], effort[4], effort[5], effort[6], effort[7], oneExit]
+					else
+						csv << [build, hash, buildOne, buildTwo, oneExit[0], state[2], state[1][0][count], state[1][1], state[1][2], state[1][3][count], "", "", "", "", "", "", "", "", oneExit]
+					end
+					count += 1
 				end
-
 			end
 		else
 			CSV.open("Errored"+projectName+".csv", "ab") do |csv|
-				csv << ["BuildID", "BuildParentOne", "BuildParentTwo", "MessageState", "NumberOccurrences", "ConflictingContributions", "AllColaborationsIntgrated", "BrokenBuild", "Dependency", "FixBuildID", "FixStatus", "Effort", "NumberBuildsPerformed", "SameAuthor", "SameCommiter", "BestCase", "FIxPattern"]
-				if (effort != nil)
-					csv << [build, buildOne, buildTwo, state[0], state[2], state[1][0], state[1][1], state[1][2], state[1][3], effort[0], effort[1], effort[2], effort[3], effort[4], effort[5], effort[6], effort[7]]
-				else
-					csv << [build, buildOne, buildTwo, state[0], state[2], state[1][0], state[1][1], state[1][2], state[1][3], "", "", "", "", "", "", "", ""]
+				csv << ["BuildID", "Commit", "BuildParentOne", "BuildParentTwo", "MessageState", "NumberOccurrences", "ConflictingContributions", "AllColaborationsIntgrated", "BrokenBuild", "Dependency", "FixBuildID", "FixStatus", "Effort", "NumberBuildsPerformed", "SameAuthor", "SameCommiter", "BestCase", "FIxPattern", "ConflictInfo"]
+				state[0].each do |oneExit|
+					if (effort != nil)
+						csv << [build, hash, buildOne, buildTwo, oneExit[0], state[2], state[1][0][count], state[1][1], state[1][2], state[1][3][count], effort[0], effort[1], effort[2], effort[3], effort[4], effort[5], effort[6], effort[7], oneExit]
+					else
+						csv << [build, hash, buildOne, buildTwo, oneExit[0], state[2], state[1][0][count], state[1][1], state[1][2], state[1][3][count], "", "", "", "", "", "", "", "", oneExit]
+					end
+					count += 1
 				end
-			end			
+			end
 		end
 	end
 

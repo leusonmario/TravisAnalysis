@@ -1,7 +1,7 @@
 class CausesFilesConflicting
 
 	def initialize()
-		@causesFilesInfoConflicts = Hash.new
+		@causesFilesInfoConflicts = Array.new
 	end
 
   def getCausesFilesInfoConflicts()
@@ -9,15 +9,15 @@ class CausesFilesConflicting
 	end
 
 	def getCausesConflict()
-		@causesFilesInfoConflicts.keys
+		@causesFilesInfoConflicts
 	end
 
 	def getFilesConflict()
-		@causesFilesInfoConflicts.values
+		@causesFilesInfoConflicts
 	end
 
 	def getCausesNumber()
-		return @causesFilesInfoConflicts.keys.size
+		return @causesFilesInfoConflicts.size
 	end
 
 	def insertNewCauseOne(cause, filesRelated)
@@ -33,10 +33,15 @@ class CausesFilesConflicting
 	end
 
   def includeNewCause(cause, filesRelated)
-		if (@causesFilesInfoConflicts.include?(cause))
-			@causesFilesInfoConflicts[cause] += filesRelated
-		else
-			@causesFilesInfoConflicts[cause] = filesRelated
+		#if (@causesFilesInfoConflicts.include?(cause))
+		filesRelated.each do |fileRelatedOne|
+			if (!@causesFilesInfoConflicts.include? fileRelatedOne)
+				@causesFilesInfoConflicts.push(fileRelatedOne)
+			end
 		end
+
+		#else
+		#	@causesFilesInfoConflicts[cause] = filesRelated
+		#end
 	end
 end

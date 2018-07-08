@@ -52,7 +52,7 @@ class UnimplementedMethodExtractor
 				methodInterface = interfaceFiles[count].to_s.match(/does not override abstract method [a-zA-Z\<\> ]*/).to_s.split("\>").last
 			end
 
-			filesInformation.push([classFile, interfaceFile, methodInterface])
+			filesInformation.push(["unimplementedMethod", classFile, interfaceFile, methodInterface])
 			count += 1
 		end
 		return "unimplementedMethod", filesInformation, interfaceFiles.size
@@ -66,7 +66,7 @@ class UnimplementedMethodExtractor
 		while(count < classFiles.size)
 			classFile = classFiles[count].to_s.match(/[a-zA-Z]+\.java/)[0].to_s.gsub(".java","")
 			methodInterface = methodInterfaces[count].to_s.match(/symbol[ \t\r\n\f]*:[ \t\r\n\f]*(method|variable|class|constructor|static)[ \t\r\n\f]*[a-zA-Z0-9\_]*/)[0].split(" ").last
-			filesInformation.push([classFile, classFile, methodInterface])
+			filesInformation.push(["unimplementedMethodSuperType", classFile, classFile, methodInterface])
 			count += 1
 		end
 		return "unimplementedMethodSuperType", filesInformation, filesInformation.size

@@ -13,7 +13,7 @@ class AlternativeStatement
         classFile = information[count].to_s.match(/\[ERROR\] Alternative [a-zA-Z0-9\.]*/).to_s.split("\.").last
         secondClass = information[count].to_s.match(/is a subclass of alternative [a-zA-Z0-9\.]*/).to_s.split("\.").last
         count += 1
-        filesInformation.push([classFile, secondClass])
+        filesInformation.push(["alternativeStatement", classFile, secondClass])
       end
       return "alternativeStatement", filesInformation, information.size
     rescue

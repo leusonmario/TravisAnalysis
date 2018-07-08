@@ -328,12 +328,12 @@ class ConflictCategoryErrored
 					getCausesErroredBuild.setDependencyProblem(extraction[2])
 					causesFilesConflicts.insertNewCauseOne(extraction[0], extraction[1])
 				else
-					causesFilesConflicts.insertNewCauseOne("compilerError",[])
+					causesFilesConflicts.insertNewCauseOne("compilerError",["compilerError"])
 					getCausesErroredBuild.setCompilerError(extraction[2])
 					@compilerError += aux
 				end
 			rescue
-				causesFilesConflicts.insertNewCauseOne("compilerError", [])
+				causesFilesConflicts.insertNewCauseOne("compilerError", ["compilerError"])
 			end
 		end
 
@@ -346,17 +346,17 @@ class ConflictCategoryErrored
 		# depois ver a questao do |Could not transfer
 		if (body[/\[ERROR\] Failed to execute goal [a-zA-Z0-9\/\-\.\:\[\]\,\(\) ]* Fatal error compiling: invalid/] || body[/\[ERROR\] Failed to execute goal [a-zA-Z0-9\/\-\.\:\[\]\,\(\) ]* There (were|was) [0-9]* error(s)?/] || body[/#{stringErroInput}/] || body[/\[#{stringErro}\][\s\S]*deprecated[\s\S]*#{stringNoMaintained}/] || body[/#{stringAccess}/] || body[/#{stringFailedGoal}[\s\S]*#{stringBuildsFailed}/] || body[/#{stringNotDefinedProp}/] || body[/#{stringFailedGoal}[\s\S]*#{stringNotResolvedDep}[#{stringFailedCollect}]?[\s\S]*[#{stringConnectionReset}]?/] || body[/#{stringUnsupported}[\s\S]*#{stringStopped}/] || body[/#{stringErrorProcessing}[\s\S]*/] || body[/\[(ERROR|WARNING)\][ \t\r\n\f]*(Non-resolvable parent POM:)? (Failure to find|Could not find artifact)+/] || body[/\[#{stringErro}\][\s\S]*(\:jar)#{stringMissing}[\s\S]*/] || body[/\[#{stringErro}\][\s\S]*(\:jar)#{stringValidVersion}[\s\S]*/] || body[/#{stringElement}[(\n\s)(a-zA-Z0-9)(\'\-\/\.\:\,\[\])]*#{stringNoExist}/])
 			otherCase = false
-			causesFilesConflicts.insertNewCauseOne("compilerError",[])		
+			causesFilesConflicts.insertNewCauseOne("compilerError",["compilerError"])
 			getCausesErroredBuild.setCompilerError(body.scan(/\[ERROR\] Failed to execute goal [a-zA-Z0-9\/\-\.\:\[\]\,\(\) ]* Fatal error compiling: invalid|\[ERROR\] Failed to execute goal [a-zA-Z0-9\/\-\.\:\[\]\,\(\) ]* There (were|was) [0-9]* error(s)?|#{stringErroInput}|\[#{stringErro}\][\s\S]*deprecated[\s\S]*#{stringNoMaintained}|#{stringAccess}|#{stringFailedGoal}[\s\S]*#{stringBuildsFailed}|#{stringNotDefinedProp}|#{stringFailedGoal}[\s\S]*#{stringNotResolvedDep}[#{stringFailedCollect}]?[\s\S]*[#{stringConnectionReset}]?|#{stringUnsupported}[\s\S]*#{stringStopped}|#{stringErrorProcessing}[\s\S]*|\[(ERROR|WARNING)\][ \t\r\n\f]*(Non-resolvable parent POM:)? (Failure to find|Could not find artifact)?|\[#{stringErro}\][\s\S]*(\:jar)#{stringMissing}[\s\S]*|\[#{stringErro}\][\s\S]*(\:jar)#{stringValidVersion}[\s\S]*|#{stringElement}[(\n\s)(a-zA-Z0-9)(\'\-\/\.\:\,\[\])]*#{stringNoExist}/).size)
 		end
 		if (body[/#{stringTheCommand}(#{stringGitClone}|#{stringGitCheckout})(.*?)#{stringFailed}(.*)[\n]*/])
 			otherCase = false
-			causesFilesConflicts.insertNewCauseOne("gitProblem",[])
+			causesFilesConflicts.insertNewCauseOne("gitProblem",["gitProblem"])
 			getCausesErroredBuild.setGitProblem(body.scan(/#{stringTheCommand}(#{stringGitClone}|#{stringGitCheckout})(.*?)#{stringFailed}(.*)[\n]*/).size)
 		end
 		if (body[/404 Not Found/] || body[/The job exceeded the maximum time limit for jobs, and has been terminated/] || body[/#{stringServiceUnavailable}/] || body[/No output has been received in the last [0-9]*/] || body[/[\s\S]*#{stringOverflowData}[\s\S]*/] || body[/(y|Y)our test run exceeded 50(.0)? minutes/] || body[/error: device not found/] || body[/ValueError: No JSON object could be decoded/] || body[/The job has been terminated/])
 			otherCase = false
-			causesFilesConflicts.insertNewCauseOne("remoteError",[])
+			causesFilesConflicts.insertNewCauseOne("remoteError",["remoteError"])
 			getCausesErroredBuild.setRemoteError(body.scan(/The job exceeded the maximum time limit for jobs, and has been terminated|No output has been received in the last [0-9]*|#{stringServiceUnavailable}|(y|Y)our test run exceeded 50(.0)? minutes|error: device not found|ValueError: No JSON object could be decoded|#{stringOverflowData}|The job has been terminated/).size)
 		end
 

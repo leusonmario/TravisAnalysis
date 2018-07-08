@@ -21,7 +21,7 @@ class StatementDuplicationExtractor
 				end
 				methodName = information[count].to_s.match(/\[ERROR\] [a-zA-Z0-9\/\-\.\:\[\,\]\s\_]*/)[0].split(" ").last
 				count += 1
-				filesInformation.push([classFile, variableName, methodName])
+				filesInformation.push(["statementDuplication", classFile, variableName, methodName])
 			end
 			return "statementDuplication", filesInformation, information.size
 		rescue
