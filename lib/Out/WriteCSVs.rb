@@ -147,9 +147,17 @@ class WriteCSVs
 			CSV.open("Errored"+projectName+".csv", "a+") do |csv|
 				state[0].each do |oneExit|
 					if (effort != nil)
-						csv << [build, hash, buildOne, buildTwo, oneExit[0], state[2], state[1][0][count], state[1][1], state[1][2], state[1][3][count], effort[0], effort[1], effort[2], effort[3], effort[4], effort[5], effort[6], effort[7], oneExit]
+						if (state[1].size > 2)
+							csv << [build, hash, buildOne, buildTwo, oneExit[0], state[2], state[1][0][count], state[1][1], state[1][2], state[1][3][count], effort[0], effort[1], effort[2], effort[3], effort[4], effort[5], effort[6], effort[7], oneExit]
+						else
+							csv << [build, hash, buildOne, buildTwo, oneExit, state[2], state[1][0], state[1][1], state[1], state[1], effort[0], effort[1], effort[2], effort[3], effort[4], effort[5], effort[6], effort[7], oneExit]
+						end
 					else
-						csv << [build, hash, buildOne, buildTwo, oneExit[0], state[2], state[1][0][count], state[1][1], state[1][2], state[1][3][count], "", "", "", "", "", "", "", "", oneExit]
+						if (state[1].size > 2)
+							csv << [build, hash, buildOne, buildTwo, oneExit[0], state[2], state[1][0][count], state[1][1], state[1][2], state[1][3][count], "", "", "", "", "", "", "", "", oneExit]
+						else
+							csv << [build, hash, buildOne, buildTwo, oneExit, state[2], state[1][0], state[1][1], state[1], state[1], "", "", "", "", "", "", "", "", oneExit]
+						end
 					end
 					count += 1
 				end
@@ -159,9 +167,17 @@ class WriteCSVs
 				csv << ["BuildID", "Commit", "BuildParentOne", "BuildParentTwo", "MessageState", "NumberOccurrences", "ConflictingContributions", "AllColaborationsIntgrated", "BrokenBuild", "Dependency", "FixBuildID", "FixStatus", "Effort", "NumberBuildsPerformed", "SameAuthor", "SameCommiter", "BestCase", "FIxPattern", "ConflictInfo"]
 				state[0].each do |oneExit|
 					if (effort != nil)
-						csv << [build, hash, buildOne, buildTwo, oneExit[0], state[2], state[1][0][count], state[1][1], state[1][2], state[1][3][count], effort[0], effort[1], effort[2], effort[3], effort[4], effort[5], effort[6], effort[7], oneExit]
+						if (state[1].size > 2)
+							csv << [build, hash, buildOne, buildTwo, oneExit[0], state[2], state[1][0][count], state[1][1], state[1][2], state[1][3][count], effort[0], effort[1], effort[2], effort[3], effort[4], effort[5], effort[6], effort[7], oneExit]
+						else
+							csv << [build, hash, buildOne, buildTwo, oneExit, state[2], state[1][0], state[1][1], state[1], state[1], effort[0], effort[1], effort[2], effort[3], effort[4], effort[5], effort[6], effort[7], oneExit]
+						end
 					else
-						csv << [build, hash, buildOne, buildTwo, oneExit[0], state[2], state[1][0][count], state[1][1], state[1][2], state[1][3][count], "", "", "", "", "", "", "", "", oneExit]
+						if (state[1].size > 2)
+							csv << [build, hash, buildOne, buildTwo, oneExit[0], state[2], state[1][0][count], state[1][1], state[1][2], state[1][3][count], "", "", "", "", "", "", "", "", oneExit]
+						else
+							csv << [build, hash, buildOne, buildTwo, oneExit, state[2], state[1][0], state[1][1], state[1], state[1], "", "", "", "", "", "", "", "", oneExit]
+						end
 					end
 					count += 1
 				end

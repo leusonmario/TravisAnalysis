@@ -7,14 +7,14 @@ class FixStatementDuplication
     index = 0
     fixPattern = []
     filesConflictsInfo.each do |fileConflictBuild|
-      if (fileConflictBuild[1] == "method")
-        if (diffErrorFix[0][fileConflictBuild[0]].to_s.match(/Delete SimpleName: #{fileConflictBuild[2]}/))
+      if (fileConflictBuild[2] == "method")
+        if (diffErrorFix[0][fileConflictBuild[1]].to_s.match(/Delete SimpleName: #{fileConflictBuild[3]}/))
           fixPattern[index] = "DELETE-DUPLICATED-METHOD"
         else
           fixPattern[index] = "OTHER"
         end
       else
-        if (diffErrorFix[0][fileConflictBuild[0]].to_s.match(/Delete SimpleName: #{fileConflictBuild[1]}/))
+        if (diffErrorFix[0][fileConflictBuild[1]].to_s.match(/Delete SimpleName: #{fileConflictBuild[2]}/))
           fixPattern[index] = "DELETE-DUPLICATED-ELEMENT"
         else
           fixPattern[index] = "OTHER"
