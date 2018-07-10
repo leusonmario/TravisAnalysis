@@ -14,9 +14,10 @@ class EffortTimeExtractor
 		@projectPath = path
 	end
 
-	def checkFixedBuild(brokenCommit, mergeCommit, pathProject, pathGumTree, causesConflicts)
+	def checkFixedBuild(brokenCommit, mergeCommit, pathProject, pathGumTree, causesConflicts, extractorCLI)
 		numberBuilsTillFix = 0
 		localBrokenCommit = brokenCommit
+		allPossibleParents = []
 		buildId = ""
 		@projectBuildsMap.each do |key, value|
 			if (checkFailedCommitAsParent(localBrokenCommit, key))
@@ -34,16 +35,16 @@ class EffortTimeExtractor
 						causesConflicts.getCausesFilesInfoConflicts().each do |conflictsCauses|
 							if (conflictsCauses[0] == "statementDuplication")
 								fixStatementDuplication = FixStatementDuplication.new
-								fixPatterns[index] = fixStatementDuplication.verfyFixPattern(conflictsCauses, resultRunDiff)
+								fixPatterns.push(fixStatementDuplication.verfyFixPattern(conflictsCauses, resultRunDiff))
 							elsif (conflictsCauses[0] == "unavailableSymbol" or conflictsCauses[0] == "unavailableSymbolFile" or conflictsCauses[0] == "unavailableSymbolMethod" or conflictsCauses[0] =="unavailableSymbolVariable")
 								fixUnavailableSymbol = FixUnavailableSymbol.new
-								fixPatterns[index] = fixUnavailableSymbol.verfyFixPattern(conflictsCauses, resultRunDiff)
+								fixPatterns.push(fixUnavailableSymbol.verfyFixPattern(conflictsCauses, resultRunDiff))
 							elsif (conflictsCauses[0] == "unimplementedMethod")
 								fixUnimplementedMethod = FixUnimplementedMethod.new
-								fixPatterns[index] = fixUnimplementedMethod.verfyFixPattern(conflictsCauses, resultRunDiff)
+								fixPatterns.push(fixUnimplementedMethod.verfyFixPattern(conflictsCauses, resultRunDiff))
 							elsif (conflictsCauses[0] == "methodParameterListSize")
 								fixMethodUpdate = FixMethodUpdate.new
-								fixPatterns[index] = fixMethodUpdate.verifyFixPattern(conflictsCauses, resultRunDiff)
+								fixPatterns.push(fixMethodUpdate.verifyFixPattern(conflictsCauses, resultRunDiff))
 							end
 							index += 1
 						end
@@ -52,6 +53,9 @@ class EffortTimeExtractor
 					end
 				else
 					localBrokenCommit = key
+					if (!allPossibleParents.include? key)
+						allPossibleParents.push(key)
+					end
 				end
 			end
 		end

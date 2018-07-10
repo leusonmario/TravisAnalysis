@@ -5,19 +5,13 @@ class FixMethodUpdate
   end
 
   def verifyFixPattern(filesConflictsInfo, diffErrorFix)
-    index = 0
-    fixPattern = []
-    filesConflictsInfo.each do |fileConflictBuild|
-      if (diffErrorFix[0][fileConflictBuild[3]].to_s.match(/Delete SimpleName: [a-zA-Z0-9\.\_]*#{fileConflictBuild[2]}[\(\)0-9]*/))
-        fixPattern[index] = "MISSING-ELEMENT-REMOVAL"
-      elsif (diffErrorFix[0][fileConflictBuild[3]].to_s.match(/Delete SimpleName: [a-zA-Z0-9\.\_]*/))
-        fixPattern[index] = "MISSING-ELEMENT-REMOVAL"
+      if (diffErrorFix[0][filesConflictsInfo[3]].to_s.match(/Delete SimpleName: [a-zA-Z0-9\.\_]*#{filesConflictsInfo[2]}[\(\)0-9]*/))
+        return "MISSING-ELEMENT-REMOVAL"
+      elsif (diffErrorFix[0][filesConflictsInfo[3]].to_s.match(/Delete SimpleName: [a-zA-Z0-9\.\_]*/))
+        return "MISSING-ELEMENT-REMOVAL"
       else
-        fixPattern[index] = "OTHER"
+        return "OTHER"
       end
-      index += 1
-    end
-    return fixPattern
   end
 
 end

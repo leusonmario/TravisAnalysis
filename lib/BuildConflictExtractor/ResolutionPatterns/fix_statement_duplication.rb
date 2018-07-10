@@ -4,25 +4,19 @@ class FixStatementDuplication
   end
 
   def verfyFixPattern(filesConflictsInfo, diffErrorFix)
-    index = 0
-    fixPattern = []
-    filesConflictsInfo.each do |fileConflictBuild|
-      if (fileConflictBuild[2] == "method")
-        if (diffErrorFix[0][fileConflictBuild[1]].to_s.match(/Delete SimpleName: #{fileConflictBuild[3]}/))
-          fixPattern[index] = "DELETE-DUPLICATED-METHOD"
+      if (filesConflictsInfo[2] == "method")
+        if (diffErrorFix[0][filesConflictsInfo[1]].to_s.match(/Delete SimpleName: #{filesConflictsInfo[3]}/))
+          return "DELETE-DUPLICATED-METHOD"
         else
-          fixPattern[index] = "OTHER"
+          return "OTHER"
         end
       else
-        if (diffErrorFix[0][fileConflictBuild[1]].to_s.match(/Delete SimpleName: #{fileConflictBuild[2]}/))
-          fixPattern[index] = "DELETE-DUPLICATED-ELEMENT"
+        if (diffErrorFix[0][filesConflictsInfo[1]].to_s.match(/Delete SimpleName: #{filesConflictsInfo[2]}/))
+          return "DELETE-DUPLICATED-ELEMENT"
         else
-          fixPattern[index] = "OTHER"
+          return "OTHER"
         end
       end
-      index += 1
-    end
-    return fixPattern
   end
 
 end
