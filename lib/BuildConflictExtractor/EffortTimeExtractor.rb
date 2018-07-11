@@ -14,7 +14,7 @@ class EffortTimeExtractor
 		@projectPath = path
 	end
 
-	def checkFixedBuild(brokenCommit, mergeCommit, pathProject, pathGumTree, causesConflicts, extractorCLI)
+	def checkFixedBuild(brokenCommit, mergeCommit, pathProject, pathGumTree, causesConflicts, extractorCLI, gitProject)
 		numberBuilsTillFix = 0
 		localBrokenCommit = brokenCommit
 		allPossibleParents = []
@@ -29,24 +29,11 @@ class EffortTimeExtractor
 					fixCommit = CopyFixCommit.new(pathProject, brokenCommit, key)
 					resultRunDiff = fixCommit.runAllDiff(pathGumTree)
 					fixCommit.deleteProjectCopies()
-					index = 0
+
 					fixPatterns = []
 					if causesConflicts != nil
 						causesConflicts.getCausesFilesInfoConflicts().each do |conflictsCauses|
-							if (conflictsCauses[0] == "statementDuplication")
-								fixStatementDuplication = FixStatementDuplication.new
-								fixPatterns.push(fixStatementDuplication.verfyFixPattern(conflictsCauses, resultRunDiff))
-							elsif (conflictsCauses[0] == "unavailableSymbol" or conflictsCauses[0] == "unavailableSymbolFile" or conflictsCauses[0] == "unavailableSymbolMethod" or conflictsCauses[0] =="unavailableSymbolVariable")
-								fixUnavailableSymbol = FixUnavailableSymbol.new
-								fixPatterns.push(fixUnavailableSymbol.verfyFixPattern(conflictsCauses, resultRunDiff))
-							elsif (conflictsCauses[0] == "unimplementedMethod")
-								fixUnimplementedMethod = FixUnimplementedMethod.new
-								fixPatterns.push(fixUnimplementedMethod.verfyFixPattern(conflictsCauses, resultRunDiff))
-							elsif (conflictsCauses[0] == "methodParameterListSize")
-								fixMethodUpdate = FixMethodUpdate.new
-								fixPatterns.push(fixMethodUpdate.verifyFixPattern(conflictsCauses, resultRunDiff))
-							end
-							index += 1
+							fixPatterns.push(fixPatternBasedOnConflictType(conflictsCauses, resultRunDiff))
 						end
 
 						return value[1][0], value[0][0], result[0], numberBuilsTillFix, result[1], result[2], true, fixPatterns
@@ -59,11 +46,32 @@ class EffortTimeExtractor
 				end
 			end
 		end
-		result = checkFixedBuildCommitCloser(brokenCommit, mergeCommit)
-		if (result.size > 2)
-			return result
+		if (!extractorCLI.getProjectActive)
+			extractorCLI.activeForkProject()
+		end
+		attemptBuildFix = extractorCLI.buildFixConflicts(brokenCommit, gitProject)
+		if (attemptBuildFix != nil)
+			fixPatterns = []
+			result = ""
+			if causesConflicts != nil
+				causesConflicts.getCausesFilesInfoConflicts().each do |conflictsCauses|
+					result = checkTimeEffort(brokenCommit, mergeCommit, attemptBuildFix[0])
+					fixCommit = CopyFixCommit.new(pathProject, brokenCommit, attemptBuildFix[0])
+					resultRunDiff = fixCommit.runAllDiff(pathGumTree)
+					fixPatterns.push(fixPatternBasedOnConflictType(conflictsCauses, resultRunDiff))
+				end
+
+				return attemptBuildFix[1][2], attemptBuildFix[1][0], result[0], numberBuilsTillFix, result[1], result[2], true, fixPatterns
+			end
 		else
-			return result[1], "NO-FIX", "NO-FIX", numberBuilsTillFix+result[0], "NO-FIX", "NO-FIX", false
+			result = checkFixedBuildCommitCloser(brokenCommit, mergeCommit)
+			if (result.size > 2)
+				print "EffortTimeExtractor-1"
+				return result
+			else
+				print "EffortTimeExtractor-2"
+				return result[1], "NO-FIX", "NO-FIX", numberBuilsTillFix+result[0], "NO-FIX", "NO-FIX", false
+			end
 		end
 	end
 
@@ -236,6 +244,24 @@ class EffortTimeExtractor
 			return true
 		else
 			return false
+		end
+	end
+
+	private
+
+	def fixPatternBasedOnConflictType(conflictsCauses, resultRunDiff)
+		if (conflictsCauses[0] == "statementDuplication")
+			fixStatementDuplication = FixStatementDuplication.new
+			return fixStatementDuplication.verfyFixPattern(conflictsCauses, resultRunDiff)
+		elsif (conflictsCauses[0] == "unavailableSymbol" or conflictsCauses[0] == "unavailableSymbolFile" or conflictsCauses[0] == "unavailableSymbolMethod" or conflictsCauses[0] == "unavailableSymbolVariable")
+			fixUnavailableSymbol = FixUnavailableSymbol.new
+			return fixUnavailableSymbol.verfyFixPattern(conflictsCauses, resultRunDiff)
+		elsif (conflictsCauses[0] == "unimplementedMethod")
+			fixUnimplementedMethod = FixUnimplementedMethod.new
+			return fixUnimplementedMethod.verfyFixPattern(conflictsCauses, resultRunDiff)
+		elsif (conflictsCauses[0] == "methodParameterListSize")
+			fixMethodUpdate = FixMethodUpdate.new
+			return fixMethodUpdate.verifyFixPattern(conflictsCauses, resultRunDiff)
 		end
 	end
 

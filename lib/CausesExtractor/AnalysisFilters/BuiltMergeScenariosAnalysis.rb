@@ -150,7 +150,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 															stateBC = confErroredForkBuilt.findConflictCause(build, getPathProject(), pathGumTree, type, true, cloneProject)
 															effort = nil
 															if (stateBC.size > 2)
-																effort = effortTimeExtractor.checkFixedBuild(build.commit.sha, mergeCommit, getPathProject(), pathGumTree, stateBC[3])
+																effort = effortTimeExtractor.checkFixedBuild(build.commit.sha, mergeCommit, getPathProject(), pathGumTree, stateBC[3], extractorCLI, getGitProject())
 															end
 															writeCSVBuilt.printConflictBuild(build.id, build.commit.sha, result[1][0], result[2][0], stateBC, projectNameFile, effort)
 															externalCause = verifyExternalCauseConflict(stateBC[0])
@@ -233,7 +233,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 															totalMSFailedWithoutExternal += 1
 														end
 														resultFailedBuild[2][0].each do |onePrint|
-															effort = effortTimeExtractor.checkFixedBuildFailed(build.commit.sha, mergeCommit, pathGumTree, onePrint[0], onePrint[2][3], extractorCLI)
+															effort = effortTimeExtractor.checkFixedBuildFailed(build.commit.sha, mergeCommit, pathGumTree, onePrint[0], onePrint[2][3], extractorCLI, getGitProject())
 															writeCSVBuilt.printConflictTest(build.id, result[1][0], result[2][0], resultFailedBuild[0][0], projectNameFile, effort, resultFailedBuild[0][1], onePrint[3][0], onePrint[3][1], onePrint[3][2], onePrint[2][0], onePrint[2][1], onePrint[2][2], resultFailedBuild[2][4], resultFailedBuild[2][1], onePrint[0], onePrint[2][3])
 														end
 														validScenarioProjectFailed += 1
@@ -310,7 +310,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 																stateBC = confErroredForkBuilt.findConflictCause(build, getPathProject(), pathGumTree, type, true, cloneProject)
 																effort = nil
 																if (stateBC.size > 2)
-																	effort = effortTimeExtractor.checkFixedBuild(build.commit.sha, mergeCommit, getPathProject(), pathGumTree, stateBC[3], extractorCLI)
+																	effort = effortTimeExtractor.checkFixedBuild(build.commit.sha, mergeCommit, getPathProject(), pathGumTree, stateBC[3], extractorCLI, getGitProject())
 																end
 																externalCause = verifyExternalCauseConflict(stateBC[0])
 																if (!externalCause)
@@ -394,7 +394,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 																totalMSFailedWithoutExternal += 1
 															end
 															resultFailedBuild[2][0].each do |onePrint|
-																effort = effortTimeExtractor.checkFixedBuildFailed(build.commit.sha, mergeCommit, pathGumTree, onePrint[0], onePrint[2][3], extractorCLI)
+																effort = effortTimeExtractor.checkFixedBuildFailed(build.commit.sha, mergeCommit, pathGumTree, onePrint[0], onePrint[2][3], extractorCLI, getGitProject())
 																writeCSVBuilt.printConflictTest(build.id, result[1][0], result[2][0], resultFailedBuild[0][0], projectNameFile, effort, resultFailedBuild[0][1], onePrint[3][0], onePrint[3][1], onePrint[3][2], onePrint[2][0], onePrint[2][1], onePrint[2][2], resultFailedBuild[2][4], resultFailedBuild[2][1], onePrint[0], onePrint[2][3])
 															end
 															validScenarioProjectFailed += 1
@@ -562,7 +562,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 												stateBC = confErroredForkBuilt.findConflictCause(build, getPathProject(), pathGumTree, type, true, cloneProject)
 												effort = nil
 												if (stateBC.size > 2)
-													effort = effortTimeExtractor.checkFixedBuild(build.commit.sha, mergeCommit, getPathProject(), pathGumTree, stateBC[3], extractorCLI)
+													effort = effortTimeExtractor.checkFixedBuild(build.commit.sha, mergeCommit, getPathProject(), pathGumTree, stateBC[3], extractorCLI, getGitProject())
 												end
 												externalCause = verifyExternalCauseConflict(stateBC[0])
 												if (!externalCause)
@@ -600,7 +600,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 														totalMSFailedWithoutExternal += 1
 													end
 													resultFailedBuild[2][0].each do |onePrint|
-														effort = effortTimeExtractor.checkFixedBuildFailed(build.commit.sha, mergeCommit, pathGumTree, onePrint[0], onePrint[2][3], extractorCLI)
+														effort = effortTimeExtractor.checkFixedBuildFailed(build.commit.sha, mergeCommit, pathGumTree, onePrint[0], onePrint[2][3], extractorCLI, getGitProject())
 														writeCSVBuilt.printConflictTest(build.id, result[1][0], result[2][0], resultFailedBuild[0][0], projectNameFile, effort, resultFailedBuild[0][1], onePrint[3][0], onePrint[3][1], onePrint[3][2], onePrint[2][0], onePrint[2][1], onePrint[2][2], resultFailedBuild[2][4], resultFailedBuild[2][1], onePrint[0], onePrint[2][3])
 													end
 												end
@@ -626,7 +626,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 										stateBC = confErroredForkBuilt.findConflictCauseFromFailedScenario(build, getPathProject(), pathGumTree, type, true, cloneProject)
 										effort = nil
 										if (stateBC.size > 2)
-											effort = effortTimeExtractor.checkFixedBuild(build.commit.sha, mergeCommit, getPathProject(), pathGumTree, stateBC[3], extractorCLI)
+											effort = effortTimeExtractor.checkFixedBuild(build.commit.sha, mergeCommit, getPathProject(), pathGumTree, stateBC[3], extractorCLI, getGitProject())
 										end
 										writeCSVBuilt.printConflictBuildFromFailedBuils(build.id, build.commit.sha, result[1][0], result[2][0], stateBC, projectNameFile, effort)
 										validScenarioProject += 1
@@ -661,7 +661,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 										stateBC = confErroredForkBuilt.findConflictCauseFork(infoValidScenario[1], mergeScenario, getPathProject(), pathGumTree, type, true, cloneProject)
 										effort = nil
 										if (stateBC.size > 1)
-											effort = effortTimeExtractor.checkFixedBuild(mergeScenario, mergeCommit, getPathProject(), pathGumTree, stateBC[3], extractorCLI)
+											effort = effortTimeExtractor.checkFixedBuild(mergeScenario, mergeCommit, getPathProject(), pathGumTree, stateBC[3], extractorCLI, getGitProject())
 										end
 										externalCause = verifyExternalCauseConflict(stateBC[0])
 										if (!externalCause)
@@ -702,7 +702,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 													totalMSFailedWithoutExternal += 1
 												end
 												resultFailedBuild[2][0].each do |onePrint|
-													effort = effortTimeExtractor.checkFixedBuildFailed(mergeScenario, mergeCommit, pathGumTree, onePrint[0], onePrint[2][3], extractorCLI)
+													effort = effortTimeExtractor.checkFixedBuildFailed(mergeScenario, mergeCommit, pathGumTree, onePrint[0], onePrint[2][3], extractorCLI, getGitProject())
 													writeCSVBuilt.printConflictTest(@gitProject.getBuildID(mergeScenario, allBuilds, forkAllBuilds), result[1][0], result[2][0], resultFailedBuild[0][0], projectNameFile, effort, onePrint[3][0], onePrint[3][1], onePrint[3][2], onePrint[2][0], onePrint[2][1], onePrint[2][2], resultFailedBuild[2][4], resultFailedBuild[2][1], onePrint[0], onePrint[2][3])
 												end
 												validScenarioProjectFailed += 1

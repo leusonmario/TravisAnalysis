@@ -169,8 +169,10 @@ class WriteCSVs
 				csv << ["BuildID", "Commit", "BuildParentOne", "BuildParentTwo", "MessageState", "NumberOccurrences", "ConflictingContributions", "AllColaborationsIntgrated", "BrokenBuild", "Dependency", "FixBuildID", "FixStatus", "Effort", "NumberBuildsPerformed", "SameAuthor", "SameCommiter", "BestCase", "FIxPattern", "ConflictInfo"]
 				state[0].each do |oneExit|
 					if (effort != nil)
-						if (state[1].size > 2)
+						if (state[1].size > 2 and effort.size == 8)
 							csv << [build, hash, buildOne, buildTwo, oneExit[0], state[2], state[1][0][count], state[1][1], state[1][2], state[1][3][count], effort[0], effort[1], effort[2], effort[3], effort[4], effort[5], effort[6], effort[7][count], oneExit]
+						elsif (state[1].size > 2 and effort.size == 7)
+							csv << [build, hash, buildOne, buildTwo, oneExit[0], state[2], state[1][0][count], state[1][1], state[1][2], state[1][3][count], effort[0], effort[1], effort[2], effort[3], effort[4], effort[5], effort[6],"", oneExit]
 						else
 							csv << [build, hash, buildOne, buildTwo, oneExit, state[2], state[1][0], state[1][1], state[1], state[1], effort[0], effort[1], effort[2], effort[3], effort[4], effort[5], effort[6], effort[7][count], oneExit]
 						end

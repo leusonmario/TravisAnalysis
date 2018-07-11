@@ -322,4 +322,13 @@ class GitProject
 			return nil
 		end
 	end
+
+	def getAllChildrenFromCommit(hash)
+		Dir.chdir @cloneProject.getLocalClone()
+
+		listCommits = %x(git rev-list --all --not $COMMIT^@ --children | grep #{hash}).to_s.split("\n")[0].to_s.split(" ")
+		print listCommits
+		listCommits.delete(hash)
+		return listCommits
+	end
 end

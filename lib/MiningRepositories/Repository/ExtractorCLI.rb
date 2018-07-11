@@ -380,4 +380,41 @@ class ExtractorCLI
 		return getDownloadDir() + "/" + getName()
 	end
 
+  def buildFixConflicts(hash, gitProject)
+		print "ExtractorCLI"
+		gitProject.getAllChildrenFromCommit(hash).each do |fix|
+			print "Attempt"
+			resultFixBuild = verifyBuildCurrentState(fix)
+			if (resultFixBuild != nil and (resultFixBuild[0] == "passed" or resultFixBuild[0] == "failed"))
+				return fix, resultFixBuild
+			end
+		end
+		return nil
+	end
+
+	def verifyBuildCurrentState(hash)
+		indexCount = 0
+		idLastBuild = checkIdLastBuild()
+		state = replayBuildOnTravis(hash, "master")
+		if (state)
+			while (idLastBuild == checkIdLastBuild() and state == true)
+				sleep(20)
+				indexCount += 1
+				if (indexCount == 10)
+					return nil
+				end
+			end
+
+			status = checkStatusBuild()
+			while (status == "started" and indexCount < 10)
+				sleep(20)
+				print "Building Fix Conflict Pattern yet\n"
+				status = checkStatusBuild()
+			end
+
+			return getInfoLastBuild()
+		end
+		return nil
+	end
+
 end

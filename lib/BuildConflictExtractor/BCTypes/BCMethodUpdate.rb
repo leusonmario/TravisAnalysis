@@ -33,14 +33,16 @@ class BCMethodUpdate
 		while (count < filesConflicting.size)
 			leftPathMethods = []
 			rightPathMethods = []
-			if (filesConflicting[0][4] == "method")
-				leftPathMethods = getParametersListSizeForMethod(leftPath, filesConflicting[0][3], filesConflicting[0][2])
-				rightPathMethods = getParametersListSizeForMethod(rightPath, filesConflicting[0][3], filesConflicting[0][2])
-			elsif (filesConflicting[0][4] == "constructor")
-				leftPathMethods = getParametersListSizeForConstructor(leftPath, filesConflicting[0][3], filesConflicting[0][2])
-				rightPathMethods = getParametersListSizeForConstructor(rightPath, filesConflicting[0][3], filesConflicting[0][2])
+			if (filesConflicting[4] == "method")
+        print "METHOD"
+				leftPathMethods = getParametersListSizeForMethod(leftPath, filesConflicting[3], filesConflicting[2])
+				rightPathMethods = getParametersListSizeForMethod(rightPath, filesConflicting[3], filesConflicting[2])
+			elsif (filesConflicting[4] == "constructor")
+        print "CONSTRUCTOR"
+        leftPathMethods = getParametersListSizeForConstructor(leftPath, filesConflicting[3], filesConflicting[2])
+				rightPathMethods = getParametersListSizeForConstructor(rightPath, filesConflicting[3], filesConflicting[2])
 			end
-			if (leftPathMethods[0].size != rightPathMethods[0].size)
+			if (leftPathMethods != nil and rightPathMethods != nil and leftPathMethods[0].size != rightPathMethods[0].size)
 				return true
 			else
 				equalParametersNumber = 0
