@@ -74,7 +74,7 @@ class ExtractorCLI
 		if (checkTravis != "")
 			head = "git rev-parse HEAD"
 			reset = "git reset --hard " + commit
-			forcePush = "git push -f origin "
+			forcePush = "git push -f origin #{branch}"
 			changeOnHead = false
 			begin
 				previousHead = %x(#{head})
@@ -384,7 +384,7 @@ class ExtractorCLI
 		print "ExtractorCLI"
 		gitProject.getAllChildrenFromCommit(hash).each do |fix|
 			print "Attempt"
-			resultFixBuild = verifyBuildCurrentState(fix)
+			resultFixBuild = verifyBuildCurrentState(fix, gitProject.getMainProjectBranch())
 			if (resultFixBuild != nil and (resultFixBuild[0] == "passed" or resultFixBuild[0] == "failed"))
 				return fix, resultFixBuild
 			end
@@ -392,10 +392,10 @@ class ExtractorCLI
 		return nil
 	end
 
-	def verifyBuildCurrentState(hash)
+	def verifyBuildCurrentState(hash, branch)
 		indexCount = 0
 		idLastBuild = checkIdLastBuild()
-		state = replayBuildOnTravis(hash, "master")
+		state = replayBuildOnTravis(hash, branch)
 		if (state)
 			while (idLastBuild == checkIdLastBuild() and state == true)
 				sleep(20)

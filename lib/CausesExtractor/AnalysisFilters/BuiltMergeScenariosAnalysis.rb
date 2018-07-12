@@ -754,7 +754,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 		idLastBuild = extractorCLI.checkIdLastBuild()
 		state = false
 		if (mergeScenarios == nil)
-			state = extractorCLI.replayBuildOnTravis(sha, "master")
+			state = extractorCLI.replayBuildOnTravis(sha, @gitProject.getMainProjectBranch())
 		else
 			state = extractorCLI.commitAndPushRebuiltMergeScenario(sha, mergeScenarios[0], mergeScenarios[1])
 		end
