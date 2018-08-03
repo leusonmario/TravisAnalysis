@@ -24,7 +24,7 @@ class ParentsMSDiff
 			kill = %x(pkill -f gumtree)
 			sleep(5)
 			thr = Thread.new { diff = system "bash", "-c", "exec -a gumtree ./gumtree webdiff #{firstBranch.gsub("\n","")} #{secondBranch.gsub("\n","")}" }
-			sleep(10)
+			sleep(15)
 			mainDiff = %x(wget http://127.0.0.1:4567/ -q -O -)
 			modifiedFilesDiff = getDiffByModification(mainDiff[/Modified files <span class="badge">(.*?)<\/span>/m, 1])
 			addedFiles = getDiffByAddedFile(mainDiff[/Added files <span class="badge">(.*?)<\/span>/m, 1])
@@ -91,6 +91,7 @@ class ParentsMSDiff
 			file = gumTreePage.css('div.col-lg-12 h3 small').text[/(.*?) \-\>/m, 1].gsub(".java", "")
 			script = gumTreePage.css('div.col-lg-12 pre').text
 			result[file.to_s] = script.gsub('"', "\"")
+			print file
 			index += 1
 		end
 		return result

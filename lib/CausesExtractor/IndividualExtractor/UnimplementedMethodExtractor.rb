@@ -7,14 +7,17 @@ class UnimplementedMethodExtractor
 	def extractionFilesInfo(buildLog)
 
 		begin
-			count = 0
-			if (buildLog[/method does not override or implement a method from a supertype/])
-				return getInfoSecondCase(buildLog)
-			else
-				return getInfoDefaultCase(buildLog)
-			end
+			return getInfoDefaultCase(buildLog)
 		rescue
 			return "unimplementedMethod", [], 0
+		end
+	end
+
+	def extractionFilesInfoSecond (buildLog)
+		begin
+			return getInfoSecondCase(buildLog)
+		rescue
+			return "unimplementedMethodSuperType", [], 0
 		end
 	end
 
@@ -25,10 +28,10 @@ class UnimplementedMethodExtractor
 		numberOccurrences = buildLog.scan(/\[#{stringErro}\][\s\S]*#{stringNoOverride}[\s\S]*(\[INFO\])?/).size
 		classFiles = ""
 
-		if (buildLog.match(/\[ERROR\] [a-zA-Z\/\-]*\.java/).to_s.match(/[a-zA-Z]+\.java/)[0].to_s)
-			classFiles = buildLog.to_enum(:scan, /\[ERROR\] [a-zA-Z\/\-]*\.java/).map { Regexp.last_match }
-		elsif (buildLog.match(/error: [a-zA-Z\/\-]* is not abstract/))
-			classFiles = buildLog.to_enum(:scan, /error: [a-zA-Z\/\-]* is not abstract/).map { Regexp.last_match }
+		if (buildLog.match(/\[ERROR\] [a-zA-Z0-9\/\-]*\.java/).to_s.match(/[0-9a-zA-Z]+\.java/)[0].to_s)
+			classFiles = buildLog.to_enum(:scan, /\[ERROR\] [a-zA-Z0-9\/\-]*\.java/).map { Regexp.last_match }
+		elsif (buildLog.match(/error: [a-zA-Z0-9\/\-]* is not abstract/))
+			classFiles = buildLog.to_enum(:scan, /error: [a-zA-Z0-9\/\-]* is not abstract/).map { Regexp.last_match }
 		end
 
 		interfaceFiles = buildLog.to_enum(:scan, /#{stringNoOverride} [0-9a-zA-Z\(\)\<\>\.\,]* in [a-zA-Z\.]*[^\n]+/).map { Regexp.last_match }
@@ -38,9 +41,9 @@ class UnimplementedMethodExtractor
 			classFile = ""
 			methodInterface = ""
 			if (buildLog.match(/\[ERROR\] [0-9a-zA-Z\/\-]*\.java/).to_s.match(/[a-zA-Z]+\.java/)[0].to_s)
-				classFile = classFiles[count].to_s.match(/[a-zA-Z]+\.java/)[0].to_s
+				classFile = classFiles[count].to_s.match(/[a-zA-Z]+\.java/)[0].to_s.gsub(".java", "")
 			elsif (buildLog.match(/error: [0-9a-zA-Z\/\-]* is not abstract/))
-				classFile = classFiles[count].to_s.match(/error: [a-zA-Z\/\-]*/).gsub("error: ","")
+				classFile = classFiles[count].to_s.match(/error: [a-zA-Z\/\-]*/).gsub("error: ","").to_s.gsub(".java", "")
 			end
 			interfaceFile = interfaceFiles[count].to_s.split(".").last.gsub("\r", "").to_s
 			if (methodInterfaces[count].to_s.match(/does not override abstract method[\s\S]*\(/))
@@ -60,13 +63,15 @@ class UnimplementedMethodExtractor
 
 	def getInfoSecondCase(buildLog)
 		filesInformation = []
-		classFiles = buildLog.to_enum(:scan, /\[ERROR\] [a-zA-Z\/\-\.\:\,\[\]0-9 ]*cannot find symbol/).map { Regexp.last_match }
-		methodInterfaces = buildLog.to_enum(:scan, /symbol[ \t\r\n\f]*:[ \t\r\n\f]*(method|variable|class|constructor|static)[ \t\r\n\f]*[a-zA-Z0-9\_]*/).map { Regexp.last_match }
+		#classFiles = buildLog.to_enum(:scan, /\[ERROR\] [a-zA-Z\/\-\.\:\,\[\]0-9 ]*cannot find symbol/).map { Regexp.last_match }
+		classFiles = buildLog.to_enum(:scan, /\[ERROR\] [a-zA-Z0-9\/\-]*\.java/).map { Regexp.last_match }
+		#methodInterfaces = buildLog.to_enum(:scan, /symbol[ \t\r\n\f]*:[ \t\r\n\f]*(method|variable|class|constructor|static)[ \t\r\n\f]*[a-zA-Z0-9\_]*/).map { Regexp.last_match }
 		count = 0
 		while(count < classFiles.size)
-			classFile = classFiles[count].to_s.match(/[a-zA-Z]+\.java/)[0].to_s.gsub(".java","")
-			methodInterface = methodInterfaces[count].to_s.match(/symbol[ \t\r\n\f]*:[ \t\r\n\f]*(method|variable|class|constructor|static)[ \t\r\n\f]*[a-zA-Z0-9\_]*/)[0].split(" ").last
-			filesInformation.push(["unimplementedMethodSuperType", classFile, classFile, methodInterface])
+			classFile = classFiles[count].to_s.match(/[a-z0-9A-Z]+\.java/)[0].to_s.gsub(".java","")
+			#methodInterface = methodInterfaces[count].to_s.match(/symbol[ \t\r\n\f]*:[ \t\r\n\f]*(method|variable|class|constructor|static)[ \t\r\n\f]*[a-zA-Z0-9\_]*/)[0].split(" ").last
+			#methodInterface = methodInterfaces[count].to_s.match(/symbol[ \t\r\n\f]*:[ \t\r\n\f]*(method|variable|class|constructor|static)[ \t\r\n\f]*[a-zA-Z0-9\_]*/)[0].split(" ").last
+			filesInformation.push(["unimplementedMethodSuperType", classFile, classFile, classFile])
 			count += 1
 		end
 		return "unimplementedMethodSuperType", filesInformation, filesInformation.size

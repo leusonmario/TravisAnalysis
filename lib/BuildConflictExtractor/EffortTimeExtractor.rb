@@ -19,6 +19,7 @@ class EffortTimeExtractor
 		localBrokenCommit = brokenCommit
 		allPossibleParents = []
 		buildId = ""
+
 		@projectBuildsMap.each do |key, value|
 			if (checkFailedCommitAsParent(localBrokenCommit, key))
 				numberBuilsTillFix += 1
@@ -27,9 +28,11 @@ class EffortTimeExtractor
 					result = checkTimeEffort(brokenCommit, mergeCommit, key)
 
 					fixCommit = CopyFixCommit.new(pathProject, brokenCommit, key)
-					resultRunDiff = fixCommit.runAllDiff(pathGumTree)
+					resultRunDiff = []
+					if (!fixCommit.getAllDiff)
+						resultRunDiff = fixCommit.runAllDiff(pathGumTree)
+					end
 					fixCommit.deleteProjectCopies()
-
 					fixPatterns = []
 					if causesConflicts != nil
 						causesConflicts.getCausesFilesInfoConflicts().each do |conflictsCauses|
@@ -46,24 +49,34 @@ class EffortTimeExtractor
 				end
 			end
 		end
+#=begin
 		if (!extractorCLI.getProjectActive)
 			extractorCLI.activeForkProject()
 		end
-		attemptBuildFix = extractorCLI.buildFixConflicts(brokenCommit, gitProject)
+		attemptBuildFix = extractorCLI.buildFixConflicts(brokenCommit, gitProject, @projectBuildsMap)
+#=begin
 		if (attemptBuildFix != nil)
 			fixPatterns = []
 			result = ""
 			if causesConflicts != nil
 				causesConflicts.getCausesFilesInfoConflicts().each do |conflictsCauses|
+					if (conflictsCauses[0] != "compilerError" and conflictsCauses[0] != "remoteError" and conflictsCauses[0] != "githubError")
 					result = checkTimeEffort(brokenCommit, mergeCommit, attemptBuildFix[0])
+					resultRunDiff = []
 					fixCommit = CopyFixCommit.new(pathProject, brokenCommit, attemptBuildFix[0])
-					resultRunDiff = fixCommit.runAllDiff(pathGumTree)
+					if (!fixCommit.getAllDiff)
+						resultRunDiff = fixCommit.runAllDiff(pathGumTree)
+          end
+          fixCommit.deleteProjectCopies()
+					#resultRunDiff = fixCommit.runAllDiff(pathGumTree)
 					fixPatterns.push(fixPatternBasedOnConflictType(conflictsCauses, resultRunDiff))
 				end
 
 				return attemptBuildFix[1][2], attemptBuildFix[1][0], result[0], numberBuilsTillFix, result[1], result[2], true, fixPatterns
+				end
 			end
 		else
+#=end
 			result = checkFixedBuildCommitCloser(brokenCommit, mergeCommit)
 			if (result.size > 2)
 				print "EffortTimeExtractor-1"

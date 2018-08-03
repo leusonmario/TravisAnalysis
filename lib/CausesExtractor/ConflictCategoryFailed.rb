@@ -1,4 +1,5 @@
 require 'require_all'
+require 'travis'
 require_rel 'ConflictCategories'
 require_all '././BuildConflictExtractor'
 require_all '././TestConflictsExtractor'
@@ -79,21 +80,41 @@ class ConflictCategoryFailed
 		return adjustValueReturn(result), result[2], getFinalStatus(result, mergeScenario, localClone)
 	end
 
-	def findConflictCause(build, pathLocalClone)
-		result = []
-		indexJob = 0
-		while (indexJob < build.job_ids.size)
-			if (build.jobs[indexJob].state == "failed")
-				if (build.jobs[indexJob].log != nil and !build.jobs[indexJob].log.to_s[/The forked VM terminated without saying properly goodbye. VM crash or System.exit called/])
-					build.jobs[indexJob].log.body do |part|
-						causesInfo = getCauseByJob(part)
-						result.push(causesInfo)
-					end
-				end
-			end
-			indexJob += 1
+	def findConflictCause(build, pathLocalClone, buildNumberParentOne, buildNumerParentTwo)
+		print build.id
+		failedTestFromParent = brokenLogsOfBuild(build)
+		if (buildNumberParentOne != nil)
+			failedTestFromParentOne = findFailedTestForFailedParent(buildNumberParentOne)
 		end
-		return adjustValueReturn(result), result[2], getFinalStatus(result, build.commit.sha, pathLocalClone)
+		if (buildNumerParentTwo != nil)
+			failedTestFromParentTwo = findFailedTestForFailedParent(buildNumerParentTwo)
+		end
+
+		removePreviousFailedTests(failedTestFromParent, failedTestFromParentOne)
+		removePreviousFailedTests(failedTestFromParent, failedTestFromParentTwo)
+		print failedTestFromParent
+		begin
+			return adjustValueReturn(failedTestFromParent), failedTestFromParent[0][2], getFinalStatus(failedTestFromParent, build.commit.sha, pathLocalClone)
+		rescue
+			return adjustValueReturn(failedTestFromParent), nil, getFinalStatus(failedTestFromParent, build.commit.sha, pathLocalClone)
+		end
+	end
+
+	# receber os ids
+	# verificar se os status sao falhos
+	# em caso positivo, pegar a lista de quebras
+	# remover essa lista já falha do resultado final
+	#
+	def findFailedTestForFailedParent(buildNumerParent)
+		result = []
+		begin
+			projectTravis = Travis::Repository.find(@projectName)
+			build = projectTravis.build(buildNumerParent)
+			result = brokenLogsOfBuild(build)
+		rescue
+			print "GET BUILD FROM BUILD NUMBER DID NOT WORK \n"
+		end
+		return result
 	end
 
 	def adjustValueReturn(result)
@@ -295,5 +316,51 @@ class ConflictCategoryFailed
 		end
 
 		return result, numberFailures, filesInfo
+	end
+
+	private
+
+	def removePreviousFailedTests(mergeCommitInfo, parentInfo)
+		removeCase = []
+		begin
+			if (mergeCommitInfo.size > 0 and mergeCommitInfo[2] != nil and parentInfo.size > 0 and parentInfo[2] != nil)
+				mergeCommitInfo[0][2].each do |failedTestInfoMergeCommit|
+					parentInfo[0][2].each do |failedTestInfoParent|
+						if (failedTestInfoMergeCommit[0] == failedTestInfoParent[0] and failedTestInfoMergeCommit[1] == failedTestInfoParent[1])
+							removeCase.push(failedTestInfoMergeCommit)
+						end
+					end
+				end
+				removeCase.each do |removeOne|
+					mergeCommitInfo[2].delete(removeOne)
+				end
+			end
+		rescue
+
+		end
+	end
+
+	def brokenLogsOfBuild(build)
+		result = []
+		indexJob = 0
+		begin
+			while (indexJob < build.job_ids.size)
+				if (build.jobs[indexJob].state == "failed")
+					if (build.jobs[indexJob].log != nil and !build.jobs[indexJob].log.to_s[/The forked VM terminated without saying properly goodbye. VM crash or System.exit called/])
+						build.jobs[indexJob].log.body do |part|
+							causesInfo = getCauseByJob(part)
+							if (causesInfo[1] > 0)
+								result.push(causesInfo)
+							end
+						end
+					end
+				end
+				indexJob += 1
+			end
+		rescue
+			print "CAUSES FROM FAILED TEST DID NOT WORK\n"
+			return [[],[],[]]
+		end
+		return result
 	end
 end

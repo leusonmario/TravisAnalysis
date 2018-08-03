@@ -290,10 +290,19 @@ class ConflictCategoryErrored
 		
 		if (body[/\[#{stringErro}\][\s\S]*#{stringNoOverride}[\s\S]*\[#{stringErro}\]/])
 			otherCase = false
-			localUnimplementedMethod = body.scan(/\[#{stringErro}\][\s\S]*#{stringNoOverride}[\s\S]*\[#{stringErro}\]/).size
-			extraction = getUnimplementedMethodExtractor().extractionFilesInfo(body)
-			getCausesErroredBuild.setUnimplementedMethod(extraction[2])
-			causesFilesConflicts.insertNewCauseOne(extraction[0], extraction[1])
+			#localUnimplementedMethod = body.scan(/\[#{stringErro}\][\s\S]*#{stringNoOverride}[\s\S]*\[#{stringErro}\]/).size
+			if (body.scan(/method does not override or implement a method from a supertype/))
+				localUnimplementedMethod = body.scan(/method does not override or implement a method from a supertype/).size
+				extraction = getUnimplementedMethodExtractor().extractionFilesInfoSecond(body[/BUILD FAILURE[\s\S]*/])
+				getCausesErroredBuild.setUnimplementedMethod(extraction[2])
+				causesFilesConflicts.insertNewCauseOne(extraction[0], extraction[1])
+			end
+			if (body.scan(/is not abstract and does not override abstract method/))
+				localUnimplementedMethod = body.scan(/is not abstract and does not override abstract method/).size
+				extraction = getUnimplementedMethodExtractor().extractionFilesInfo(body[/BUILD FAILURE[\s\S]*/])
+				getCausesErroredBuild.setUnimplementedMethod(extraction[2])
+				causesFilesConflicts.insertNewCauseOne(extraction[0], extraction[1])
+			end
 		end
 
 		if (body[/\[INFO\][\s\S]* Alternatives in a multi-catch statement cannot be related by subclassing/])
@@ -308,14 +317,18 @@ class ConflictCategoryErrored
 			otherCase = false
 			localUnavailableSymbol = body.scan(/\[javac\] [\/a-zA-Z\_\-\.\:0-9]* cannot find symbol[\s\S]* \[javac\] (location:)+|\[ERROR\] [a-zA-Z0-9\/\-\.\:\[\]\,]* cannot find symbol[\n\r]+\[ERROR\]?[ \t\r\n\f]*symbol[ \t\r\n\f]*:[ \t\r\n\f]*method [a-zA-Z0-9\/\-\.\:\[\]\,\(\)]*[\n\r]+\[ERROR\]?[ \t\r\n\f]*location[ \t\r\n\f]*:[ \t\r\n\f]*class[ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,\(\)]*[\n\r]?|\[#{stringErro}\][\s\S]*#{stringNotFindType}|\[#{stringErro}\][\s\S]*#{stringNotMember}|\[ERROR\]?[\s\S]*cannot find symbol/).size
 			extraction = getUnavailableSymbolExtractor().extractionFilesInfo(body, bodyJob)
-			if (extraction[0] == "unavailableSymbolMethod")
-				getCausesErroredBuild.setUnavailableMethod(extraction[2])
-			elsif (extraction[0] == "unavailableSymbolVariable")
-				getCausesErroredBuild.setUnavailableVariable(extraction[2])
-			else
-				getCausesErroredBuild.setUnavailableFile(extraction[2])
-			end
-			causesFilesConflicts.insertNewCauseOne(extraction[0], extraction[1])
+			begin
+        if (extraction[0] == "unavailableSymbolMethod")
+          getCausesErroredBuild.setUnavailableMethod(extraction[2])
+        elsif (extraction[0] == "unavailableSymbolVariable")
+          getCausesErroredBuild.setUnavailableVariable(extraction[2])
+        else
+          getCausesErroredBuild.setUnavailableFile(extraction[2])
+        end
+        causesFilesConflicts.insertNewCauseOne(extraction[0], extraction[1])
+      rescue
+        print "LOG WITHOUT INFORMATION"
+      end
 		end
 
 		if (body[/The JAVA_HOME environment variable is not defined correctly/] || body[/Could not transfer artifact/] || body[/\[ERROR\][ \t\r\n\f]*Failed to execute goal [a-zA-Z0-9\/\-\.\:\[\]\,\(\) ]*Some Enforcer rules have failed/] || body[/#{stringBuildFail}[\s\S]*#{stringUndefinedExt}/] || body[/\[#{stringErro}\][\s\S]*#{stringDependency}/] || body[/\[#{stringErro}\][\s\S]*#{stringNonParseable}[\s\S]*(#{stringUnexpected}[\s\S]*\[#{stringErro}\])?/] || body[/#{stringScript}[\s\S]*#{stringGradle}[\s\S]*#{stringProblemScript}[\s\S]*#{stringAddTask}[\s\S]*#{stringTaskExists}[\s\S]*#{stringBuildFail}/])

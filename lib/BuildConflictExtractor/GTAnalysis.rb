@@ -71,6 +71,7 @@ class GTAnalysis
 	end
 
 	def gumTreeDiffByBranch(mergeCommit, result, left, right, base, conflictCauses, pathProject, parents, cloneProject)
+		print conflictCauses
 		statusModified = cloneProject.verifyBadlyMergeScenario(parents[0], parents[1], mergeCommit)
 		conflictingContributions = []
 
@@ -79,7 +80,7 @@ class GTAnalysis
 		leftResult = @parentMSDiff.runAllDiff(left, result)
 		rightResult = @parentMSDiff.runAllDiff(right, result)
 		# passar como parametro o caminho dos diretorios (base, left, right, result). Por enquanto apenas o left e right
-		return verifyModificationStatus(mergeCommit, baseLeft, leftResult, baseRight, rightResult, conflictCauses, left, right, pathProject, parents, cloneProject, statusModified)
+		return verifyModificationStatus(mergeCommit, baseLeft, leftResult, baseRight, rightResult, conflictCauses, base, left, right, pathProject, parents, cloneProject, statusModified)
 	end
 
 	def gumTreeDiffTCByBranch(mergeCommit, result, left, right, base, pathProject, parents, cloneProject)
@@ -116,7 +117,7 @@ class GTAnalysis
 		end
 	end
 
-	def verifyModificationStatus(mergeCommit, baseLeft, leftResult, baseRight, rightResult, conflictCauses, leftPath, rightPath, pathProject, parents, cloneProject, contributionsState)
+	def verifyModificationStatus(mergeCommit, baseLeft, leftResult, baseRight, rightResult, conflictCauses, basePath, leftPath, rightPath, pathProject, parents, cloneProject, contributionsState)
 		conflictingContributions = []
 		allIntegratedContributions = true
 		bcDependency = []
@@ -139,7 +140,7 @@ class GTAnalysis
 				#	conflictingContributions[indexValue] = true
 				#else
 					bcUnimplementedMethod = BCUnimplementedMethod.new()
-					if (bcUnimplementedMethod.verifyBuildConflict(baseLeft[0], leftResult[0], baseRight[0], rightResult[0], conflictCauses.getFilesConflict()[indexValue]) == false)
+					if (bcUnimplementedMethod.verifyBuildConflict(baseLeft, leftResult, baseRight, rightResult, conflictCause) == false)
 						conflictingContributions[indexValue] = false
 						bcDependency[indexValue] = false
 					else
@@ -153,7 +154,7 @@ class GTAnalysis
 			elsif (conflictCause[0] == "unavailableSymbolMethod" || conflictCause[0] == "unavailableSymbolVariable" || conflictCause[0] == "unavailableSymbolFile")
 				bcUnavailableSymbol = BCUnavailableSymbol.new()
 				bcMethodUpdate = BCMethodUpdate.new(getGumTreePath())
-				if (bcUnavailableSymbol.verifyBuildConflict(baseLeft, leftResult, baseRight, rightResult, conflictCause, leftPath, rightPath) == false)
+				if (bcUnavailableSymbol.verifyBuildConflict(baseLeft, leftResult, baseRight, rightResult, conflictCause, basePath, leftPath, rightPath) == false)
 					if (conflictCause[0] == "unavailableSymbolFile" and bcUnavailableSymbol.verifyBCDependency(leftPath, rightPath, conflictCause, baseLeft[0], baseRight[0], leftResult[0], rightResult[0]))
 						conflictingContributions[indexValue] = true
 						bcDependency[indexValue] = true
@@ -166,15 +167,34 @@ class GTAnalysis
 					end
 				else
 					conflictingContributions[indexValue] = true
-					bcDependency[indexValue] = false
+					bcDependency[indexValue] = true
 				end
+=begin					elsif (conflictCause[0] == "unavailableSymbolMethod" and bcUnavailableSymbol.verifyBCDependencyMethod(leftPath, rightPath, conflictCause, bcMethodUpdate))
+						conflictingContributions[indexValue] = true
+						bcDependency[indexValue] = true
+					else
+						conflictingContributions[indexValue] = false
+						bcDependency[indexValue] = false
+					end
+#=end
+					conflictingContributions[indexValue] = false
+					bcDependency[indexValue] = false
+=end
+#				else
+#					conflictingContributions[indexValue] = true
+#					bcDependency[indexValue] = false
+					#end
+					#conflictingContributions[indexValue] = true
+					#bcDependency[indexValue] = true
+					#end
+
 			elsif (conflictCause[0] == "statementDuplication")
 				bcDependency[indexValue] = false
 				#if (allIntegratedContributions)
 				#	conflictingContributions[indexValue] = true
 				#else
 					bcStatementDuplication = BCStatementDuplication.new()
-					if (bcStatementDuplication.verifyBuildConflict(baseLeft, leftResult, baseRight, rightResult, conflictCauses.getFilesConflict()[indexValue]) == false)
+					if (bcStatementDuplication.verifyBuildConflict(baseLeft, leftResult, baseRight, rightResult, conflictCause) == false)
 						conflictingContributions[indexValue] = false
 					else
 						conflictingContributions[indexValue] = true
@@ -182,8 +202,8 @@ class GTAnalysis
 				#end
 			elsif (conflictCause[0] == "methodParameterListSize")
 				bcMethodUpdate = BCMethodUpdate.new(getGumTreePath())
-				if (bcMethodUpdate.verifyBuildConflict(leftPath, rightPath, conflictCauses.getFilesConflict()[indexValue]) == false)
-					if (bcMethodUpdate.verifyBCDependency(leftPath, rightPath, conflictCauses.getFilesConflict()[indexValue]) == false)
+				if (bcMethodUpdate.verifyBuildConflict(leftPath, rightPath, conflictCause) == false)
+					if (bcMethodUpdate.verifyBCDependency(leftPath, rightPath, conflictCause) == false)
 						conflictingContributions[indexValue] = false
 						bcDependency[indexValue] = false
 					else
@@ -196,7 +216,7 @@ class GTAnalysis
 				end
 			elsif (conflictCause[0] == "dependencyProblem")
 				bcDependencyAnalisis = BCDependency.new()
-				if (bcDependencyAnalisis.verifyBuildConflict(baseLeft[0], leftResult[0], baseRight[0], rightResult[0], conflictCauses.getFilesConflict()[indexValue]) == true)
+				if (bcDependencyAnalisis.verifyBuildConflict(baseLeft[0], leftResult[0], baseRight[0], rightResult[0], conflictCause) == true)
 					conflictingContributions[indexValue] = false
 					bcDependency[indexValue] = false
 				else
@@ -209,7 +229,7 @@ class GTAnalysis
 				#	conflictingContributions[indexValue] = true
 				#else
 					bcAlternative = BCAlternativeStatement.new()
-					if (bcAlternative.verifyBuildConflict(baseLeft[0], leftResult[0], baseRight[0], rightResult[0], conflictCauses.getFilesConflict()[indexValue]) == false)
+					if (bcAlternative.verifyBuildConflict(baseLeft[0], leftResult[0], baseRight[0], rightResult[0], conflictCause) == false)
 						conflictingContributions[indexValue] = false
 					else
 						conflictingContributions[indexValue] = true
@@ -233,7 +253,7 @@ class GTAnalysis
 			else
 				#add tratamento para unavailablesymbol "Special Case"
 				bcDependency[indexValue] = false
-				conflictingContributions[indexValue] = true
+				conflictingContributions[indexValue] = false
 			end
 			indexValue += 1
 		end
@@ -261,23 +281,27 @@ class GTAnalysis
 	end
 
 	def verifyModifiedFile(baseLeftInitial, leftResultFinal, baseRightInitial, rightResultFinal)
-		if(baseLeftInitial.size > 0)
-			baseLeftInitial.each do |keyFile, fileLeft|
-				fileRight = rightResultFinal[keyFile]
-				if (fileRight == nil or fileLeft != fileRight)
-					return false
+		begin
+			if(baseLeftInitial.size > 0)
+				baseLeftInitial.each do |keyFile, fileLeft|
+					fileRight = rightResultFinal[keyFile]
+					if (fileRight == nil or fileLeft != fileRight)
+						return false
+					end
 				end
 			end
-		end
-		if(baseRightInitial.size > 0) 
-			baseRightInitial.each do |keyFile, fileRight|
-				fileLeft = leftResultFinal[keyFile]
-				if (fileLeft == nil or fileRight != fileLeft)
-					return false
+			if(baseRightInitial.size > 0)
+				baseRightInitial.each do |keyFile, fileRight|
+					fileLeft = leftResultFinal[keyFile]
+					if (fileLeft == nil or fileRight != fileLeft)
+						return false
+					end
 				end
 			end
+			return true
+		rescue
+			return false
 		end
-		return true
 	end
 
 end

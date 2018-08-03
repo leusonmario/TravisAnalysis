@@ -173,6 +173,7 @@ class ExtractorCLI
 		cmd = "travis" + " login --github-token " + @token
 		cmd2 = "travis" + " enable -r " + @username + "/" + @name
 		begin
+=begin
 			%x(#{cmd})
 			answerLogin = %x(travis whoami)
 			while (!answerLogin.include? "#{@username}")
@@ -185,6 +186,7 @@ class ExtractorCLI
 				answerActivation = %x(#{cmd2})
 			end
 			sleep(20)
+=end
 		rescue
 			print "NOT ALLOWED"
 		end
@@ -380,13 +382,17 @@ class ExtractorCLI
 		return getDownloadDir() + "/" + getName()
 	end
 
-  def buildFixConflicts(hash, gitProject)
+  def buildFixConflicts(hash, gitProject, projectBuildsMap)
 		print "ExtractorCLI"
 		gitProject.getAllChildrenFromCommit(hash).each do |fix|
 			print "Attempt"
-			resultFixBuild = verifyBuildCurrentState(fix, gitProject.getMainProjectBranch())
-			if (resultFixBuild != nil and (resultFixBuild[0] == "passed" or resultFixBuild[0] == "failed"))
-				return fix, resultFixBuild
+			if (projectBuildsMap[fix] == nil)
+				resultFixBuild = verifyBuildCurrentState(fix, gitProject.getMainProjectBranch())
+				if (resultFixBuild != nil and (resultFixBuild[0] == "passed" or resultFixBuild[0] == "failed"))
+					return fix, resultFixBuild
+				end
+			else
+				return fix, projectBuildsMap[fix][1][0]
 			end
 		end
 		return nil

@@ -15,10 +15,15 @@ class CopyFixCommit
     @pathCopyDirectory = ""
     createDirectories()
     createCopyProject(fixedCommit, brokenCommit)
+    @allDiff = false
   end
 
   def getPathCopyFix()
     @pathCopyFix
+  end
+
+  def getAllDiff()
+    @allDiff
   end
 
   def createDirectories()
@@ -65,6 +70,7 @@ class CopyFixCommit
 
       kill = %x(pkill -f gumtree)
       sleep(5)
+      @allDiff = true
     rescue Exception => e
       puts "GumTree Failed"
     end

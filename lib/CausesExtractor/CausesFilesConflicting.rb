@@ -34,9 +34,11 @@ class CausesFilesConflicting
 
   def includeNewCause(cause, filesRelated)
 		#if (@causesFilesInfoConflicts.include?(cause))
-		filesRelated.each do |fileRelatedOne|
-			if (!@causesFilesInfoConflicts.include? fileRelatedOne)
-				@causesFilesInfoConflicts.push(fileRelatedOne)
+		if (filesRelated != nil)
+			filesRelated.each do |fileRelatedOne|
+				if (!@causesFilesInfoConflicts.include? fileRelatedOne)
+					@causesFilesInfoConflicts.push(fileRelatedOne)
+				end
 			end
 		end
 
