@@ -222,32 +222,34 @@ class GitProject
 		parentOne = nil
 		buildOne = nil
 		buildNumberOne = nil
+		statusParentOne = ""
 		parentTwo = nil
 		buildTwo = nil
 		buildNumberTwo = nil
+		statusParentTwo = ""
 
 		if (projectBuilds[parentsMerge[0]] != nil and projectBuilds[parentsMerge[1]] != nil)
+			statusParentOne = projectBuilds[parentsMerge[0]][0][0]
+			statusParentTwo = projectBuilds[parentsMerge[1]][0][0]
 			if (projectBuilds[parentsMerge[0]][0]==["passed"])
 				parentOne = true
 				buildOne = projectBuilds[parentsMerge[0]][1]
 			else
 				buildOne = projectBuilds[parentsMerge[0]][1]
-				buildNumberOne = projectBuilds[parentsMerge[0]][2]
 			end
-
+			buildNumberOne = projectBuilds[parentsMerge[0]][2]
 			if (projectBuilds[parentsMerge[1]][0]==["passed"])
 				parentTwo = true
 				buildTwo = projectBuilds[parentsMerge[1]][1]
 			else
 				buildTwo = projectBuilds[parentsMerge[1]][1]
-				buildNumberTwo = projectBuilds[parentsMerge[1]][2]
 			end
-
+			buildNumberTwo = projectBuilds[parentsMerge[1]][2]
 			if (parentOne==true and parentTwo==true)
-				return true, buildOne, buildTwo, buildNumberOne, buildNumberTwo
+				return true, buildOne, buildTwo, buildNumberOne, buildNumberTwo, statusParentOne, statusParentTwo
 			end
 		end
-		return false, buildOne, buildTwo, buildNumberOne, buildNumberTwo
+		return false, buildOne, buildTwo, buildNumberOne, buildNumberTwo, statusParentOne, statusParentTwo
 	end
 
 	def getBuildID(sha, projectBuilds, projectBuildsFork)

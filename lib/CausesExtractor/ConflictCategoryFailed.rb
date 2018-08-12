@@ -77,10 +77,11 @@ class ConflictCategoryFailed
 		logs.each do |log|
 			result.push(getCauseByJob(log))
 		end
+		result = verificationOfTrueTestFiles(result, localClone, mergeScenario)
 		return adjustValueReturn(result), result[2], getFinalStatus(result, mergeScenario, localClone)
 	end
 
-	def findConflictCause(build, pathLocalClone, buildNumberParentOne, buildNumerParentTwo)
+	def findConflictCause(build, sha, pathLocalClone, buildNumberParentOne, buildNumerParentTwo)
 		print build.id
 		failedTestFromParent = brokenLogsOfBuild(build)
 		if (buildNumberParentOne != nil)
@@ -92,6 +93,7 @@ class ConflictCategoryFailed
 
 		removePreviousFailedTests(failedTestFromParent, failedTestFromParentOne)
 		removePreviousFailedTests(failedTestFromParent, failedTestFromParentTwo)
+		verificationOfTrueTestFiles(failedTestFromParent, pathLocalClone, sha)
 		print failedTestFromParent
 		begin
 			return adjustValueReturn(failedTestFromParent), failedTestFromParent[0][2], getFinalStatus(failedTestFromParent, build.commit.sha, pathLocalClone)
@@ -128,7 +130,7 @@ class ConflictCategoryFailed
 	end
 
 	def getFinalStatus(resultByJobs, sha, localClone)
-		diffsMergeScenario = @gtAnalysis.getGumTreeTCAnalysis(localClone, sha, @localClone)
+		diffsMergeScenario = @gtAnalysis.getGumTreeTCAnalysis(@localClone.getCloneProject().getLocalClone(), sha, @localClone)
 		testConflictsExtractor = TestConflictInfo.new()
 		newTestFileArray = []
 		newTestCaseArray = []
@@ -338,6 +340,37 @@ class ConflictCategoryFailed
 		rescue
 
 		end
+	end
+
+	def verificationOfTrueTestFiles(mergeCommitInfo, pathLocalClone, sha)
+		actualPath = Dir.pwd
+		removeCases = Array.new
+		Dir.chdir @localClone.getCloneProject().getLocalClone()
+		checkout = %x(git checkout #{sha})
+		begin
+			mergeCommitInfo[0][2].each do |fileWithTestCase|
+				fileLocalPath = %x(find -name #{fileWithTestCase[0]}.java)
+				if (fileLocalPath != "")
+					file = File.open(fileLocalPath.to_s.gsub("./","").to_s.gsub("\n",""))
+					contents = file.read
+					file.close
+					if (!contents.to_s.include? fileWithTestCase[1].to_s.gsub("\n",""))
+						removeCases.push(fileWithTestCase)
+					end
+				else
+					removeCases.push(fileWithTestCase)
+				end
+			end
+			if (removeCases.size > 0)
+				removeCases.each do |oneCase|
+					mergeCommitInfo[0][2].delete(oneCase)
+				end
+			end
+		rescue
+			print "NOT WORKED VERIFICATION OF TRULLY TESTS"
+		end
+		Dir.chdir actualPath
+		return mergeCommitInfo
 	end
 
 	def brokenLogsOfBuild(build)

@@ -60,10 +60,10 @@ class BCUnavailableSymbol
 			pathFileBase = %x(find -name #{filesConflicting[2]}.java)
 			print "#{basePath} - #{pathFileBase}\n"
 			Dir.chdir leftPath
-			pathFileLeft = %x(find -name #{filesConflicting[2]}.java})
+			pathFileLeft = %x(find -name #{filesConflicting[2]}.java)
 			print "#{leftPath} - #{pathFileLeft}\n"
 			Dir.chdir rightPath
-			pathFileRight = %x(find -name #{filesConflicting[2]}.java})
+			pathFileRight = %x(find -name #{filesConflicting[2]}.java)
 			print "#{rightPath} - #{pathFileRight}\n"
 			if (pathFileBase != "" and (pathFileLeft != "" or pathFileRight != "") and pathFileLeft != pathFileRight)
 				return true
