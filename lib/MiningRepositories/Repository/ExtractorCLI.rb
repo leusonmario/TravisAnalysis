@@ -48,7 +48,18 @@ class ExtractorCLI
 	end
 
 	def replayBuildOnTravis(commit, branch)
+		syncProjectWithFork(branch)
 		return commitAndPush(commit, branch)
+	end
+
+  def syncProjectWithFork(branch)
+		Dir.chdir getDownloadDir()
+		Dir.chdir getName()
+		%x(git checkout -f #{branch})
+		%x(git remote add mainFork https://github.com/#{@originalRepo})
+		%x(git fetch mainFork)
+		%x(git merge mainFork/#{branch})
+		Dir.chdir getDownloadDir()
 	end
 
   def checkoutHardOnCommit(commit)
@@ -70,23 +81,21 @@ class ExtractorCLI
 	def commitAndPush(commit, branch)
 		Dir.chdir getDownloadDir()
 		Dir.chdir getName()
-		checkTravis = %x(find -name '.travis.yml')
-		if (checkTravis != "")
-			head = "git rev-parse HEAD"
-			reset = "git reset --hard " + commit
-			forcePush = "git push -f origin #{branch}"
-			changeOnHead = false
-			begin
-				previousHead = %x(#{head})
-				%x(#{reset})
-				currentHead = %x(#{head})
+		head = "git rev-parse HEAD"
+		reset = "git reset --hard " + commit
+		forcePush = "git push -f origin #{branch}"
+		changeOnHead = false
+		begin
+			previousHead = %x(#{head})
+			%x(#{reset})
+			checkTravis = %x(find -name '.travis.yml')
+			currentHead = %x(#{head})
+			if (previousHead != currentHead and checkTravis != "")
 				%x(#{forcePush})
-				if (previousHead != currentHead)
-					changeOnHead = true
-				end
-			rescue
-				print "IT DID NOT WORK"
+				changeOnHead = true
 			end
+		rescue
+			print "IT DID NOT WORK"
 		end
 
 		Dir.chdir getDownloadDir()

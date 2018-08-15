@@ -32,7 +32,7 @@ class BadlyMergeScenarioExtractor
 
 	def simulateMergeScenario(leftParent, rightParent, mergeCommit)
 		Dir.chdir @cloneProject.getLocalClone()
-		mainBranch =  %x(git remote show origin).match(/HEAD branch: [\s\S]*  Remote branches/).to_s.match(/HEAD branch: [\s\S]*(\n)/).to_s.gsub("HEAD branch: ","").gsub("\n","")
+		mainBranch =  %x(git remote show origin).match(/HEAD branch: [\s\S]*  Remote branch(es)?/).to_s.match(/HEAD branch: [\s\S]*(\n)/).to_s.gsub("HEAD branch: ","").gsub("\n","")
 		%x(git checkout #{mainBranch})
 		%x(git clean -f)
 		%x(git checkout -b leftParent #{leftParent})

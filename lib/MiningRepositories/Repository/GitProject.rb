@@ -83,7 +83,7 @@ class GitProject
 
 	def getMainProjectBranch()
 		Dir.chdir @cloneProject.getLocalClone()
-		return %x(git remote show origin).match(/HEAD branch: [\s\S]*  Remote branches/).to_s.match(/HEAD branch: [\s\S]*(\n)/).to_s.gsub("HEAD branch: ","").gsub("\n","")
+		return %x(git remote show origin).match(/HEAD branch: [\s\S]*  Remote branch(es)?/).to_s.match(/HEAD branch: [\s\S]*(\n)/).to_s.gsub("HEAD branch: ","").gsub("\n","")
 	end
 
 	def getMergesScenariosByProject()
