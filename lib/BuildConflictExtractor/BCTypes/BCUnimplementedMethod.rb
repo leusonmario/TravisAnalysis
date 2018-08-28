@@ -5,7 +5,7 @@ class BCUnimplementedMethod
 	end
 
 	def verifyBuildConflict(baseLeft, leftResult, baseRight, rightResult, filesConflicting)
-		#begin
+		begin
 				if(baseLeft[0][filesConflicting[2]] != nil and baseLeft[0][filesConflicting[2].to_s].to_s.match(/Insert SimpleName: #{filesConflicting[3].to_s.gsub(/\(.*/, '').gsub('(', '')}[\(\)0-9]* into MethodDeclaration[\(\)0-9]* at [0-9]*/) or baseLeft[0][filesConflicting[2].to_s].to_s.match(/Update SimpleName: [\s\S]* to #{filesConflicting[3].gsub(/\(.*/, '').gsub('(', '')}/) or baseLeft[0][filesConflicting[2].to_s].to_s.match(/Insert (SimpleName|Modifier): abstract[\(\)0-9]* into MethodDeclaration[\(\)0-9]* at [0-9]* on Method #{filesConflicting[3].gsub(/\(.*/, '').gsub('(', '')}/))
 					if ((rightResult[0][filesConflicting[2]].to_s.match(/Insert SimpleName: #{filesConflicting[3].to_s.gsub(/\(.*/, '').gsub('(', '')}[\(\)0-9]* into MethodDeclaration[\(\)0-9]* at [0-9]*/) or rightResult[0][filesConflicting[2].to_s].to_s.match(/Update SimpleName: [\s\S]* to #{filesConflicting[3].gsub(/\(.*/, '').gsub('(', '')}/)) and ((rightResult[0][filesConflicting[1].to_s].to_s.match(/Insert SimpleType: #{filesConflicting[2].gsub(/\(.*/, '').gsub('(', '')}[0-9\(\)]* into TypeDeclaration[0-9\(\)]*/)) and (!rightResult[0][filesConflicting[1].to_s].to_s.match(/Insert SimpleName: #{filesConflicting[3].gsub(/\(.*/, '').gsub('(', '')}[\(\)0-9]* into MethodDeclaration[\(\)0-9]* at [0-9]*/) or !rightResult[0][filesConflicting[1].to_s].to_s.match(/Update SimpleName: [\s\S]* to #{filesConflicting[3].gsub(/\(.*/, '').gsub('(', '')}/))) or checkIfFileIsNew(baseRight[1], filesConflicting[1]))
 						#BUILD CONFLICT DETECTED
@@ -18,9 +18,9 @@ class BCUnimplementedMethod
 						return true
 					end
 				end
-		#rescue
+		rescue
 			print "NOT VALID VALUES #{filesConflicting}"
-		#end
+		end
 		return false
 	end
 

@@ -4,10 +4,10 @@ class BCUnavailableSymbol
 
 	end
 
-	def verifyBuildConflict(baseLeft, leftResult, baseRight, rightResult, filesConflicting, basePath, leftPath, rightPath)
+	def verifyBuildConflict(baseLeft, leftResult, baseRight, rightResult, filesConflicting, basePath, leftPath, rightPath, superiorParentStatus)
 		count = 0
     begin
-			if(baseRight[0][filesConflicting[1]] != nil and baseRight[0][filesConflicting[1]].to_s.match(/(Delete|Move|Update) (SimpleName|QualifiedName): [a-zA-Z0-9\.\(\)]*#{filesConflicting[2]}/))
+			if(baseRight[0][filesConflicting[1]] != nil and baseRight[0][filesConflicting[1]].to_s.match(/(Delete|Move|Update) (SimpleName|QualifiedName): [a-zA-Z0-9\.\(\) ]*#{filesConflicting[2]}/))
 				if (baseLeft[0][filesConflicting[3]] != nil and baseLeft[0][filesConflicting[3]].to_s.match(/(Insert|Move) (SimpleName|QualifiedName): [a-zA-Z\.]*?#{filesConflicting[2]}[\s\S]*[\n\r]?/))
 					if (filesConflicting[0] == "unavailableSymbolVariable" and filesConflicting[1] == filesConflicting[3])
 						#if (verifyVariableActionsSameMethod(baseRight[0][filesConflicting[count][1]], baseRight[0][filesConflicting[count][3]], filesConflicting[count][1]))
@@ -16,7 +16,6 @@ class BCUnavailableSymbol
 						else
 							return false
 						end
-					#	return true
 					else
 						return true
 					end
@@ -26,13 +25,14 @@ class BCUnavailableSymbol
 							return true
 						end
 					end
-
-#					if (baseRight[0][filesConflicting[3]] == nil)
-#						return true
-#					end
+					if (superiorParentStatus)
+						if (baseRight[0][filesConflicting[3]] == nil)
+							return true
+						end
+					end
 				end
 			end
-			if(baseLeft[0][filesConflicting[1]] != nil and baseLeft[0][filesConflicting[1]].to_s.match(/(Delete|Move|Update) (SimpleName|QualifiedName): [a-zA-Z0-9\.\(\)]*#{filesConflicting[2]}/))
+			if(baseLeft[0][filesConflicting[1]] != nil and baseLeft[0][filesConflicting[1]].to_s.match(/(Delete|Move|Update) (SimpleName|QualifiedName): [a-zA-Z0-9\.\(\) ]*#{filesConflicting[2]}/))
 				if(baseRight[0][filesConflicting[3]] != nil and baseRight[0][filesConflicting[3]].to_s.match(/(Insert|Move) (SimpleName|QualifiedName): [a-zA-Z\.]*?#{filesConflicting[2]}[\s\S]*[\n\r]?/))
 					if (filesConflicting[0] == "unavailableSymbolVariable" and filesConflicting[1] == filesConflicting[3])
 						if (verifyVariableActionsSameMethod(baseLeft[0][filesConflicting[1]], baseRight[0][filesConflicting[1]], filesConflicting[2]))
@@ -40,7 +40,6 @@ class BCUnavailableSymbol
 						else
 							return false
 						end
-						#	return true
 					else
 						return true
 					end
@@ -50,10 +49,11 @@ class BCUnavailableSymbol
 							return true
 						end
 					end
-
-#					if (baseLeft[0][filesConflicting[3]] == nil)
-#						return true
-#					end
+					if (superiorParentStatus)
+						if (baseLeft[0][filesConflicting[3]] == nil)
+							return true
+						end
+					end
 				end
 			end
 			Dir.chdir basePath
@@ -75,26 +75,28 @@ class BCUnavailableSymbol
 		return false
 	end
 
-	def verifyBCDependency(pathLeft, pathRight, filesConflicting, baseLeft, baseRight, leftResult, rightResult)
+	def verifyBCDependency(pathLeft, pathRight, filesConflicting, baseLeft, baseRight, leftResult, rightResults, superiorParentStates)
 		#verificando se import feito por um parent foi removido pelo outro
 		begin
-				if ((baseLeft[filesConflicting[1]] == nil and baseLeft[filesConflicting[2]] == nil and baseLeft[filesConflicting[3]] == nil) or (baseRight[filesConflicting[2]] == nil and baseRight[filesConflicting[1]] == nil and baseRight[filesConflicting[3]] == nil))
-					return false
+				if (superiorParentStates)
+					if(leftResult[filesConflicting[1]] != nil and leftResult[filesConflicting[1]].to_s.match(/(Delete|Update) (SimpleName|QualifiedName): #{filesConflicting[2]}[\n\r]?/) and rightResult[filesConflicting[1]] != nil and rightResult[filesConflicting[1]].to_s.match(/(Delete|Update) (SimpleName|QualifiedName): #{filesConflicting[2]}[\n\r]?/))
+						return false
+					end
+					if((baseLeft[filesConflicting[1]] != nil and baseLeft[filesConflicting[1]].to_s.match(/(Insert|Update) (ImportDeclaration\([0-9]*\)|QualifiedName:) #{filesConflicting[2]}[\n\r]?/)) and (rightResult[filesConflicting[1]] != nil and rightResult[filesConflicting[1]].to_s.match(/(Delete|Update) (ImportDeclaration|QualifiedName:) #{filesConflicting[2]}[\n\r]?/)))
+						return false
+					end
+					if((baseRight[filesConflicting[1]] != nil and baseRight[filesConflicting[1]].to_s.match(/(Insert|Update) (ImportDeclaration\([0-9]*\)|QualifiedName:) #{filesConflicting[2]}[\n\r]?/)) and (leftResult[filesConflicting[1]] != nil and leftResult[filesConflicting[1]].to_s.match(/(Delete|Update) (ImportDeclaration|QualifiedName:) #{filesConflicting[2]}[\n\r]?/)))
+						return false
+					end
+					if((leftResult[filesConflicting[1]].to_s.match(/(Delete|Update) (ImportDeclaration\([0-9]*\)|QualifiedName:) [a-zA-Z0-9\.]*#{filesConflicting[2]}[\n\r]?/) or rightResult[filesConflicting[1]].to_s.match(/(Delete|Update) (ImportDeclaration|QualifiedName:) [a-zA-Z0-9\.]*#{filesConflicting[2]}[\n\r]?/)) and (!baseLeft[filesConflicting[1]].to_s.match(/(Insert|Update) (ImportDeclaration\([0-9]*\)|QualifiedName:) [a-zA-Z0-9\.]*#{filesConflicting[2]}[\n\r]?/) or !baseRight[filesConflicting[1]].to_s.match(/(Insert|Update) (ImportDeclaration\([0-9]*\)|QualifiedName:) [a-zA-Z0-9\.]*#{filesConflicting[2]}[\n\r]?/)))
+					#if((leftResult[filesConflicting[1]].to_s.match(/(Delete|Update) (ImportDeclaration\([0-9]*\)|QualifiedName:) #{filesConflicting[2]}[\n\r]?/) != nil or rightResult[filesConflicting[1]].to_s.match(/(Delete|Update) (ImportDeclaration|QualifiedName:) #{filesConflicting[2]}[\n\r]?/) != nil) and (baseLeft[filesConflicting[1]].to_s.match(/(Insert|Update) (ImportDeclaration\([0-9]*\)|QualifiedName:) #{filesConflicting[2]}[\n\r]?/) != nil or !baseRight[filesConflicting[1]].to_s.match(/(Insert|Update) (ImportDeclaration\([0-9]*\)|QualifiedName:) #{filesConflicting[2]}[\n\r]?/) != nil))
+						return false
+					end
+				else
+					if ((baseLeft[filesConflicting[1]] == nil and baseLeft[filesConflicting[2]] == nil and baseLeft[filesConflicting[3]] == nil) or (baseRight[filesConflicting[2]] == nil and baseRight[filesConflicting[1]] == nil and baseRight[filesConflicting[3]] == nil))
+						return false
+					end
 				end
-=begin
-				if(leftResult[filesConflicting[1]] != nil and leftResult[filesConflicting[1]].to_s.match(/(Delete|Update) (SimpleName|QualifiedName): #{filesConflicting[2]}[\n\r]?/) != nil and rightResult[filesConflicting[1]] != nil and rightResult[filesConflicting[1]].to_s.match(/(Delete|Update) (SimpleName|QualifiedName): #{filesConflicting[2]}[\n\r]?/) != nil)
-					return true
-				end
-				if((baseLeft[filesConflicting[1]] != nil and baseLeft[filesConflicting[1]].to_s.match(/(Insert|Update) (ImportDeclaration\([0-9]*\)|QualifiedName:) #{filesConflicting[2]}[\n\r]?/) != nil) and (rightResult[filesConflicting[1]] != nil and rightResult[filesConflicting[1]].to_s.match(/(Delete|Update) (ImportDeclaration|QualifiedName:) #{filesConflicting[2]}[\n\r]?/)) != nil)
-					return true
-				end
-				if((baseRight[filesConflicting[1]] != nil and baseRight[filesConflicting[1]].to_s.match(/(Insert|Update) (ImportDeclaration\([0-9]*\)|QualifiedName:) #{filesConflicting[2]}[\n\r]?/) != nil) and (leftResult[filesConflicting[1]] != nil and leftResult[filesConflicting[1]].to_s.match(/(Delete|Update) (ImportDeclaration|QualifiedName:) #{filesConflicting[2]}[\n\r]?/)) != nil)
-					return true
-				end
-				if((leftResult[filesConflicting[1]].to_s.match(/(Delete|Update) (ImportDeclaration\([0-9]*\)|QualifiedName:) #{filesConflicting[2]}[\n\r]?/) != nil or rightResult[filesConflicting[1]].to_s.match(/(Delete|Update) (ImportDeclaration|QualifiedName:) #{filesConflicting[2]}[\n\r]?/) != nil) and (baseLeft[filesConflicting[1]].to_s.match(/(Insert|Update) (ImportDeclaration\([0-9]*\)|QualifiedName:) #{filesConflicting[2]}[\n\r]?/) != nil or !baseRight[filesConflicting[1]].to_s.match(/(Insert|Update) (ImportDeclaration\([0-9]*\)|QualifiedName:) #{filesConflicting[2]}[\n\r]?/) != nil))
-					return true
-				end
-=end
 		rescue
 			print "NO INFO FROM GUMTREE"
 		end
@@ -102,13 +104,13 @@ class BCUnavailableSymbol
 			Dir.chdir pathLeft
 			pathFileLeft = %x(find -name #{filesConflicting[2]}.java)
 			Dir.chdir pathRight
-			pathFileRight = %x(find -name #{filesConflicting[2]}.java})
+			pathFileRight = %x(find -name #{filesConflicting[2]}.java)
 			if ((pathFileLeft != "" or pathFileRight != "") and (pathLeft != pathRight))
 				#if (pathFileLeft == "" or pathFileRight == "")
 				#return true
 				return true
 			end
-		return false
+		return true
 	end
 
 	def verifyBCDependencyMethod(pathLeft, pathRight, filesConflicting, bcMethodUpdate)
