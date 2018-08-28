@@ -62,10 +62,11 @@ class ConflictCategoryErrored
 
 	def findConflictCauseFork(logs, sha, pathProject, pathGumTree, type, mergeScenario, cloneProject, superiorParentStatus)
 		localUnavailableSymbol = 0
-		localMethodUpdate = 0
-		localMalformedExp = 0
-		localDuplicateStatement = 0
-		localDependencyProblem = 0
+		localMethodUpdate = 0 
+		localMalformedExp = 0 
+		localDuplicateStatement = 0 
+		localDependencyProblem = 0 
+
 		localUnimplementedMethod = 0
 		localOtherCase = 0
 		localAlternativeStatement = 0
@@ -103,10 +104,10 @@ class ConflictCategoryErrored
 
 	def findConflictCause(build, pathProject, pathGumTree, type, mergeScenario, cloneProject, superiorParentStatus)
 		localUnavailableSymbol = 0
-		localMethodUpdate = 0
-		localMalformedExp = 0
-		localDuplicateStatement = 0
-		localDependencyProblem = 0
+		localMethodUpdate = 0 
+		localMalformedExp = 0 
+		localDuplicateStatement = 0 
+		localDependencyProblem = 0 
 		localUnimplementedMethod = 0
 		localOtherCase = 0
 		localAlternativeStatement = 0

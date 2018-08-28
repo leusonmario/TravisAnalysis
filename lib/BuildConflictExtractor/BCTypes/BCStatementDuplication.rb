@@ -21,16 +21,13 @@ class BCStatementDuplication
 						end
 					end
 				else
-					#begin
-					print filesConflicting
-					print baseLeft[0][filesConflicting[1]]
-					print baseRight[0][filesConflicting[1]]
-					if(baseLeft[0][filesConflicting[1]] != nil and baseLeft[0][filesConflicting[1]].to_s.match(/Insert SimpleName: #{filesConflicting[3]}[0-9\(\)]* into [a-zA-Z]*[0-9\(\)]*/) and baseRight[0][filesConflicting[1]] != nil and baseRight[0][filesConflicting[1]].to_s.match(/Insert SimpleName: #{filesConflicting[3]}[0-9\(\)]* into [a-zA-Z]*[0-9\(\)]*/))
-						return true
+					begin
+						if(baseLeft[0][filesConflicting[1]] != nil and baseLeft[0][filesConflicting[1]].to_s.match(/Insert SimpleName: #{filesConflicting[3]}[0-9\(\)]* into [a-zA-Z]*[0-9\(\)]*/) and baseRight[0][filesConflicting[1]] != nil and baseRight[0][filesConflicting[1]].to_s.match(/Insert SimpleName: #{filesConflicting[3]}[0-9\(\)]* into [a-zA-Z]*[0-9\(\)]*/))
+							return true
+						end
+					rescue
+						print "EMPTY INFO FROM GUMTREE"
 					end
-					#rescue
-					#	print "EMPTY INFO FROM GUMTREE"
-					#end
 				end
 		#	rescue
 
