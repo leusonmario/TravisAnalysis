@@ -84,22 +84,27 @@ class ConflictCategoryFailed
 	def findConflictCause(build, sha, pathLocalClone, buildNumberParentOne, buildNumerParentTwo)
 		print build.id
 		failedTestFromParent = brokenLogsOfBuild(build)
-		if (buildNumberParentOne != nil)
-			failedTestFromParentOne = findFailedTestForFailedParent(buildNumberParentOne)
-		end
-		if (buildNumerParentTwo != nil)
-			failedTestFromParentTwo = findFailedTestForFailedParent(buildNumerParentTwo)
-		end
+		failedTestFromParent.each do |failed|
+			if (failed[0] != "CoverageError")
+				if (buildNumberParentOne != nil)
+					failedTestFromParentOne = findFailedTestForFailedParent(buildNumberParentOne)
+				end
+				if (buildNumerParentTwo != nil)
+					failedTestFromParentTwo = findFailedTestForFailedParent(buildNumerParentTwo)
+				end
 
-		removePreviousFailedTests(failedTestFromParent, failedTestFromParentOne)
-		removePreviousFailedTests(failedTestFromParent, failedTestFromParentTwo)
-		verificationOfTrueTestFiles(failedTestFromParent, pathLocalClone, sha)
-		print failedTestFromParent
-		begin
-			return adjustValueReturn(failedTestFromParent), failedTestFromParent[0][2], getFinalStatus(failedTestFromParent, build.commit.sha, pathLocalClone)
-		rescue
-			return adjustValueReturn(failedTestFromParent), nil, getFinalStatus(failedTestFromParent, build.commit.sha, pathLocalClone)
+				removePreviousFailedTests(failedTestFromParent, failedTestFromParentOne)
+				removePreviousFailedTests(failedTestFromParent, failedTestFromParentTwo)
+				verificationOfTrueTestFiles(failedTestFromParent, pathLocalClone, sha)
+				print failedTestFromParent
+				begin
+					return adjustValueReturn(failedTestFromParent), failedTestFromParent[0][2], getFinalStatus(failedTestFromParent, build.commit.sha, pathLocalClone)
+				rescue
+					return adjustValueReturn(failedTestFromParent), nil, getFinalStatus(failedTestFromParent, build.commit.sha, pathLocalClone)
+				end
+			end
 		end
+		return failedTestFromParent, nil, nil
 	end
 
 	# receber os ids
@@ -382,7 +387,7 @@ class ConflictCategoryFailed
 					if (build.jobs[indexJob].log != nil and !build.jobs[indexJob].log.to_s[/The forked VM terminated without saying properly goodbye. VM crash or System.exit called/])
 						build.jobs[indexJob].log.body do |part|
 							causesInfo = getCauseByJob(part)
-							if (causesInfo[1] > 0)
+							if (causesInfo[1] > 0 or causesInfo[0] == "CoverageError")
 								result.push(causesInfo)
 							end
 						end

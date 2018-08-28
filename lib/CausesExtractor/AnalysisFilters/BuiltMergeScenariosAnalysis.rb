@@ -16,7 +16,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 		buildPullFailed = 0
 		buildPullCanceled = 0
 		typeBuild = ""
-		
+
 		notBuiltParents = Array.new
 		builtMergeScenarios = Array.new
 		rebuiltMergeScenarios = Array.new
@@ -48,12 +48,12 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 
 		fileErrored = ""
 		fileFailed = ""
-		
+
 		passedConflicts = ConflictAnalysis.new()
 		erroredConflicts = ConflictAnalysis.new()
 		failedConflicts = ConflictAnalysis.new()
 		canceledConflicts = ConflictAnalysis.new()
-		
+
 		confBuild = ConflictBuild.new(@pathProject)
 		confBuildFork = ConflictBuild.new(extractorCLI.getPathProject())
 		confAllErrored = ConflictCategoryErroredAll.new()
@@ -65,7 +65,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 
 		projectBuildsMap = Hash.new()
 
-		projectNameFile = projectName.gsub('/','-')	
+		projectNameFile = projectName.gsub('/','-')
 		@repositoryTravisProject = getGitProject.getRepositoryTravisByProject()
 		validMergeScenario = Array.new
 		lastScenarioDate = nil
@@ -147,16 +147,18 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 											if (verifyDateDifference(mergeCommit, validParentsMergeScenarios))
 												if (!verifyEmptyBuildLogs(build))
 													#if (validScenarioProject < 100)
-														isConflict = confBuild.conflictAnalysisCategories(erroredConflicts, type, result[0])
-														#writeCSVForkAll.printConflictBuild(build, mergeCommit[0].to_s, mergeCommit[1].to_s, confForkAllErrored.findConflictCause(build, getPathProject(), pathGumTree, type, true), projectNameFile)
+													isConflict = confBuild.conflictAnalysisCategories(erroredConflicts, type, result[0])
+													#writeCSVForkAll.printConflictBuild(build, mergeCommit[0].to_s, mergeCommit[1].to_s, confForkAllErrored.findConflictCause(build, getPathProject(), pathGumTree, type, true), projectNameFile)
 
-														#if (isConflict and result[0] == true)
-															stateBC = confErroredForkBuilt.findConflictCause(build, getPathProject(), pathGumTree, type, true, cloneProject)
-															effort = nil
-															print result
-															if (stateBC.size > 2)
-																effort = effortTimeExtractor.checkFixedBuild(build.commit.sha, mergeCommit, getPathProject(), pathGumTree, stateBC[3], extractorCLI, getGitProject())
-															end
+													#if (isConflict and result[0] == true)
+													if (result[0] == true)
+														stateBC = confErroredForkBuilt.findConflictCause(build, getPathProject(), pathGumTree, type, true, cloneProject, result[0])
+														effort = nil
+														print result
+														if (stateBC.size > 2)
+															effort = effortTimeExtractor.checkFixedBuild(build.commit.sha, mergeCommit, getPathProject(), pathGumTree, stateBC[3], extractorCLI, getGitProject())
+														end
+														if (typeErrorVerification(stateBC[0]))
 															if (result[1] == nil)
 																aux = verifyBuildCurrentState(extractorCLI, mergeCommit[0], nil)
 																if (aux != nil)
@@ -171,54 +173,55 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 																	result[4] = aux[0]
 																end
 															end
-															writeCSVBuilt.printConflictBuild(build.id, build.commit.sha, result[1], result[3], result[2], result[4], stateBC, projectNameFile, effort)
-															externalCause = verifyExternalCauseConflict(stateBC[0])
-															if (!externalCause)
-																totalMSErroredWithoutExternal += 1
-																if (stateBC[1][1])
-																	totalMSErroredParentsPreservation += 1
-																else
-																	totalMSErroredParentsNoPreservation += 1
-																end
+														end
+														writeCSVBuilt.printConflictBuild(build.id, build.commit.sha, result[1], result[3], result[2], result[4], stateBC, projectNameFile, effort)
+														externalCause = verifyExternalCauseConflict(stateBC[0])
+														if (!externalCause)
+															totalMSErroredWithoutExternal += 1
+															if (stateBC[1][1])
+																totalMSErroredParentsPreservation += 1
+															else
+																totalMSErroredParentsNoPreservation += 1
 															end
-															validScenarioProject += 1
-															lastScenarioDate = getDataMergeScenario(build.commit.sha)
-															validParentsMergeScenarios.push([mergeCommit[0], mergeCommit[1]])
+														end
+														validScenarioProject += 1
+														lastScenarioDate = getDataMergeScenario(build.commit.sha)
+														validParentsMergeScenarios.push([mergeCommit[0], mergeCommit[1]])
 														#else
-															if !result[0]
-																causesBroken = confAllErrored.findConflictCause(build, getPathProject())
-																buildAgain = false
-																causesBroken.each do |cause|
-																	if (cause == "methodUpdate" or cause == "unavailableSymbol" or cause == "unimplementedMethod" or cause == "statementDuplication")
-																		buildAgain = true
+														if !result[0]
+															causesBroken = confAllErrored.findConflictCause(build, getPathProject())
+															buildAgain = false
+															causesBroken.each do |cause|
+																if (cause == "methodUpdate" or cause == "unavailableSymbol" or cause == "unimplementedMethod" or cause == "statementDuplication")
+																	buildAgain = true
+																end
+															end
+															if buildAgain
+																causesParentOne = confAllErrored.findConflictCauseLocalID(result[1], getPathProject())
+																causesParentOne.each do |cause|
+																	if (cause == "dependencyProblem" or cause == "compilerError" or cause == "gitProblem" or cause ==  "remoteError")
+																		notBuiltParents.push(mergeCommit[0])
+																		break
 																	end
 																end
-																if buildAgain
-																	causesParentOne = confAllErrored.findConflictCauseLocalID(result[1], getPathProject())
-																	causesParentOne.each do |cause|
-																		if (cause == "dependencyProblem" or cause == "compilerError" or cause == "gitProblem" or cause ==  "remoteError")
-																			notBuiltParents.push(mergeCommit[0])
-																			break
-																		end
-																	end
 
-																	causesParentTwo = confAllErrored.findConflictCauseLocalID(result[2], getPathProject())
-																	causesParentTwo.each do |cause|
-																		if (cause == "dependencyProblem" or cause == "compilerError" or cause == "gitProblem" or cause ==  "remoteError")
-																			notBuiltParents.push(mergeCommit[1])
-																			break
-																		end
+																causesParentTwo = confAllErrored.findConflictCauseLocalID(result[2], getPathProject())
+																causesParentTwo.each do |cause|
+																	if (cause == "dependencyProblem" or cause == "compilerError" or cause == "gitProblem" or cause ==  "remoteError")
+																		notBuiltParents.push(mergeCommit[1])
+																		break
 																	end
 																end
 															end
-															if (result[1] == nil)
-																notBuiltParents.push(mergeCommit[0])
-															end
-															if (result[2] == nil)
-																notBuiltParents.push(mergeCommit[1])
-															end
-															totalPushesNoBuilt+=1
-														#end
+														end
+														if (result[1] == nil)
+															notBuiltParents.push(mergeCommit[0])
+														end
+														if (result[2] == nil)
+															notBuiltParents.push(mergeCommit[1])
+														end
+														totalPushesNoBuilt+=1
+													end
 													#end
 												else
 													builtMergeScenarios.delete(build.commit.sha)
@@ -286,6 +289,18 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 																end
 																validScenarioProjectFailed += 1
 																lastScenarioDateFailed = getDataMergeScenario(build.commit.sha)
+															end
+														else
+															begin
+																resultFailedBuild.each do |failed|
+																	failed.each do |failedOne|
+																		if (failedOne[0] == "CoverageError")
+																			writeCSVBuilt.printConflictTest(build.id, build.commit.sha, result[1], result[2], failedOne[0], projectNameFile, effort, "", "", "", "", "", "", "", "", "", "", "", "", "")
+																		end
+																	end
+																end
+															rescue
+
 															end
 														end
 													end
@@ -355,24 +370,26 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 												if (verifyDateDifference(mergeCommit, validParentsMergeScenarios))
 													if (!verifyEmptyBuildLogs(build))
 														#if (validScenarioProject < 100)
-															isConflict = confBuild.conflictAnalysisCategories(erroredConflicts, type, result[0])
-															#writeCSVForkAll.printConflictBuild(build, mergeCommit[0].to_s, mergeCommit[1].to_s, confForkAllErrored.findConflictCause(build, getPathProject(), pathGumTree, type, true), projectNameFile)
+														isConflict = confBuild.conflictAnalysisCategories(erroredConflicts, type, result[0])
+														#writeCSVForkAll.printConflictBuild(build, mergeCommit[0].to_s, mergeCommit[1].to_s, confForkAllErrored.findConflictCause(build, getPathProject(), pathGumTree, type, true), projectNameFile)
 
-															#if (isConflict and result[0] == true)
-																stateBC = confErroredForkBuilt.findConflictCause(build, getPathProject(), pathGumTree, type, true, cloneProject)
-																effort = nil
-																if (stateBC.size > 2)
-																	effort = effortTimeExtractor.checkFixedBuild(build.commit.sha, mergeCommit, getPathProject(), pathGumTree, stateBC[3], extractorCLI, getGitProject())
+														#if (isConflict and result[0] == true)
+														if (result[0] == true)
+															stateBC = confErroredForkBuilt.findConflictCause(build, getPathProject(), pathGumTree, type, true, cloneProject, result[0])
+															effort = nil
+															if (stateBC.size > 2)
+																effort = effortTimeExtractor.checkFixedBuild(build.commit.sha, mergeCommit, getPathProject(), pathGumTree, stateBC[3], extractorCLI, getGitProject())
+															end
+															externalCause = verifyExternalCauseConflict(stateBC[0])
+															if (!externalCause)
+																totalMSErroredWithoutExternal += 1
+																if (stateBC[1][1])
+																	totalMSErroredParentsPreservation += 1
+																else
+																	totalMSErroredParentsNoPreservation += 1
 																end
-																externalCause = verifyExternalCauseConflict(stateBC[0])
-																if (!externalCause)
-																	totalMSErroredWithoutExternal += 1
-																	if (stateBC[1][1])
-																		totalMSErroredParentsPreservation += 1
-																	else
-																		totalMSErroredParentsNoPreservation += 1
-																	end
-																end
+															end
+															if (typeErrorVerification(stateBC[0]))
 																if (result[1] == nil)
 																	aux = verifyBuildCurrentState(extractorCLI, mergeCommit[0], nil)
 																	if (aux != nil)
@@ -388,45 +405,46 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 																		result[4] = aux[0]
 																	end
 																end
-																writeCSVBuilt.printConflictBuild(build.id, build.commit.sha, result[1], result[3], result[2], result[4], stateBC, projectNameFile, effort)
-																validScenarioProject += 1
-																lastScenarioDate = getDataMergeScenario(build.commit.sha)
-																validParentsMergeScenarios.push([mergeCommit[0], mergeCommit[1]])
+															end
+															writeCSVBuilt.printConflictBuild(build.id, build.commit.sha, result[1], result[3], result[2], result[4], stateBC, projectNameFile, effort)
+															validScenarioProject += 1
+															lastScenarioDate = getDataMergeScenario(build.commit.sha)
+															validParentsMergeScenarios.push([mergeCommit[0], mergeCommit[1]])
 															#else
-																if !result[0]
-																	causesBroken = confAllErrored.findConflictCause(build, getPathProject())
-																	buildAgain = false
-																	causesBroken.each do |cause|
-																		if (cause == "methodUpdate" or cause == "unavailableSymbol" or cause == "unimplementedMethod" or cause == "statementDuplication")
-																			buildAgain = true
+															if !result[0]
+																causesBroken = confAllErrored.findConflictCause(build, getPathProject())
+																buildAgain = false
+																causesBroken.each do |cause|
+																	if (cause == "methodUpdate" or cause == "unavailableSymbol" or cause == "unimplementedMethod" or cause == "statementDuplication")
+																		buildAgain = true
+																	end
+																end
+																if buildAgain
+																	causesParentOne = confAllErrored.findConflictCauseLocalID(result[1], getPathProject())
+																	causesParentOne.each do |cause|
+																		if (cause == "dependencyProblem" or cause == "compilerError" or cause == "gitProblem" or cause ==  "remoteError")
+																			notBuiltParents.push(mergeCommit[0])
+																			break
 																		end
 																	end
-																	if buildAgain
-																		causesParentOne = confAllErrored.findConflictCauseLocalID(result[1], getPathProject())
-																		causesParentOne.each do |cause|
-																			if (cause == "dependencyProblem" or cause == "compilerError" or cause == "gitProblem" or cause ==  "remoteError")
-																				notBuiltParents.push(mergeCommit[0])
-																				break
-																			end
-																		end
 
-																		causesParentTwo = confAllErrored.findConflictCauseLocalID(result[2], getPathProject())
-																		causesParentTwo.each do |cause|
-																			if (cause == "dependencyProblem" or cause == "compilerError" or cause == "gitProblem" or cause ==  "remoteError")
-																				notBuiltParents.push(mergeCommit[1])
-																				break
-																			end
+																	causesParentTwo = confAllErrored.findConflictCauseLocalID(result[2], getPathProject())
+																	causesParentTwo.each do |cause|
+																		if (cause == "dependencyProblem" or cause == "compilerError" or cause == "gitProblem" or cause ==  "remoteError")
+																			notBuiltParents.push(mergeCommit[1])
+																			break
 																		end
 																	end
 																end
-																if (result[1] == nil)
-																	notBuiltParents.push(mergeCommit[0])
-																end
-																if (result[2] == nil)
-																	notBuiltParents.push(mergeCommit[1])
-																end
-																totalPushesNoBuilt+=1
-															#end
+															end
+															if (result[1] == nil)
+																notBuiltParents.push(mergeCommit[0])
+															end
+															if (result[2] == nil)
+																notBuiltParents.push(mergeCommit[1])
+															end
+															totalPushesNoBuilt+=1
+														end
 														#end
 													else
 														builtMergeScenarios.delete(build.commit.sha)
@@ -509,81 +527,81 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 			end
 
 			#if (validScenarioProject < 100)
-				extractorCLI.activeForkProject()
-				forkAllBuilds = Hash.new()
-				notBuiltParents.each do |notBuiltParent|
-					mergeScenarios = nil
-					if (rebuiltMergeScenarios.include? notBuiltParent)
-						mergeScenarios = mergeScenariosAnalysisCommit(notBuiltParent)
-					end
-					resultBuildProcess = verifyBuildCurrentState(extractorCLI, notBuiltParent, mergeScenarios)
-					if (resultBuildProcess != nil)
-						forkAllBuilds[notBuiltParent] = [resultBuildProcess[0], resultBuildProcess[1], resultBuildProcess[2]]
-					else
-						break
-					end
+			extractorCLI.activeForkProject()
+			forkAllBuilds = Hash.new()
+			notBuiltParents.each do |notBuiltParent|
+				mergeScenarios = nil
+				if (rebuiltMergeScenarios.include? notBuiltParent)
+					mergeScenarios = mergeScenariosAnalysisCommit(notBuiltParent)
 				end
+				resultBuildProcess = verifyBuildCurrentState(extractorCLI, notBuiltParent, mergeScenarios)
+				if (resultBuildProcess != nil)
+					forkAllBuilds[notBuiltParent] = [resultBuildProcess[0], resultBuildProcess[1], resultBuildProcess[2]]
+				else
+					break
+				end
+			end
 
-				#extractorCLI.gitPull()
-				countIntervalCommits = 0
-#=begin
-				@projectMergeScenarios.each do |mergeScenario|
-					if (!builtMergeScenarios.include? mergeScenario)
-						mergeScenarioDate = getDataMergeScenario(mergeScenario)
-						mergeScenarios = nil
-						if (rebuiltMergeScenarios.include? mergeScenario)
-							mergeScenarios = mergeScenariosAnalysisCommit(mergeScenario)
-						end
-						if (verifyDateDifference(mergeScenarios,validParentsMergeScenarios))
-							lastScenarioDate = mergeScenarioDate
+			#extractorCLI.gitPull()
+			countIntervalCommits = 0
+=begin
+			@projectMergeScenarios.each do |mergeScenario|
+				if (!builtMergeScenarios.include? mergeScenario)
+					mergeScenarioDate = getDataMergeScenario(mergeScenario)
+					mergeScenarios = nil
+					if (rebuiltMergeScenarios.include? mergeScenario)
+						mergeScenarios = mergeScenariosAnalysisCommit(mergeScenario)
+					end
+					if (verifyDateDifference(mergeScenarios,validParentsMergeScenarios))
+						lastScenarioDate = mergeScenarioDate
 
-							resultBuildProcess = verifyBuildCurrentState(extractorCLI, mergeScenario, mergeScenarios)
-							if (resultBuildProcess != nil)
-								forkAllBuilds[mergeScenario] = [resultBuildProcess[0], resultBuildProcess[1], resultBuildProcess[2]]
+						resultBuildProcess = verifyBuildCurrentState(extractorCLI, mergeScenario, mergeScenarios)
+						if (resultBuildProcess != nil)
+							forkAllBuilds[mergeScenario] = [resultBuildProcess[0], resultBuildProcess[1], resultBuildProcess[2]]
 							#else
-								#break
-								if (extractorCLI.checkStatusBuild() == "errored")
-									#totalMSCanceled += 1
-#=begin
-									mergeCommit = mergeScenariosAnalysisCommit(mergeScenario)
-									if (mergeCommit != nil)
+							#break
+							if (extractorCLI.checkStatusBuild() == "errored")
+								#totalMSCanceled += 1
+								#=begin
+								mergeCommit = mergeScenariosAnalysisCommit(mergeScenario)
+								if (mergeCommit != nil)
 
-										result = @gitProject.conflictScenario(mergeCommit, allBuilds)
-										firstParentStatus = ""
-										secondParentStatus = ""
-										if (result[1] != nil and result[2] != nil)
+									result = @gitProject.conflictScenario(mergeCommit, allBuilds)
+									firstParentStatus = ""
+									secondParentStatus = ""
+									if (result[1] != nil and result[2] != nil)
+										validScenarioProject += 1
+										validScenarioProjectList.push(mergeScenario)
+									else
+=begin
+										if (result[1] == nil)
+											resultBuildProcess = verifyBuildCurrentState(extractorCLI, mergeCommit[0], nil)
+											if (resultBuildProcess != nil)
+												forkAllBuilds[mergeCommit[0]] = [resultBuildProcess[0], resultBuildProcess[1], resultBuildProcess[2]]
+											else
+												break
+											end
+											firstParentStatus = extractorCLI.checkStatusBuild()
+										end
+										if (result[2] == nil and (firstParentStatus == "passed" or firstParentStatus == "failed"))
+											resultBuildProcess = verifyBuildCurrentState(extractorCLI, mergeCommit[1], nil)
+											if (resultBuildProcess != nil)
+												forkAllBuilds[mergeCommit[1]] = [resultBuildProcess[0], resultBuildProcess[1], resultBuildProcess[2]]
+											else
+												break
+											end
+											secondParentStatus = extractorCLI.checkStatusBuild()
+										end
+										if ((result[1] != nil or firstParentStatus == "passed" or firstParentStatus == "failed") and (result[2] != nil or secondParentStatus == "passed" or secondParentStatus == "failed"))
 											validScenarioProject += 1
 											validScenarioProjectList.push(mergeScenario)
-										else
-#=begin
-											if (result[1] == nil)
-												resultBuildProcess = verifyBuildCurrentState(extractorCLI, mergeCommit[0], nil)
-												if (resultBuildProcess != nil)
-													forkAllBuilds[mergeCommit[0]] = [resultBuildProcess[0], resultBuildProcess[1], resultBuildProcess[2]]
-												else
-													break
-												end
-												firstParentStatus = extractorCLI.checkStatusBuild()
-											end
-											if (result[2] == nil and (firstParentStatus == "passed" or firstParentStatus == "failed"))
-												resultBuildProcess = verifyBuildCurrentState(extractorCLI, mergeCommit[1], nil)
-												if (resultBuildProcess != nil)
-													forkAllBuilds[mergeCommit[1]] = [resultBuildProcess[0], resultBuildProcess[1], resultBuildProcess[2]]
-												else
-													break
-												end
-												secondParentStatus = extractorCLI.checkStatusBuild()
-											end
-											if ((result[1] != nil or firstParentStatus == "passed" or firstParentStatus == "failed") and (result[2] != nil or secondParentStatus == "passed" or secondParentStatus == "failed"))
-												validScenarioProject += 1
-												validScenarioProjectList.push(mergeScenario)
-											end
-#=end
 										end
-									end
 #=end
-								elsif (extractorCLI.checkStatusBuild() == "passed")
-									totalMSPassed += 1
+									end
+								end
+								#=end
+							elsif (extractorCLI.checkStatusBuild() == "passed")
+								totalMSPassed += 1
 							elsif (extractorCLI.checkStatusBuild() == "failed")
 #=begin
 								if (!extractorCLI.getProjectActive)
@@ -626,56 +644,58 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 									end
 								end
 #=end
-								elsif (extractorCLI.checkStatusBuild() == "canceled")
-									totalMSCanceled += 1
-								end
+							elsif (extractorCLI.checkStatusBuild() == "canceled")
+								totalMSCanceled += 1
 							end
 						end
 					end
-					#if (validScenarioProject > 99 and validScenarioProjectFailed > 99)
-					#	break
-					#end
 				end
-#=end
-				getRepositoryTravisProject().each_build do |build|
-					if (build != nil and !(validMergeScenario.include? build.commit.sha+"\n" or validMergeScenario.include? build.commit.sha))
-						status = confBuild.getBuildStatus(build)
-						if (!build.pull_request)
-							if (@projectMergeScenarios.include? build.commit.sha+"\n" or @projectMergeScenarios.include? build.commit.sha)
-								mergeCommit = mergeScenariosAnalysis(build)
-								if (mergeCommit != nil)
+				#if (validScenarioProject > 99 and validScenarioProjectFailed > 99)
+				#	break
+				#end
+			end
+=end
+			getRepositoryTravisProject().each_build do |build|
+				if (build != nil and !(validMergeScenario.include? build.commit.sha+"\n" or validMergeScenario.include? build.commit.sha))
+					status = confBuild.getBuildStatus(build)
+					if (!build.pull_request)
+						if (@projectMergeScenarios.include? build.commit.sha+"\n" or @projectMergeScenarios.include? build.commit.sha)
+							mergeCommit = mergeScenariosAnalysis(build)
+							if (mergeCommit != nil)
+								if (status == "errored")
+									totalErroredBuildsMS += 1
+								elsif (status == "failed")
+									totalFailedBuildsMS += 1
+								end
+								result = @gitProject.conflictScenarioAll(mergeCommit, allBuilds, forkAllBuilds)
+								#result = @gitProject.conflictScenario(mergeCommit, allBuilds)
+								#if (result[0] == true)
+								if (true)
+									totalPushes += 1
+									type = confBuild.typeConflict(build)
 									if (status == "errored")
-										totalErroredBuildsMS += 1
-									elsif (status == "failed")
-										totalFailedBuildsMS += 1
-									end
-									result = @gitProject.conflictScenarioAll(mergeCommit, allBuilds, forkAllBuilds)
-									#result = @gitProject.conflictScenario(mergeCommit, allBuilds)
-									#if (result[0] == true)
-									if (true)
-										totalPushes += 1
-										type = confBuild.typeConflict(build)
-										if (status == "errored")
 #begin
-											print build.id
-											totalMSErrored += 1
-											isConflict = confBuild.conflictAnalysisCategories(erroredConflicts, type, result[0])
-											if (isConflict and result[0] == true)
-												stateBC = confErroredForkBuilt.findConflictCause(build, getPathProject(), pathGumTree, type, true, cloneProject)
-												effort = nil
-												if (stateBC.size > 2)
-													effort = effortTimeExtractor.checkFixedBuild(build.commit.sha, mergeCommit, getPathProject(), pathGumTree, stateBC[3], extractorCLI, getGitProject())
+										print build.id
+										totalMSErrored += 1
+										isConflict = confBuild.conflictAnalysisCategories(erroredConflicts, type, result[0])
+										#if (isConflict and result[0] == true)
+										if (result[0] == true)
+											stateBC = confErroredForkBuilt.findConflictCause(build, getPathProject(), pathGumTree, type, true, cloneProject, result[0])
+											effort = nil
+											if (stateBC.size > 2)
+												effort = effortTimeExtractor.checkFixedBuild(build.commit.sha, mergeCommit, getPathProject(), pathGumTree, stateBC[3], extractorCLI, getGitProject())
+											end
+											externalCause = verifyExternalCauseConflict(stateBC[0])
+											if (!externalCause)
+												totalMSErroredWithoutExternal += 1
+												if (stateBC[1][1])
+													totalMSErroredParentsPreservation += 1
+												else
+													totalMSErroredParentsNoPreservation += 1
 												end
-												externalCause = verifyExternalCauseConflict(stateBC[0])
-												if (!externalCause)
-													totalMSErroredWithoutExternal += 1
-													if (stateBC[1][1])
-														totalMSErroredParentsPreservation += 1
-													else
-														totalMSErroredParentsNoPreservation += 1
-													end
-												end
-												print "#{result}"
+											end
+											print "#{result}"
+											if (typeErrorVerification(stateBC[0]))
 												if (result[1] == nil)
 													aux = verifyBuildCurrentState(extractorCLI, mergeCommit[0], nil)
 													if (aux != nil)
@@ -690,13 +710,14 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 														result[4] = aux[0]
 													end
 												end
-												writeCSVBuilt.printConflictBuild(build.id, build.commit.sha, result[1], result[3], result[2], result[4], stateBC, projectNameFile, effort)
-												validScenarioProject += 1
-												lastScenarioDate = getDataMergeScenario(build.commit.sha)
-												validParentsMergeScenarios.push([mergeCommit[0], mergeCommit[1]])
 											end
+											writeCSVBuilt.printConflictBuild(build.id, build.commit.sha, result[1], result[3], result[2], result[4], stateBC, projectNameFile, effort)
+											validScenarioProject += 1
+											lastScenarioDate = getDataMergeScenario(build.commit.sha)
+											validParentsMergeScenarios.push([mergeCommit[0], mergeCommit[1]])
+										end
 #=end
-#=begin
+=begin
 										elsif (status == "failed")
 											if (!extractorCLI.getProjectActive)
 												extractorCLI.activeForkProject()
@@ -744,8 +765,8 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 												end
 											#end
 											end
-#=end
-										#end
+=end
+#end
 									end
 								end
 							end
@@ -759,15 +780,17 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 						if (verifyDateDifference(mergeFailedBC, validParentsMergeScenarios))
 							if (!verifyEmptyBuildLogs(build))
 								#if (validScenarioProject < 100)
-									type = confBuild.typeConflict(mergeFailedBC)
-									result = @gitProject.conflictScenario(mergeCommit, allBuilds)
-									isConflict = confBuild.conflictAnalysisCategories(erroredConflicts, type, result[0])
-									if (isConflict)
-										stateBC = confErroredForkBuilt.findConflictCauseFromFailedScenario(build, getPathProject(), pathGumTree, type, true, cloneProject)
-										effort = nil
-										if (stateBC.size > 2)
-											effort = effortTimeExtractor.checkFixedBuild(build.commit.sha, mergeCommit, getPathProject(), pathGumTree, stateBC[3], extractorCLI, getGitProject())
-										end
+								type = confBuild.typeConflict(mergeFailedBC)
+								result = @gitProject.conflictScenario(mergeCommit, allBuilds)
+								isConflict = confBuild.conflictAnalysisCategories(erroredConflicts, type, result[0])
+								#if (isConflict)
+								if (result[0] == true)
+									stateBC = confErroredForkBuilt.findConflictCauseFromFailedScenario(build, getPathProject(), pathGumTree, type, true, cloneProject, result[0])
+									effort = nil
+									if (stateBC.size > 2)
+										effort = effortTimeExtractor.checkFixedBuild(build.commit.sha, mergeCommit, getPathProject(), pathGumTree, stateBC[3], extractorCLI, getGitProject())
+									end
+									if (typeErrorVerification(stateBC[0]))
 										if (result[1] == nil)
 											aux = verifyBuildCurrentState(extractorCLI, mergeCommit[0], nil)
 											if (aux != nil)
@@ -782,10 +805,11 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 												result[4] = aux[0]
 											end
 										end
-										writeCSVBuilt.printConflictBuildFromFailedBuils(build.id, build.commit.sha, result[1], result[3], result[2], result[4], stateBC, projectNameFile, effort)
-										validScenarioProject += 1
-										lastScenarioDate = getDataMergeScenario(build.commit.sha)
 									end
+									writeCSVBuilt.printConflictBuildFromFailedBuils(build.id, build.commit.sha, result[1], result[3], result[2], result[4], stateBC, projectNameFile, effort)
+									validScenarioProject += 1
+									lastScenarioDate = getDataMergeScenario(build.commit.sha)
+								end
 								#end
 							else
 								builtMergeScenarios.delete(build.commit.sha)
@@ -816,8 +840,9 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 									totalMSErrored += 1
 									isConflict = confBuild.conflictAnalysisCategories(erroredConflicts, type, result[0])
 									#if (isConflict and result[0] == true)
-									if (true)
-										stateBC = confErroredForkBuilt.findConflictCauseFork(infoValidScenario[1], mergeScenario, getPathProject(), pathGumTree, type, true, cloneProject)
+									#if (true)
+									if (result[0] == true)
+										stateBC = confErroredForkBuilt.findConflictCauseFork(infoValidScenario[1], mergeScenario, getPathProject(), pathGumTree, type, true, cloneProject, result[0])
 										effort = nil
 										if (stateBC.size > 1)
 											effort = effortTimeExtractor.checkFixedBuild(mergeScenario, mergeCommit, getPathProject(), pathGumTree, stateBC[3], extractorCLI, getGitProject())
@@ -832,18 +857,20 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 											end
 										end
 										print result
-										if (result[1] == nil)
-											aux = verifyBuildCurrentState(extractorCLI, mergeCommit[0], nil)
-											if (aux != nil)
-												result[1] = aux[2]
-												result[3] = aux[0]
+										if (typeErrorVerification(stateBC[0]))
+											if (result[1] == nil)
+												aux = verifyBuildCurrentState(extractorCLI, mergeCommit[0], nil)
+												if (aux != nil)
+													result[1] = aux[2]
+													result[3] = aux[0]
+												end
 											end
-										end
-										if (result[2] == nil)
-											aux = verifyBuildCurrentState(extractorCLI, mergeCommit[1], nil)
-											if (aux != nil)
-												result[2] = aux[2]
-												result[4] = aux[0]
+											if (result[2] == nil)
+												aux = verifyBuildCurrentState(extractorCLI, mergeCommit[1], nil)
+												if (aux != nil)
+													result[2] = aux[2]
+													result[4] = aux[0]
+												end
 											end
 										end
 										writeCSVBuilt.printConflictBuild(@gitProject.getBuildID(mergeScenario, allBuilds, forkAllBuilds), mergeScenario, result[1], result[3], result[2], result[4], stateBC, projectNameFile, effort)
@@ -880,7 +907,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 										if ((result[5] == "passed" or result[5] == "failed") and (result[6] == "passed" or result[6] == "failed"))
 										#if (isConflict)
 											#effort = effortTimeExtractor.checkFixedBuildFailed(mergeScenario, mergeCommit)
-											resultFailedBuild = confFailedBuilt.findConflictCauseFork(infoValidScenario[1], mergeScenario, getPathProject(), result[3], result[4])
+											resultFailedBuild = confFailedBuilt.findConflictCauseFork(infoValidScenario[1], mergeScenario, getPathProject())
 #											writeCSVBuilt.printAllConflictTest(@gitProject.getBuildID(mergeScenario, allBuilds, forkAllBuilds), mergeScenario, result[1], result[2], projectNameFile, result[3], result[4])
 											#writeCSVBuilt.printConflictTest(build, result[1][0], result[2][0], resultFailedBuild[0][0], projectNameFile, effort, resultFailedBuild[0][1], resultFailedBuild[2][0], resultFailedBuild[2][1], resultFailedBuild[2][2], resultFailedBuild[2][3], resultFailedBuild[2][4], resultFailedBuild[2][5])
 											#lastScenarioDateFailed = getDataMergeScenario(mergeScenario)
@@ -904,7 +931,6 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 											end
 										end
 									end
-
 #=end
 								end
 							end
@@ -913,32 +939,32 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 				end
 			end
 
-		 	writeCSVBuilt.writeMergeScenariosFinal(projectName, @projectMergeScenarios.size, @projectMergeScenarios.size-builtMergeScenarios.size,
-		 		totalPushes, totalParentsNoPassed, totalPushesNoBuilt, totalRepeatedBuilds, totalBuilds, totalPushes+totalParentsNoPassed, 
-		 		totalMSPassed, totalErroredBuildsMS, totalMSErrored, totalMSErroredWithoutExternal, totalMSErroredParentsPreservation, totalMSErroredParentsNoPreservation,
-				totalFailedBuildsMS, totalMSFailed, totalMSFailedWithoutExternal, totalMSFailedParentsPreservation, totalMSFailedParentsNoPreservation, totalMSCanceled)
-			
-			writeCSVBuilt.writeBuildConflicts(projectName, confErroredForkBuilt.getTotal(), confErroredForkBuilt.getCausesErroredBuild.getUnavailableVariable(), 
-				confErroredForkBuilt.getCausesErroredBuild.getExpectedSymbol(), confErroredForkBuilt.getCausesErroredBuild.getMethodParameterListSize(), 
-				confErroredForkBuilt.getCausesErroredBuild.getStatementDuplication(), confErroredForkBuilt.getCausesErroredBuild.getDependencyProblem(), 
-				confErroredForkBuilt.getCausesErroredBuild.getUnimplementedMethod(), confErroredForkBuilt.getCausesErroredBuild.getGitProblem(), 
-				confErroredForkBuilt.getCausesErroredBuild.getRemoteError(), confErroredForkBuilt.getCausesErroredBuild.getCompilerError(), 
-				confErroredForkBuilt.getCausesErroredBuild.getOtherError())
+			writeCSVBuilt.writeMergeScenariosFinal(projectName, @projectMergeScenarios.size, @projectMergeScenarios.size-builtMergeScenarios.size,
+																						 totalPushes, totalParentsNoPassed, totalPushesNoBuilt, totalRepeatedBuilds, totalBuilds, totalPushes+totalParentsNoPassed,
+																						 totalMSPassed, totalErroredBuildsMS, totalMSErrored, totalMSErroredWithoutExternal, totalMSErroredParentsPreservation, totalMSErroredParentsNoPreservation,
+																						 totalFailedBuildsMS, totalMSFailed, totalMSFailedWithoutExternal, totalMSFailedParentsPreservation, totalMSFailedParentsNoPreservation, totalMSCanceled)
 
-#			writeCSVBuilt.writeTestConflicts(projectName, confFailedBuilt.getTotal(), confFailedBuilt.getFailed(), confFailedBuilt.getGitProblem(),
-#				confFailedBuilt.getRemoteError(), confFailedBuilt.getPermission(), confFailedBuilt.getOtherError())
+			writeCSVBuilt.writeBuildConflicts(projectName, confErroredForkBuilt.getTotal(), confErroredForkBuilt.getCausesErroredBuild.getUnavailableVariable(),
+																				confErroredForkBuilt.getCausesErroredBuild.getExpectedSymbol(), confErroredForkBuilt.getCausesErroredBuild.getMethodParameterListSize(),
+																				confErroredForkBuilt.getCausesErroredBuild.getStatementDuplication(), confErroredForkBuilt.getCausesErroredBuild.getDependencyProblem(),
+																				confErroredForkBuilt.getCausesErroredBuild.getUnimplementedMethod(), confErroredForkBuilt.getCausesErroredBuild.getGitProblem(),
+																				confErroredForkBuilt.getCausesErroredBuild.getRemoteError(), confErroredForkBuilt.getCausesErroredBuild.getCompilerError(),
+																				confErroredForkBuilt.getCausesErroredBuild.getOtherError())
 
-			writeCSVBuilt.writeConflictsAnalysisFinal(projectName, @projectMergeScenarios.size, @projectMergeScenarios.size - builtMergeScenarios.size, 
-							totalRepeatedBuilds, totalPushesNoBuilt, totalPushes, 
-							passedConflicts.getTotalPushes, passedConflicts.getTotalTravis, passedConflicts.getTotalTravisConf, passedConflicts.getTotalConfig, 
-							passedConflicts.getTotalConfigConf, passedConflicts.getTotalSource, passedConflicts.getTotalSourceConf, passedConflicts.getTotalAll, 
-							passedConflicts.getTotalAllConf, erroredConflicts.getTotalPushes, erroredConflicts.getTotalTravis, erroredConflicts.getTotalTravisConf, 
-							erroredConflicts.getTotalConfig, erroredConflicts.getTotalConfigConf, erroredConflicts.getTotalSource, erroredConflicts.getTotalSourceConf, 
-							erroredConflicts.getTotalAll, erroredConflicts.getTotalAllConf, failedConflicts.getTotalPushes, failedConflicts.getTotalTravis, 
-							failedConflicts.getTotalTravisConf, failedConflicts.getTotalConfig, failedConflicts.getTotalConfigConf, failedConflicts.getTotalSource, 
-							failedConflicts.getTotalSourceConf,failedConflicts.getTotalAll, failedConflicts.getTotalAllConf, canceledConflicts.getTotalPushes, 
-							canceledConflicts.getTotalTravis,canceledConflicts.getTotalTravisConf, canceledConflicts.getTotalConfig, canceledConflicts.getTotalConfigConf, 
-							canceledConflicts.getTotalSource, canceledConflicts.getTotalSourceConf,canceledConflicts.getTotalAll, canceledConflicts.getTotalAllConf)
+			#			writeCSVBuilt.writeTestConflicts(projectName, confFailedBuilt.getTotal(), confFailedBuilt.getFailed(), confFailedBuilt.getGitProblem(),
+			#				confFailedBuilt.getRemoteError(), confFailedBuilt.getPermission(), confFailedBuilt.getOtherError())
+
+			writeCSVBuilt.writeConflictsAnalysisFinal(projectName, @projectMergeScenarios.size, @projectMergeScenarios.size - builtMergeScenarios.size,
+																								totalRepeatedBuilds, totalPushesNoBuilt, totalPushes,
+																								passedConflicts.getTotalPushes, passedConflicts.getTotalTravis, passedConflicts.getTotalTravisConf, passedConflicts.getTotalConfig,
+																								passedConflicts.getTotalConfigConf, passedConflicts.getTotalSource, passedConflicts.getTotalSourceConf, passedConflicts.getTotalAll,
+																								passedConflicts.getTotalAllConf, erroredConflicts.getTotalPushes, erroredConflicts.getTotalTravis, erroredConflicts.getTotalTravisConf,
+																								erroredConflicts.getTotalConfig, erroredConflicts.getTotalConfigConf, erroredConflicts.getTotalSource, erroredConflicts.getTotalSourceConf,
+																								erroredConflicts.getTotalAll, erroredConflicts.getTotalAllConf, failedConflicts.getTotalPushes, failedConflicts.getTotalTravis,
+																								failedConflicts.getTotalTravisConf, failedConflicts.getTotalConfig, failedConflicts.getTotalConfigConf, failedConflicts.getTotalSource,
+																								failedConflicts.getTotalSourceConf,failedConflicts.getTotalAll, failedConflicts.getTotalAllConf, canceledConflicts.getTotalPushes,
+																								canceledConflicts.getTotalTravis,canceledConflicts.getTotalTravisConf, canceledConflicts.getTotalConfig, canceledConflicts.getTotalConfigConf,
+																								canceledConflicts.getTotalSource, canceledConflicts.getTotalSourceConf,canceledConflicts.getTotalAll, canceledConflicts.getTotalAllConf)
 
 			return projectName, buildTotalPush, buildPushPassed, buildPushErrored, buildPushFailed, buildPushCanceled, buildTotalPull, buildPullPassed, buildPullErrored, buildPullFailed, buildPullCanceled
 		else
@@ -953,7 +979,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 		if (mergeScenarios == nil)
 			state = extractorCLI.replayBuildOnTravis(sha, @gitProject.getMainProjectBranch())
 		else
-		#	state = extractorCLI.commitAndPushRebuiltMergeScenario(sha, mergeScenarios[0], mergeScenarios[1])
+			#	state = extractorCLI.commitAndPushRebuiltMergeScenario(sha, mergeScenarios[0], mergeScenarios[1])
 		end
 		if (state)
 			while (idLastBuild == extractorCLI.checkIdLastBuild() and state == true)
@@ -972,8 +998,8 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 			end
 
 			return extractorCLI.getInfoLastBuild()
-			end
-			return nil
+		end
+		return nil
 	end
 
 	def verifyEmptyBuildLogs(build)
@@ -1024,7 +1050,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 			end
 			return true
 		rescue
-				print "Merge Parents are nil\n"
+			print "Merge Parents are nil\n"
 		end
 		return false
 	end
@@ -1069,6 +1095,19 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 		if (finalPrinter)
 			printer.printAllConflictTestExternalCauses(buildId, buildOneID, buildTwoId, projectName, buildsReport)
 		end
+	end
+
+	def typeErrorVerification(infoError)
+		begin
+			infoError.each do |error|
+				if (error != "" and error != "[]" and error != "compilerError" and error != "remoteError" and error != "githubProblem")
+					return true
+				end
+			end
+		rescue
+
+		end
+		return false
 	end
 
 end
