@@ -1,4 +1,5 @@
 require 'require_all'
+require_all './SiteReport'
 require_all './MiningRepositories'
 require_all './Out'
 require_all './CausesExtractor'
@@ -12,6 +13,7 @@ class MainAnalysisProjects
 		@pathGumTree = pathGumTree
 		@token = travisToken
 		@localClone = Dir.pwd
+=begin
 		delete = %x(rm -rf FinalResults)
 		FileUtils::mkdir_p 'FinalResults/AllErroredBuilds'
 		FileUtils::mkdir_p 'FinalResults/MergeScenarios/BuiltMergeScenarios'
@@ -28,6 +30,15 @@ class MainAnalysisProjects
 		Dir.chdir getLocalCLone
 		Dir.chdir "FinalResults/AllErroredBuilds"
 		@writeCSVAllErroredBuilds = WriteCSVAllErrored.new(Dir.pwd)
+=end
+
+		Dir.chdir getLocalCLone
+		Dir.chdir "FinalResults"
+		aux  = Dir.pwd
+
+		Dir.chdir getLocalCLone
+		Dir.chdir "SiteReport"
+		@runReport = RunReport.new(Dir.pwd, aux)
 		Dir.chdir getLocalCLone
 		@projectsList = projectsList
 	end
@@ -95,13 +106,13 @@ class MainAnalysisProjects
 	def runAnalysis()
 		printStartAnalysis()
 		index = 1
-		
+=begin
 		@projectsList.each do |project|
 			printProjectInformation(index, project)
 			begin
-			mainGitProject = GitProject.new(project, getLocalCLone(), getLoginUser(), getPasswordUser())
-			cloneProject = BadlyMergeScenarioExtractor.new(project, "", getLocalCLone())
-			extractorCLI = ExtractorCLI.new(getLoginUser(), getPasswordUser(), getTravisToken(), "travis", getLocalCLone(), project)
+				mainGitProject = GitProject.new(project, getLocalCLone(), getLoginUser(), getPasswordUser())
+				cloneProject = BadlyMergeScenarioExtractor.new(project, "", getLocalCLone())
+				extractorCLI = ExtractorCLI.new(getLoginUser(), getPasswordUser(), getTravisToken(), "travis", getLocalCLone(), project)
 			rescue
 				print "\nPROJECT NOT FOUND\n"
 			end
@@ -128,6 +139,8 @@ class MainAnalysisProjects
 			end
 			index += 1
 		end
+=end
+		@runReport.runReport()
 		printFinishAnalysis()
 	end
 
@@ -154,11 +167,3 @@ end
 actualPath = Dir.pwd
 project = MainAnalysisProjects.new(parameters[0], parameters[1], parameters[2], parameters[3], projectsList)
 project.runAnalysis()
-
-Dir.chdir actualPath
-Dir.chdir "R"
-%x(Rscript r-analysis.r)
-Dir.chdir actualPath
-bcTypesCount = BCTypesCount.new()
-bcTypesCount.runTypesCount()
-Dir.chdir actualPath
