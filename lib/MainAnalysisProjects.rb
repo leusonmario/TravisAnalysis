@@ -13,7 +13,6 @@ class MainAnalysisProjects
 		@pathGumTree = pathGumTree
 		@token = travisToken
 		@localClone = Dir.pwd
-=begin
 		delete = %x(rm -rf FinalResults)
 		FileUtils::mkdir_p 'FinalResults/AllErroredBuilds'
 		FileUtils::mkdir_p 'FinalResults/MergeScenarios/BuiltMergeScenarios'
@@ -30,7 +29,6 @@ class MainAnalysisProjects
 		Dir.chdir getLocalCLone
 		Dir.chdir "FinalResults/AllErroredBuilds"
 		@writeCSVAllErroredBuilds = WriteCSVAllErrored.new(Dir.pwd)
-=end
 
 		Dir.chdir getLocalCLone
 		Dir.chdir "FinalResults"
@@ -106,7 +104,6 @@ class MainAnalysisProjects
 	def runAnalysis()
 		printStartAnalysis()
 		index = 1
-=begin
 		@projectsList.each do |project|
 			printProjectInformation(index, project)
 			begin
@@ -139,7 +136,6 @@ class MainAnalysisProjects
 			end
 			index += 1
 		end
-=end
 		@runReport.runReport()
 		printFinishAnalysis()
 	end
