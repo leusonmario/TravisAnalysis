@@ -1,4 +1,4 @@
-login=<login>
-password=<password>
-token=<gitHubToken>
-pathGumTree=<localPathGumTree>
+login=<GitHubUsername>
+password=<GitHubPassword>
+token=<GitHubOAuth>
+pathGumTree=<PathGumTree>

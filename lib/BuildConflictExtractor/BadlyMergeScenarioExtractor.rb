@@ -23,7 +23,8 @@ class BadlyMergeScenarioExtractor
 
 	def verifyBadlyMergeScenario(leftParent, rightParent, mergeCommit)
 		result = simulateMergeScenario(leftParent, rightParent, mergeCommit)
-		if (result == "")
+
+		if (result)
 			return true
 		else
 			return false
@@ -32,22 +33,30 @@ class BadlyMergeScenarioExtractor
 
 	def simulateMergeScenario(leftParent, rightParent, mergeCommit)
 		Dir.chdir @cloneProject.getLocalClone()
-		mainBranch =  %x(git remote show origin).match(/HEAD branch: [\s\S]*  Remote branches/).to_s.match(/HEAD branch: [\s\S]*(\n)/).to_s.gsub("HEAD branch: ","").gsub("\n","")
+
+		mainBranch =  %x(git remote show origin).match(/HEAD branch: [\s\S]*  Remote branch(es)?/).to_s.match(/HEAD branch: [\s\S]*(\n)/).to_s.gsub("HEAD branch: ","").gsub("\n","")
 		%x(git checkout #{mainBranch})
-		%x(git clean -f)
-		%x(git checkout -b leftParent #{leftParent})
-		%x(git checkout #{mainBranch})
-		%x(git checkout -b rightParent #{rightParent})
-		merge = %x(git merge leftParent --no-edit)
-		%x(git checkout -f #{mainBranch})
 		%x(git checkout -b mergeCommit #{mergeCommit})
-		diff = %x(git diff rightParent)
-		%x(git reset --merge)
-		%x(git checkout -f #{mainBranch})
-		%x(git branch -D rightParent)
-		%x(git branch -D leftParent)
+		%x(git checkout #{mainBranch})
+		%x(git reset --hard #{leftParent})
+		%x(git clean -f)
+		%x(git checkout -b new #{rightParent})
+		%x(git checkout #{mainBranch})
+		%x(git merge new)
+
+		logReply = %x(git diff)
+		logReplyMerge = %x(git diff mergeCommit)
+
+		%x(git branch -D new)
 		%x(git branch -D mergeCommit)
-		return diff
+		%x(git checkout #{mainBranch})
+
+		modificationsAfterMerge = false
+
+		if (logReply != logReplyMerge) # conflict
+			modificationsAfterMerge = true
+		end
+		return modificationsAfterMerge
 	end
 
 end

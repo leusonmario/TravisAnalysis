@@ -14,7 +14,7 @@ class UnavailableSymbolExtractor
 		numberOcccurrences = buildLog.scan(/\[ERROR\] [a-zA-Z0-9\/\-\.\:\[\]\,]* cannot find symbol[\n\r]+\[ERROR\]?[ \t\r\n\f]*symbol[ \t\r\n\f]*:[ \t\r\n\f]*method [a-zA-Z0-9\/\-\.\:\[\]\,\(\)]*[\n\r]+\[ERROR\]?[ \t\r\n\f]*location[ \t\r\n\f]*:[ \t\r\n\f]*class[ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,\(\)]*[\n\r]?|\[#{stringErro}\][\s\S]*#{stringNotFindType}|\[#{stringErro}\][\s\S]*#{stringNotMember}|\[ERROR\]?[\s\S]*cannot find symbol/).size
 		begin
 			if (buildLog[/\[ERROR\]?[\s\S]*cannot find symbol/] || buildLog[/\[ERROR\] [a-zA-Z0-9\/\-\.\:\[\]\,]* cannot find symbol[\n\r]+\[ERROR\]?[ \t\r\n\f]*symbol[ \t\r\n\f]*:[ \t\r\n\f]*method [a-zA-Z0-9\/\-\.\:\[\]\,\(\)]*[\n\r]+\[ERROR\]?[ \t\r\n\f]*location[ \t\r\n\f]*:[ \t\r\n\f]*class[ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,\(\)]*[\n\r]?/] || buildLog[/\[javac\] [\/a-zA-Z\_\-\.\:0-9 ]* cannot find symbol/])
-				if (buildLog[/error: package [a-zA-Z\.]* does not exist/])
+				if (buildLog[/error: package [a-zA-Z\.]* does not exist /])
 					return getInfoSecondCase(buildLog, completeBuildLog)
 				elsif (buildLog[/error: cannot find symbol/])
 					return getInfoThirdCase(completeBuildLog)
@@ -37,23 +37,26 @@ class UnavailableSymbolExtractor
 			callClassFiles = buildLog.to_enum(:scan, /\[javac\] [\/a-zA-Z\_\-\.\:0-9]* cannot find symbol[\s\S]* \[javac\] (location:)+ [a-zA-Z\. ]*/).map { Regexp.last_match }
 		else
 			methodNames = buildLog.to_enum(:scan, /\[ERROR\][ \t\r\n\f]*symbol[ \t\r\n\f]*:[ \t\r\n\f]*[method|class|variable|constructor|static]*[ \t\r\n\f]*[a-zA-Z0-9\(\)\.\/\,\_]*[ \t\r\n\f]*(\[INFO\] )?\[ERROR\][ \t\r\n\f]*(location)?/).map { Regexp.last_match }
-			classFiles = buildLog.to_enum(:scan, /\[ERROR\]?[ \t\r\n\f]*(location)?[ \t\r\n\f]*:[ \t\r\n\f]*(@)?[class|interface|variable instance of type|variable request of type)?|package]+[ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,\(\)]*[\n\r]?/).map { Regexp.last_match }
+			classFiles = buildLog.to_enum(:scan, /\[ERROR\]?[ \t\r\n\f]*(location)?[ \t\r\n\f]*:[ \t\r\n\f]*(@)?[class|interface|variable instance of type|variable request of type)?|package]+[ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,\(\) ]*[\n\r]?/).map { Regexp.last_match }
 			callClassFiles = getCallClassFiles(completeBuildLog)
 		end
 		categoryMissingSymbol = getTypeUnavailableSymbol(methodNames[0])
 		filesInformation = []
 		count = 0
 		while (count < classFiles.size)
+			#fazer chamada de categorySymbol aqui... não precisa mudar mais nada no método methodNames[count]
 			methodName = methodNames[count].to_s.match(/symbol[ \t\r\n\f]*:[ \t\r\n\f]*(method|variable|class|constructor|static)[ \t\r\n\f]*[a-zA-Z0-9\_]*/)[0].split(" ").last
-			classFile = classFiles[count].to_s.match(/location[ \t\r\n\f]*:[ \t\r\n\f]*(@)?(variable (request|instance) of type|class|interface)?[ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,\(\)]*/)[0].split(".").last.gsub("\r", "").to_s
+			classFile = classFiles[count].to_s.match(/location[ \t\r\n\f]*:[ \t\r\n\f]*(@)?(variable (request|instance) of type|class|interface|package)?[ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,\(\) ]*/)[0].split(".").last.gsub("\r", "").to_s
 			callClassFile = ""
+			line = callClassFiles[count].to_s.gsub(" cannot find symbol","").to_s.split(".java")[1].to_s.match(/[0-9]*\,[0-9]*/)[0]
 			if (buildLog[/\[javac\] [\/a-zA-Z\_\-\.\:0-9]* cannot find symbol[\s\S]* \[javac\] (location:)+/])
 				callClassFile = classFile
 			else
 				callClassFile = callClassFiles[count].to_s.match(/\[ERROR\]?[ \t\r\n\f]*[\/\-\.\:a-zA-Z0-9\,\_]*/)[0].split("/").last.gsub(".java:", "").gsub("\r", "").to_s
 			end
+			categoryMissingSymbol = getTypeUnavailableSymbol(methodNames[count])
 			count += 1
-			filesInformation.push([classFile, methodName, callClassFile])
+			filesInformation.push([categoryMissingSymbol, classFile, methodName, callClassFile, line])
 		end
 		return categoryMissingSymbol, filesInformation, filesInformation.size
 	end
@@ -72,7 +75,7 @@ class UnavailableSymbolExtractor
 			count = 0
 			while(count < classFiles.size)
 				classFile = classFiles[count].to_s.split(".java")[0].to_s.split('\/').last
-				filesInformation.push(classFile)
+				filesInformation.push(["unavailableSymbolFileSpecialCase", classFile])
 				count += 1
 			end
 		end
@@ -90,7 +93,7 @@ class UnavailableSymbolExtractor
 		while (count < methodNames.size)
 			packageName = methodNames[count].to_s.split("package ").last.to_s.gsub(" does not exist")
 			count += 1
-			filesInformation.push([packageName])
+			filesInformation.push([categoryMissingSymbol, packageName])
 		end
 		return categoryMissingSymbol, filesInformation, filesInformation.size
 	end
@@ -105,6 +108,7 @@ class UnavailableSymbolExtractor
 	end
 
 	def getTypeUnavailableSymbol(methodNames)
+		#update aqui - Receber um array, e retornar todos os valores possíveis
 		if (methodNames.to_s.match(/symbol[ \t\r\n\f]*:[ \t\r\n\f]*(method|constructor)[ \t\r\n\f]*[a-zA-Z0-9\_]*/))
 			return "unavailableSymbolMethod"
 		elsif (methodNames.to_s.match(/symbol[ \t\r\n\f]*:[ \t\r\n\f]*(variable)[ \t\r\n\f]*[a-zA-Z0-9\_]*/))

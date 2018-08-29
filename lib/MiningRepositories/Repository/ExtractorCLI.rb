@@ -48,7 +48,18 @@ class ExtractorCLI
 	end
 
 	def replayBuildOnTravis(commit, branch)
+		syncProjectWithFork(branch)
 		return commitAndPush(commit, branch)
+	end
+
+  def syncProjectWithFork(branch)
+		Dir.chdir getDownloadDir()
+		Dir.chdir getName()
+		%x(git checkout -f #{branch})
+		%x(git remote add mainFork https://github.com/#{@originalRepo})
+		%x(git fetch mainFork)
+		%x(git merge mainFork/#{branch})
+		Dir.chdir getDownloadDir()
 	end
 
   def checkoutHardOnCommit(commit)
@@ -70,23 +81,21 @@ class ExtractorCLI
 	def commitAndPush(commit, branch)
 		Dir.chdir getDownloadDir()
 		Dir.chdir getName()
-		checkTravis = %x(find -name '.travis.yml')
-		if (checkTravis != "")
-			head = "git rev-parse HEAD"
-			reset = "git reset --hard " + commit
-			forcePush = "git push -f origin "
-			changeOnHead = false
-			begin
-				previousHead = %x(#{head})
-				%x(#{reset})
-				currentHead = %x(#{head})
+		head = "git rev-parse HEAD"
+		reset = "git reset --hard " + commit
+		forcePush = "git push -f origin #{branch}"
+		changeOnHead = false
+		begin
+			previousHead = %x(#{head})
+			%x(#{reset})
+			checkTravis = %x(find -name '.travis.yml')
+			currentHead = %x(#{head})
+			if (previousHead != currentHead and checkTravis != "")
 				%x(#{forcePush})
-				if (previousHead != currentHead)
-					changeOnHead = true
-				end
-			rescue
-				print "IT DID NOT WORK"
+				changeOnHead = true
 			end
+		rescue
+			print "IT DID NOT WORK"
 		end
 
 		Dir.chdir getDownloadDir()
@@ -173,6 +182,7 @@ class ExtractorCLI
 		cmd = "travis" + " login --github-token " + @token
 		cmd2 = "travis" + " enable -r " + @username + "/" + @name
 		begin
+=begin
 			%x(#{cmd})
 			answerLogin = %x(travis whoami)
 			while (!answerLogin.include? "#{@username}")
@@ -185,6 +195,7 @@ class ExtractorCLI
 				answerActivation = %x(#{cmd2})
 			end
 			sleep(20)
+=end
 		rescue
 			print "NOT ALLOWED"
 		end
@@ -378,6 +389,47 @@ class ExtractorCLI
 
 	def getPathProject()
 		return getDownloadDir() + "/" + getName()
+	end
+
+  def buildFixConflicts(hash, gitProject, projectBuildsMap)
+		print "ExtractorCLI"
+		gitProject.getAllChildrenFromCommit(hash).each do |fix|
+			print "Attempt"
+			if (projectBuildsMap[fix] == nil)
+				resultFixBuild = verifyBuildCurrentState(fix, gitProject.getMainProjectBranch())
+				if (resultFixBuild != nil and (resultFixBuild[0] == "passed" or resultFixBuild[0] == "failed"))
+					return fix, resultFixBuild
+				end
+			else
+				return fix, projectBuildsMap[fix][1][0]
+			end
+		end
+		return nil
+	end
+
+	def verifyBuildCurrentState(hash, branch)
+		indexCount = 0
+		idLastBuild = checkIdLastBuild()
+		state = replayBuildOnTravis(hash, branch)
+		if (state)
+			while (idLastBuild == checkIdLastBuild() and state == true)
+				sleep(20)
+				indexCount += 1
+				if (indexCount == 10)
+					return nil
+				end
+			end
+
+			status = checkStatusBuild()
+			while (status == "started" and indexCount < 10)
+				sleep(20)
+				print "Building Fix Conflict Pattern yet\n"
+				status = checkStatusBuild()
+			end
+
+			return getInfoLastBuild()
+		end
+		return nil
 	end
 
 end

@@ -81,6 +81,11 @@ class GitProject
 		end
 	end
 
+	def getMainProjectBranch()
+		Dir.chdir @cloneProject.getLocalClone()
+		return %x(git remote show origin).match(/HEAD branch: [\s\S]*  Remote branch(es)?/).to_s.match(/HEAD branch: [\s\S]*(\n)/).to_s.gsub("HEAD branch: ","").gsub("\n","")
+	end
+
 	def getMergesScenariosByProject()
 		Dir.chdir @cloneProject.getLocalClone()
 		@mergeScenarios = Array.new
@@ -130,21 +135,21 @@ class GitProject
 	  		:login    => getLogin(),
 	  		:password => getPassword()
 		
-		forksProject = client.forks(getProjectName())
-		forksProject.each do |fork|
-			begin  
-				noTravisProject = 0
-				buildProjeto = Travis::Repository.find(fork.html_url.gsub('https://github.com/','')) 
-				newName = fork.html_url.partition('github.com/').last
-				if (buildProjeto != nil)
-					@forksListNames.push(newName)
-				end
-				result.push(buildProjeto)
-				rescue Exception => e  
-				 	noTravisProject += 1
-			end
-		end
-		@numberProjectForks = forksProject.size
+#		forksProject = client.forks(getProjectName())
+#		forksProject.each do |fork|
+#			begin
+#				noTravisProject = 0
+#				buildProjeto = Travis::Repository.find(fork.html_url.gsub('https://github.com/',''))
+#				newName = fork.html_url.partition('github.com/').last
+#				if (buildProjeto != nil)
+#					@forksListNames.push(newName)
+#				end
+#				result.push(buildProjeto)
+#				rescue Exception => e
+#				 	noTravisProject += 1
+#			end
+#		end
+#		@numberProjectForks = forksProject.size
 		return result
 	end
 
@@ -186,55 +191,65 @@ class GitProject
 		buildOne = nil
 		parentTwo = nil
 		buildTwo = nil
+		statusParentOne = ""
+		statusParentTwo = ""
 
 		if (projectBuilds[parentsMerge[0]] != nil and projectBuilds[parentsMerge[1]] != nil)
+			statusParentOne = projectBuilds[parentsMerge[0]][0]
+			statusParentTwo = projectBuilds[parentsMerge[1]][0]
 			if (projectBuilds[parentsMerge[0]][0]==["passed"] or projectBuilds[parentsMerge[0]][0]==["failed"])
 				parentOne = true
 				buildOne = projectBuilds[parentsMerge[0]][1]
 			else
-				buildOne = projectBuilds[parentsMerge[0]][2]
+				buildOne = projectBuilds[parentsMerge[0]][1]
 			end
 			
 			if (projectBuilds[parentsMerge[1]][0]==["passed"] or projectBuilds[parentsMerge[1]][0]==["failed"])
 				parentTwo = true
 				buildTwo = projectBuilds[parentsMerge[1]][1]
 			else
-				buildTwo = projectBuilds[parentsMerge[1]][2]
+				buildTwo = projectBuilds[parentsMerge[1]][1]
 			end
 			
 			if (parentOne==true and parentTwo==true and parentsMerge.size > 2)
-				return true, buildOne, buildTwo
+				return true, buildOne, buildTwo, statusParentOne, statusParentTwo
 			end
 		end
-		return false, buildOne, buildTwo
+		return false, buildOne, buildTwo, statusParentOne, statusParentTwo
 	end
 
 	def conflictScenarioFailed(parentsMerge, projectBuilds)
 		parentOne = nil
 		buildOne = nil
+		buildNumberOne = nil
+		statusParentOne = ""
 		parentTwo = nil
 		buildTwo = nil
+		buildNumberTwo = nil
+		statusParentTwo = ""
 
 		if (projectBuilds[parentsMerge[0]] != nil and projectBuilds[parentsMerge[1]] != nil)
+			statusParentOne = projectBuilds[parentsMerge[0]][0][0]
+			statusParentTwo = projectBuilds[parentsMerge[1]][0][0]
 			if (projectBuilds[parentsMerge[0]][0]==["passed"])
 				parentOne = true
 				buildOne = projectBuilds[parentsMerge[0]][1]
 			else
-				buildOne = projectBuilds[parentsMerge[0]][2]
+				buildOne = projectBuilds[parentsMerge[0]][1]
 			end
-
+			buildNumberOne = projectBuilds[parentsMerge[0]][2]
 			if (projectBuilds[parentsMerge[1]][0]==["passed"])
 				parentTwo = true
 				buildTwo = projectBuilds[parentsMerge[1]][1]
 			else
-				buildTwo = projectBuilds[parentsMerge[1]][2]
+				buildTwo = projectBuilds[parentsMerge[1]][1]
 			end
-
+			buildNumberTwo = projectBuilds[parentsMerge[1]][2]
 			if (parentOne==true and parentTwo==true)
-				return true, buildOne, buildTwo
+				return true, buildOne, buildTwo, buildNumberOne, buildNumberTwo, statusParentOne, statusParentTwo
 			end
 		end
-		return false, buildOne, buildTwo
+		return false, buildOne, buildTwo, buildNumberOne, buildNumberTwo, statusParentOne, statusParentTwo
 	end
 
 	def getBuildID(sha, projectBuilds, projectBuildsFork)
@@ -252,13 +267,31 @@ class GitProject
 		buildOne = nil
 		parentTwo = nil
 		buildTwo = nil
-		
+		statusParentOne = ""
+		statusParentTwo = ""
+
+		aux = conflictScenario(parentsMerge, projectBuilds)
+		buildOne = aux[1]
+		statusParentOne = aux[3]
+		buildTwo = aux[2]
+		statusParentTwo = aux[4]
+		if (aux[0] and aux[1] != nil and aux[2] != nil)
+			return aux
+		end
+
+		if (aux[1] != nil)
+			parentOne = true
+		end
+		if (aux[2] != nil)
+			parentTwo = true
+		end
 		begin
 			if (projectBuilds[parentsMerge[0]] != nil)
-				if (projectBuilds[parentsMerge[0]][0]==["passed"] or projectBuilds[parentsMerge[0]][0]==["failed"])
+				#if (projectBuilds[parentsMerge[0]][0]==["passed"] or projectBuilds[parentsMerge[0]][0]==["failed"])
 					parentOne = true
 					buildOne = projectBuilds[parentsMerge[0]][1]
-				end
+					statusParentOne = projectBuilds[parentsMerge[0]][0]
+				#end
 			end
 		rescue
 
@@ -266,10 +299,11 @@ class GitProject
 
 		begin
 			if (projectBuildsFork[parentsMerge[0]] != nil)
-				if (projectBuildsFork[parentsMerge[0]][0]== "passed" or projectBuildsFork[parentsMerge[0]][0]== "failed")
+				#if (projectBuildsFork[parentsMerge[0]][0]== "passed" or projectBuildsFork[parentsMerge[0]][0]== "failed")
 					parentOne = true
-					buildOne = projectBuildsFork[parentsMerge[0]][2]
-				end
+					buildOne = projectBuildsFork[parentsMerge[0]][1]
+					statusParentOne = projectBuilds[parentsMerge[0]][0]
+				#end
 			end
 		rescue
 
@@ -277,10 +311,11 @@ class GitProject
 			
 		begin
 			if (projectBuilds[parentsMerge[1]] != nil)
-				if ((projectBuilds[parentsMerge[1]][0]==["passed"] or projectBuilds[parentsMerge[1]][0]==["failed"]))
+				#if ((projectBuilds[parentsMerge[1]][0]==["passed"] or projectBuilds[parentsMerge[1]][0]==["failed"]))
 					parentTwo = true
 					buildTwo = projectBuilds[parentsMerge[1]][1]
-				end
+					statusParentTwo = projectBuilds[parentsMerge[1]][0]
+				#end
 			end
 		rescue
 
@@ -288,20 +323,21 @@ class GitProject
 
 		begin
 			if (projectBuildsFork[parentsMerge[1]] != nil)
-				if (projectBuildsFork[parentsMerge[1]][0]== "passed" or projectBuildsFork[parentsMerge[1]][0]== "failed")
+				#if (projectBuildsFork[parentsMerge[1]][0]== "passed" or projectBuildsFork[parentsMerge[1]][0]== "failed")
 					parentTwo = true
-					buildTwo = projectBuildsFork[parentsMerge[1]][2]
-				end
+					buildTwo = projectBuildsFork[parentsMerge[1]][1]
+					statusParentTwo = projectBuilds[parentsMerge[1]][0]
+				#end
 			end
 		rescue
 
 		end
 		
 		if (parentOne==true and parentTwo==true)
-			return true, buildOne, buildTwo
+			return true, buildOne, buildTwo, statusParentOne, statusParentTwo
 		end
 
-		return false, buildOne, buildTwo
+		return false, buildOne, buildTwo, statusParentOne, statusParentTwo
 	end
 
 	def getCommitCloserToBuild(allbuilds, commit)
@@ -321,5 +357,14 @@ class GitProject
 		rescue
 			return nil
 		end
+	end
+
+	def getAllChildrenFromCommit(hash)
+		Dir.chdir @cloneProject.getLocalClone()
+
+		listCommits = %x(git rev-list --all --not $COMMIT^@ --children | grep #{hash}).to_s.split("\n")[0].to_s.split(" ")
+		print listCommits
+		listCommits.delete(hash)
+		return listCommits
 	end
 end

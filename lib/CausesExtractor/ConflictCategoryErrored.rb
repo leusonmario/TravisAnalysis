@@ -1,5 +1,5 @@
 require 'require_all'
-require_all './BuildConflictExtractor' 
+require_all './BuildConflictExtractor'
 require_rel 'ConflictCategories'
 require_rel 'CausesFilesConflicting'
 require_rel 'CausesErroredBuild'
@@ -60,16 +60,17 @@ class ConflictCategoryErrored
 		return getCausesErroredBuild.getTotal()
 	end
 
-	def findConflictCauseFork(logs, sha, pathProject, pathGumTree, type, mergeScenario, cloneProject)
-		localUnavailableSymbol = 0 
+	def findConflictCauseFork(logs, sha, pathProject, pathGumTree, type, mergeScenario, cloneProject, superiorParentStatus)
+		localUnavailableSymbol = 0
 		localMethodUpdate = 0 
 		localMalformedExp = 0 
 		localDuplicateStatement = 0 
 		localDependencyProblem = 0 
+
 		localUnimplementedMethod = 0
 		localOtherCase = 0
 		localAlternativeStatement = 0
-		
+
 		causesFilesConflicts = CausesFilesConflicting.new()
 
 		logs.each do |log|
@@ -95,14 +96,14 @@ class ConflictCategoryErrored
 		end
 
 		if (mergeScenario)
-			return causesFilesConflicts.getCausesConflict(), getFinalStatus(pathGumTree, pathProject, sha, causesFilesConflicts, localMethodUpdate, localUnavailableSymbol, localDuplicateStatement, localUnimplementedMethod, localDependencyProblem, localMalformedExp, localAlternativeStatement, cloneProject), causesFilesConflicts.getCausesNumber()
+			return causesFilesConflicts.getCausesConflict(), getFinalStatus(pathGumTree, pathProject, sha, causesFilesConflicts, localMethodUpdate, localUnavailableSymbol, localDuplicateStatement, localUnimplementedMethod, localDependencyProblem, localMalformedExp, localAlternativeStatement, cloneProject, superiorParentStatus), causesFilesConflicts.getCausesNumber()
 		else
 			return causesFilesConflicts.getCausesConflict()
 		end
 	end
 
-	def findConflictCause(build, pathProject, pathGumTree, type, mergeScenario, cloneProject)
-		localUnavailableSymbol = 0 
+	def findConflictCause(build, pathProject, pathGumTree, type, mergeScenario, cloneProject, superiorParentStatus)
+		localUnavailableSymbol = 0
 		localMethodUpdate = 0 
 		localMalformedExp = 0 
 		localDuplicateStatement = 0 
@@ -110,14 +111,14 @@ class ConflictCategoryErrored
 		localUnimplementedMethod = 0
 		localOtherCase = 0
 		localAlternativeStatement = 0
-		
+
 		indexJob = 0
 		causesFilesConflicts = CausesFilesConflicting.new()
 		while (indexJob < build.job_ids.size)
 			if (build.jobs[indexJob].state == "errored")
 				if (build.jobs[indexJob].log != nil)
 					build.jobs[indexJob].log.body do |bodyJob|
-						if (bodyJob != nil)	
+						if (bodyJob != nil)
 							body = ""
 							otherCase = true
 							if (bodyJob.include?('Retrying, 3 of 3'))
@@ -144,13 +145,13 @@ class ConflictCategoryErrored
 			indexJob += 1
 		end
 		if (mergeScenario)
-			return causesFilesConflicts.getCausesConflict(), getFinalStatus(pathGumTree, pathProject, build.commit.sha, causesFilesConflicts, localMethodUpdate, localUnavailableSymbol, localDuplicateStatement, localUnimplementedMethod, localDependencyProblem, localMalformedExp, localAlternativeStatement, cloneProject), causesFilesConflicts.getCausesNumber(), causesFilesConflicts
+			return causesFilesConflicts.getCausesConflict(), getFinalStatus(pathGumTree, pathProject, build.commit.sha, causesFilesConflicts, localMethodUpdate, localUnavailableSymbol, localDuplicateStatement, localUnimplementedMethod, localDependencyProblem, localMalformedExp, localAlternativeStatement, cloneProject, superiorParentStatus), causesFilesConflicts.getCausesNumber(), causesFilesConflicts
 		else
 			return causesFilesConflicts.getCausesConflict()
 		end
 	end
 
-	def findConflictCauseFromFailedScenario(build, pathProject, pathGumTree, type, mergeScenario, cloneProject)
+	def findConflictCauseFromFailedScenario(build, pathProject, pathGumTree, type, mergeScenario, cloneProject, superiorParentStatus)
 		localUnavailableSymbol = 0
 		localMethodUpdate = 0
 		localMalformedExp = 0
@@ -193,7 +194,7 @@ class ConflictCategoryErrored
 			indexJob += 1
 		end
 		if (mergeScenario)
-			return causesFilesConflicts.getCausesConflict(), getFinalStatus(pathGumTree, pathProject, build.commit.sha, causesFilesConflicts, localMethodUpdate, localUnavailableSymbol, localDuplicateStatement, localUnimplementedMethod, localDependencyProblem, localMalformedExp, localAlternativeStatement, cloneProject), causesFilesConflicts.getCausesNumber(), causesFilesConflicts
+			return causesFilesConflicts.getCausesConflict(), getFinalStatus(pathGumTree, pathProject, build.commit.sha, causesFilesConflicts, localMethodUpdate, localUnavailableSymbol, localDuplicateStatement, localUnimplementedMethod, localDependencyProblem, localMalformedExp, localAlternativeStatement, cloneProject, superiorParentStatus), causesFilesConflicts.getCausesNumber(), causesFilesConflicts
 		else
 			return causesFilesConflicts.getCausesConflict()
 		end
@@ -247,7 +248,7 @@ class ConflictCategoryErrored
 		stringNoMaintained = "no longer maintained"
 		stringNotMember = "is not a member of"
 		stringErroInput = "error reading input file:"
-		
+
 		stringTheCommand = "The command "
 		stringMoveCMD = "mvn"
 		stringGitClone = "\"git clone"
@@ -287,13 +288,22 @@ class ConflictCategoryErrored
 			getCausesErroredBuild.setStatementDuplication(extraction[2])
 			causesFilesConflicts.insertNewCauseOne(extraction[0], extraction[1])
 		end
-		
+
 		if (body[/\[#{stringErro}\][\s\S]*#{stringNoOverride}[\s\S]*\[#{stringErro}\]/])
 			otherCase = false
-			localUnimplementedMethod = body.scan(/\[#{stringErro}\][\s\S]*#{stringNoOverride}[\s\S]*\[#{stringErro}\]/).size
-			extraction = getUnimplementedMethodExtractor().extractionFilesInfo(body)
-			getCausesErroredBuild.setUnimplementedMethod(extraction[2])
-			causesFilesConflicts.insertNewCauseOne(extraction[0], extraction[1])
+			#localUnimplementedMethod = body.scan(/\[#{stringErro}\][\s\S]*#{stringNoOverride}[\s\S]*\[#{stringErro}\]/).size
+			if (body.scan(/method does not override or implement a method from a supertype/))
+				localUnimplementedMethod = body.scan(/method does not override or implement a method from a supertype/).size
+				extraction = getUnimplementedMethodExtractor().extractionFilesInfoSecond(body[/BUILD FAILURE[\s\S]*/])
+				getCausesErroredBuild.setUnimplementedMethod(extraction[2])
+				causesFilesConflicts.insertNewCauseOne(extraction[0], extraction[1])
+			end
+			if (body.scan(/is not abstract and does not override abstract method/))
+				localUnimplementedMethod = body.scan(/is not abstract and does not override abstract method/).size
+				extraction = getUnimplementedMethodExtractor().extractionFilesInfo(body[/BUILD FAILURE[\s\S]*/])
+				getCausesErroredBuild.setUnimplementedMethod(extraction[2])
+				causesFilesConflicts.insertNewCauseOne(extraction[0], extraction[1])
+			end
 		end
 
 		if (body[/\[INFO\][\s\S]* Alternatives in a multi-catch statement cannot be related by subclassing/])
@@ -308,14 +318,18 @@ class ConflictCategoryErrored
 			otherCase = false
 			localUnavailableSymbol = body.scan(/\[javac\] [\/a-zA-Z\_\-\.\:0-9]* cannot find symbol[\s\S]* \[javac\] (location:)+|\[ERROR\] [a-zA-Z0-9\/\-\.\:\[\]\,]* cannot find symbol[\n\r]+\[ERROR\]?[ \t\r\n\f]*symbol[ \t\r\n\f]*:[ \t\r\n\f]*method [a-zA-Z0-9\/\-\.\:\[\]\,\(\)]*[\n\r]+\[ERROR\]?[ \t\r\n\f]*location[ \t\r\n\f]*:[ \t\r\n\f]*class[ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,\(\)]*[\n\r]?|\[#{stringErro}\][\s\S]*#{stringNotFindType}|\[#{stringErro}\][\s\S]*#{stringNotMember}|\[ERROR\]?[\s\S]*cannot find symbol/).size
 			extraction = getUnavailableSymbolExtractor().extractionFilesInfo(body, bodyJob)
-			if (extraction[0] == "unavailableSymbolMethod")
-				getCausesErroredBuild.setUnavailableMethod(extraction[2])
-			elsif (extraction[0] == "unavailableSymbolVariable")
-				getCausesErroredBuild.setUnavailableVariable(extraction[2])
-			else
-				getCausesErroredBuild.setUnavailableFile(extraction[2])
+			begin
+				if (extraction[0] == "unavailableSymbolMethod")
+					getCausesErroredBuild.setUnavailableMethod(extraction[2])
+				elsif (extraction[0] == "unavailableSymbolVariable")
+					getCausesErroredBuild.setUnavailableVariable(extraction[2])
+				else
+					getCausesErroredBuild.setUnavailableFile(extraction[2])
+				end
+				causesFilesConflicts.insertNewCauseOne(extraction[0], extraction[1])
+			rescue
+				print "LOG WITHOUT INFORMATION"
 			end
-			causesFilesConflicts.insertNewCauseOne(extraction[0], extraction[1])
 		end
 
 		if (body[/The JAVA_HOME environment variable is not defined correctly/] || body[/Could not transfer artifact/] || body[/\[ERROR\][ \t\r\n\f]*Failed to execute goal [a-zA-Z0-9\/\-\.\:\[\]\,\(\) ]*Some Enforcer rules have failed/] || body[/#{stringBuildFail}[\s\S]*#{stringUndefinedExt}/] || body[/\[#{stringErro}\][\s\S]*#{stringDependency}/] || body[/\[#{stringErro}\][\s\S]*#{stringNonParseable}[\s\S]*(#{stringUnexpected}[\s\S]*\[#{stringErro}\])?/] || body[/#{stringScript}[\s\S]*#{stringGradle}[\s\S]*#{stringProblemScript}[\s\S]*#{stringAddTask}[\s\S]*#{stringTaskExists}[\s\S]*#{stringBuildFail}/])
@@ -328,12 +342,12 @@ class ConflictCategoryErrored
 					getCausesErroredBuild.setDependencyProblem(extraction[2])
 					causesFilesConflicts.insertNewCauseOne(extraction[0], extraction[1])
 				else
-					causesFilesConflicts.insertNewCauseOne("compilerError",[])
+					causesFilesConflicts.insertNewCauseOne("compilerError",["compilerError"])
 					getCausesErroredBuild.setCompilerError(extraction[2])
 					@compilerError += aux
 				end
 			rescue
-				causesFilesConflicts.insertNewCauseOne("compilerError", [])
+				causesFilesConflicts.insertNewCauseOne("compilerError", ["compilerError"])
 			end
 		end
 
@@ -346,17 +360,17 @@ class ConflictCategoryErrored
 		# depois ver a questao do |Could not transfer
 		if (body[/\[ERROR\] Failed to execute goal [a-zA-Z0-9\/\-\.\:\[\]\,\(\) ]* Fatal error compiling: invalid/] || body[/\[ERROR\] Failed to execute goal [a-zA-Z0-9\/\-\.\:\[\]\,\(\) ]* There (were|was) [0-9]* error(s)?/] || body[/#{stringErroInput}/] || body[/\[#{stringErro}\][\s\S]*deprecated[\s\S]*#{stringNoMaintained}/] || body[/#{stringAccess}/] || body[/#{stringFailedGoal}[\s\S]*#{stringBuildsFailed}/] || body[/#{stringNotDefinedProp}/] || body[/#{stringFailedGoal}[\s\S]*#{stringNotResolvedDep}[#{stringFailedCollect}]?[\s\S]*[#{stringConnectionReset}]?/] || body[/#{stringUnsupported}[\s\S]*#{stringStopped}/] || body[/#{stringErrorProcessing}[\s\S]*/] || body[/\[(ERROR|WARNING)\][ \t\r\n\f]*(Non-resolvable parent POM:)? (Failure to find|Could not find artifact)+/] || body[/\[#{stringErro}\][\s\S]*(\:jar)#{stringMissing}[\s\S]*/] || body[/\[#{stringErro}\][\s\S]*(\:jar)#{stringValidVersion}[\s\S]*/] || body[/#{stringElement}[(\n\s)(a-zA-Z0-9)(\'\-\/\.\:\,\[\])]*#{stringNoExist}/])
 			otherCase = false
-			causesFilesConflicts.insertNewCauseOne("compilerError",[])		
+			causesFilesConflicts.insertNewCauseOne("compilerError",["compilerError"])
 			getCausesErroredBuild.setCompilerError(body.scan(/\[ERROR\] Failed to execute goal [a-zA-Z0-9\/\-\.\:\[\]\,\(\) ]* Fatal error compiling: invalid|\[ERROR\] Failed to execute goal [a-zA-Z0-9\/\-\.\:\[\]\,\(\) ]* There (were|was) [0-9]* error(s)?|#{stringErroInput}|\[#{stringErro}\][\s\S]*deprecated[\s\S]*#{stringNoMaintained}|#{stringAccess}|#{stringFailedGoal}[\s\S]*#{stringBuildsFailed}|#{stringNotDefinedProp}|#{stringFailedGoal}[\s\S]*#{stringNotResolvedDep}[#{stringFailedCollect}]?[\s\S]*[#{stringConnectionReset}]?|#{stringUnsupported}[\s\S]*#{stringStopped}|#{stringErrorProcessing}[\s\S]*|\[(ERROR|WARNING)\][ \t\r\n\f]*(Non-resolvable parent POM:)? (Failure to find|Could not find artifact)?|\[#{stringErro}\][\s\S]*(\:jar)#{stringMissing}[\s\S]*|\[#{stringErro}\][\s\S]*(\:jar)#{stringValidVersion}[\s\S]*|#{stringElement}[(\n\s)(a-zA-Z0-9)(\'\-\/\.\:\,\[\])]*#{stringNoExist}/).size)
 		end
 		if (body[/#{stringTheCommand}(#{stringGitClone}|#{stringGitCheckout})(.*?)#{stringFailed}(.*)[\n]*/])
 			otherCase = false
-			causesFilesConflicts.insertNewCauseOne("gitProblem",[])
+			causesFilesConflicts.insertNewCauseOne("gitProblem",["gitProblem"])
 			getCausesErroredBuild.setGitProblem(body.scan(/#{stringTheCommand}(#{stringGitClone}|#{stringGitCheckout})(.*?)#{stringFailed}(.*)[\n]*/).size)
 		end
 		if (body[/404 Not Found/] || body[/The job exceeded the maximum time limit for jobs, and has been terminated/] || body[/#{stringServiceUnavailable}/] || body[/No output has been received in the last [0-9]*/] || body[/[\s\S]*#{stringOverflowData}[\s\S]*/] || body[/(y|Y)our test run exceeded 50(.0)? minutes/] || body[/error: device not found/] || body[/ValueError: No JSON object could be decoded/] || body[/The job has been terminated/])
 			otherCase = false
-			causesFilesConflicts.insertNewCauseOne("remoteError",[])
+			causesFilesConflicts.insertNewCauseOne("remoteError",["remoteError"])
 			getCausesErroredBuild.setRemoteError(body.scan(/The job exceeded the maximum time limit for jobs, and has been terminated|No output has been received in the last [0-9]*|#{stringServiceUnavailable}|(y|Y)our test run exceeded 50(.0)? minutes|error: device not found|ValueError: No JSON object could be decoded|#{stringOverflowData}|The job has been terminated/).size)
 		end
 
@@ -367,14 +381,14 @@ class ConflictCategoryErrored
 		return otherCase, localUnavailableSymbol, localMethodUpdate, localMalformedExp, localDuplicateStatement, localDependencyProblem, localUnimplementedMethod, localAlternativeStatemnt, causesFilesConflicts
 	end
 
-	def getFinalStatus(pathGumTree, pathProject, sha, conflictCauses, localMethodUpdate, localUnavailableSymbol, localDuplicateStatement, localUnimplementedMethod, localDependencyProblem, localMalformedExp, localAlternativeStatement, cloneProject)
+	def getFinalStatus(pathGumTree, pathProject, sha, conflictCauses, localMethodUpdate, localUnavailableSymbol, localDuplicateStatement, localUnimplementedMethod, localDependencyProblem, localMalformedExp, localAlternativeStatement, cloneProject, superiorParentStatus)
 		gtAnalysis = GTAnalysis.new(pathGumTree, @projectName, getPathLocalClone())
 		if(localMethodUpdate > 0 || localUnavailableSymbol > 0 || localDuplicateStatement > 0 || localUnimplementedMethod > 0 || localDependencyProblem > 0 || localMalformedExp > 0 || localAlternativeStatement  > 0)
 			if(localUnimplementedMethod > 0 or localUnavailableSymbol > 0 or localDuplicateStatement > 0 or localMethodUpdate > 0 or localDependencyProblem > 0 || localMalformedExp > 0)
 				if (conflictCauses.getFilesConflict().size < 1)
 					return false, nil
 				else
-					return gtAnalysis.getGumTreeAnalysis(pathProject, sha, conflictCauses, cloneProject)
+					return gtAnalysis.getGumTreeAnalysis(pathProject, sha, conflictCauses, cloneProject, superiorParentStatus)
 				end
 			end
 			return false, nil
