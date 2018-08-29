@@ -44,6 +44,8 @@ class RunReport
     createFile("build-conflicts", "Build Conflicts")
     createFile("broken-integrator", "Broken Builds by Integrator")
     createFile("sample", "Sample")
+    createFile("previous-broken", "Previous Broken Builds")
+    createFile("previous-broken-with-integrator", "Broken Builds due to Previous Errors and Integrator Changes")
     return Dir.pwd
   end
 
@@ -111,13 +113,14 @@ class RunReport
   def runReport()
     sampleInfo = SampleInfo.new(@pathFinalResults)
     projectsInfo = ProjectInfoReport.new()
-    buildConflicts = BuildConflict.new()
     updateHTMLFile = UpdateHTMLFile.new(getSitePath())
-    brokenIntegrator = BrokenIntegrator.new()
+    brokenBuilds = BrokenBuilds.new()
 
     updateHTMLFile.updateFile("sample", projectsInfo.getAllProjectInfo(sampleInfo.getProjectList))
-    updateHTMLFile.updateFile("build-conflicts", buildConflicts.getAllConflicts(sampleInfo.getAllErroredFiles, projectsInfo.getProjectNames))
-    updateHTMLFile.updateFile("broken-integrator", brokenIntegrator.getAllBrokenBuildsByIntegrator(sampleInfo.getAllErroredFiles, projectsInfo.getProjectNames))
+    updateHTMLFile.updateFile("build-conflicts", brokenBuilds.getAllConflicts(sampleInfo.getAllErroredFiles, projectsInfo.getProjectNames))
+    updateHTMLFile.updateFile("broken-integrator", brokenBuilds.getAllBrokenBuildsByIntegrator(sampleInfo.getAllErroredFiles, projectsInfo.getProjectNames))
+    updateHTMLFile.updateFile("previous-broken", brokenBuilds.getAllPreviousBrokenBuilds(sampleInfo.getAllErroredFiles, projectsInfo.getProjectNames))
+    updateHTMLFile.updateFile("previous-broken-with-integrator", brokenBuilds.getAllPreviousBrokenBuildsWithIntegrator(sampleInfo.getAllErroredFiles, projectsInfo.getProjectNames))
   end
 end
 
