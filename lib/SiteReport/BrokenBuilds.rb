@@ -11,6 +11,7 @@ class BrokenBuilds
   end
 
   def getAllConflicts(files, projectNames)
+    projectWithConflicts = Array.new
     textConflict = "<table class=\"build_conflicts\">
                       <thead>
                         <tr>
@@ -34,11 +35,15 @@ class BrokenBuilds
         if (row[8] == "true" or ((row[3] == "failed" or row[3] == "[\"failed\"]" or row[3] == "[\"passed\"]" or row[3] == "passed") and (row[5] == "failed" or row[5] == "[\"failed\"]" or row[5] == "[\"passed\"]" or row[5] == "passed") and row[21] == "false") and (row[6] != "gitProblem" and row[6] != "compilerError" and row[6] != "[" and row[6] != "r" and row[6] != "c" and row[6] != "remoteError"))
           projectName = projectNames[file.to_s.split("/").last.to_s.gsub("Errored","").gsub(".csv\n","").gsub("BCFromFailed","").gsub("-","/")]
           textConflict += htmlTextForCoflict(projectName, adjustInfo(row[0]), adjustInfo(row[1]), row[6], adjustInfo(row[2]), adjustInfo(row[3]), adjustInfo(row[4]), adjustInfo(row[5]), adjustInfo(row[12]), adjustInfo(row[13]), adjustInfo(row[19]), buildsProject)
+          if (!projectWithConflicts.include? projectName)
+            projectWithConflicts.push(projectName)
+          end
         end
       end
     end
     textConflict += finalText()
-    return updateConflictNames(textConflict)
+    textConflict += addInformationOfProjectsWithConflicts(projectWithConflicts)
+    return updateConflictNames(textConflict), projectWithConflicts
   end
 
   def getAllBrokenBuildsByIntegrator(files, projectNames)
@@ -184,6 +189,14 @@ class BrokenBuilds
 
   def updateConflictNames(textConflict)
     return textConflict.to_s.gsub("statementDuplication", "duplicatedDeclaration").to_s.gsub("methodParameterListSize","incompatibleMethodSignature").gsub("malformedExpression","projectRules")
+  end
+
+  def addInformationOfProjectsWithConflicts(projectWithConflicts)
+    "
+    <div class=\"alert alert-info\">
+      In the end, #{projectWithConflicts.size} project(s) present build conflicts.
+    </div>
+    "
   end
 
 end

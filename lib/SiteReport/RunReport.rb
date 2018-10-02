@@ -117,7 +117,7 @@ class RunReport
     brokenBuilds = BrokenBuilds.new()
 
     updateHTMLFile.updateFile("sample", projectsInfo.getAllProjectInfo(sampleInfo.getProjectList))
-    updateHTMLFile.updateFile("build-conflicts", brokenBuilds.getAllConflicts(sampleInfo.getAllErroredFiles, projectsInfo.getProjectNames))
+    updateHTMLFile.updateFile("build-conflicts", brokenBuilds.getAllConflicts(sampleInfo.getAllErroredFiles, projectsInfo.getProjectNames)[0])
     updateHTMLFile.updateFile("broken-integrator", brokenBuilds.getAllBrokenBuildsByIntegrator(sampleInfo.getAllErroredFiles, projectsInfo.getProjectNames))
     updateHTMLFile.updateFile("previous-broken", brokenBuilds.getAllPreviousBrokenBuilds(sampleInfo.getAllErroredFiles, projectsInfo.getProjectNames))
     updateHTMLFile.updateFile("previous-broken-with-integrator", brokenBuilds.getAllPreviousBrokenBuildsWithIntegrator(sampleInfo.getAllErroredFiles, projectsInfo.getProjectNames))
