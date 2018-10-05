@@ -108,23 +108,23 @@ class UnavailableSymbolExtractor
 				#puts "Line length " + lineErrored.length.to_s
 
 
-				unavailableSymbol = lineErrored[columnErroredPosition..lineErrored.length-1]
+				unavailableSymbolName = lineErrored[columnErroredPosition..lineErrored.length-1]
 
 				#puts unavailableSymbol
 
 				symbolType = ""
-				if(/[\/a-zA-Z\_\-\.\:0-9]*\([\/a-zA-Z\_\-\.\:0-9]*\)/.match(unavailableSymbol))then
+				if(/[\/a-zA-Z\_\-\.\:0-9]*\([\/a-zA-Z\_\-\.\:0-9]*\)/.match(unavailableSymbolName))then
 					symbolType = "MethodCall"
-				elsif(/new ([\/a-zA-Z\_\-\.\:0-9]*)/.match(unavailableSymbol)) then
+				elsif(/new ([\/a-zA-Z\_\-\.\:0-9]*)/.match(unavailableSymbolName)) then
 					symbolType = "ClassInstantiation"
 				elsif
-				(/class ([\/a-zA-Z\_\-\.\:0-9]*)/.match(unavailableSymbol)) then
+				(/class ([\/a-zA-Z\_\-\.\:0-9]*)/.match(unavailableSymbolName)) then
 					symbolType = "ClassAtribution"
 				end
 
 
 
-				filesInformation.push(["unavailableSymbolFileSpecialCase", classFile, unavailableSymbol, symbolType])
+				filesInformation.push(["unavailableSymbolFileSpecialCase", classFile, unavailableSymbolName, symbolType])
 
 
 
