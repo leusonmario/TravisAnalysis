@@ -62,10 +62,10 @@ class ConflictCategoryErrored
 
 	def findConflictCauseFork(logs, sha, pathProject, pathGumTree, type, mergeScenario, cloneProject, superiorParentStatus)
 		localUnavailableSymbol = 0
-		localMethodUpdate = 0 
-		localMalformedExp = 0 
-		localDuplicateStatement = 0 
-		localDependencyProblem = 0 
+		localMethodUpdate = 0
+		localMalformedExp = 0
+		localDuplicateStatement = 0
+		localDependencyProblem = 0
 
 		localUnimplementedMethod = 0
 		localOtherCase = 0
@@ -81,7 +81,7 @@ class ConflictCategoryErrored
 			else
 				body = log
 			end
-			otherCase = getCauseByBuild(body, log, causesFilesConflicts, localUnavailableSymbol, localMethodUpdate, localMalformedExp, localDuplicateStatement, localDependencyProblem, localUnimplementedMethod, localAlternativeStatement)
+			otherCase = getCauseByBuild(body, log, causesFilesConflicts, localUnavailableSymbol, localMethodUpdate, localMalformedExp, localDuplicateStatement, localDependencyProblem, localUnimplementedMethod, localAlternativeStatement, sha, cloneProject)
 			localUnavailableSymbol = otherCase[1]
 			localMethodUpdate = otherCase[2]
 			localMalformedExp = otherCase[3]
@@ -104,10 +104,10 @@ class ConflictCategoryErrored
 
 	def findConflictCause(build, pathProject, pathGumTree, type, mergeScenario, cloneProject, superiorParentStatus)
 		localUnavailableSymbol = 0
-		localMethodUpdate = 0 
-		localMalformedExp = 0 
-		localDuplicateStatement = 0 
-		localDependencyProblem = 0 
+		localMethodUpdate = 0
+		localMalformedExp = 0
+		localDuplicateStatement = 0
+		localDependencyProblem = 0
 		localUnimplementedMethod = 0
 		localOtherCase = 0
 		localAlternativeStatement = 0
@@ -126,7 +126,7 @@ class ConflictCategoryErrored
 							else
 								body = bodyJob
 							end
-							otherCase = getCauseByBuild(body, bodyJob, causesFilesConflicts, localUnavailableSymbol, localMethodUpdate, localMalformedExp, localDuplicateStatement, localDependencyProblem, localUnimplementedMethod, localAlternativeStatement)
+							otherCase = getCauseByBuild(body, bodyJob, causesFilesConflicts, localUnavailableSymbol, localMethodUpdate, localMalformedExp, localDuplicateStatement, localDependencyProblem, localUnimplementedMethod, localAlternativeStatement, build.commit.sha, cloneProject)
 							localUnavailableSymbol = otherCase[1]
 							localMethodUpdate = otherCase[2]
 							localMalformedExp = otherCase[3]
@@ -175,7 +175,7 @@ class ConflictCategoryErrored
 							else
 								body = bodyJob
 							end
-							otherCase = getCauseByBuild(body, bodyJob, causesFilesConflicts, localUnavailableSymbol, localMethodUpdate, localMalformedExp, localDuplicateStatement, localDependencyProblem, localUnimplementedMethod, localAlternativeStatement)
+							otherCase = getCauseByBuild(body, bodyJob, causesFilesConflicts, localUnavailableSymbol, localMethodUpdate, localMalformedExp, localDuplicateStatement, localDependencyProblem, localUnimplementedMethod, localAlternativeStatement, build.commit.sha, cloneProject)
 							localUnavailableSymbol = otherCase[1]
 							localMethodUpdate = otherCase[2]
 							localMalformedExp = otherCase[3]
@@ -200,7 +200,7 @@ class ConflictCategoryErrored
 		end
 	end
 
-	def getCauseByBuild(body, bodyJob, causesFilesConflicts, localUnavailableSymbol, localMethodUpdate, localMalformedExp, localDuplicateStatement, localDependencyProblem, localUnimplementedMethod, localAlternativeStatemnt)
+	def getCauseByBuild(body, bodyJob, causesFilesConflicts, localUnavailableSymbol, localMethodUpdate, localMalformedExp, localDuplicateStatement, localDependencyProblem, localUnimplementedMethod, localAlternativeStatemnt, hashCommit, pathToMerge)
 		otherCase = true
 
 		stringCompError = " COMPILATION ERROR :"
@@ -317,7 +317,7 @@ class ConflictCategoryErrored
 		if (body[/\[javac\] [\/a-zA-Z\_\-\.\:0-9 \-]* cannot find symbol[\s\S]* \[javac\] [ ]*(location:)+/] || body[/\[ERROR\]?[\s\S]*cannot find symbol/] || body[/\[ERROR\] [a-zA-Z0-9\/\-\.\:\[\]\,]* cannot find symbol[\n\r]+\[ERROR\]?[ \t\r\n\f]*symbol[ \t\r\n\f]*:[ \t\r\n\f]*method [a-zA-Z0-9\/\-\.\:\[\]\,\(\)]*[\n\r]+\[ERROR\]?[ \t\r\n\f]*location[ \t\r\n\f]*:[ \t\r\n\f]*class[ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,\(\)]*[\n\r]?/] || body[/\[#{stringErro}\][\s\S]*#{stringNotFindType}/] || body[/\[#{stringErro}\][\s\S]*#{stringNotMember}/])
 			otherCase = false
 			localUnavailableSymbol = body.scan(/\[javac\] [\/a-zA-Z\_\-\.\:0-9]* cannot find symbol[\s\S]* \[javac\] (location:)+|\[ERROR\] [a-zA-Z0-9\/\-\.\:\[\]\,]* cannot find symbol[\n\r]+\[ERROR\]?[ \t\r\n\f]*symbol[ \t\r\n\f]*:[ \t\r\n\f]*method [a-zA-Z0-9\/\-\.\:\[\]\,\(\)]*[\n\r]+\[ERROR\]?[ \t\r\n\f]*location[ \t\r\n\f]*:[ \t\r\n\f]*class[ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,\(\)]*[\n\r]?|\[#{stringErro}\][\s\S]*#{stringNotFindType}|\[#{stringErro}\][\s\S]*#{stringNotMember}|\[ERROR\]?[\s\S]*cannot find symbol/).size
-			extraction = getUnavailableSymbolExtractor().extractionFilesInfo(body, bodyJob)
+			extraction = getUnavailableSymbolExtractor().extractionFilesInfo(body, bodyJob, hashCommit, pathToMerge)
 			begin
 				if (extraction[0] == "unavailableSymbolMethod")
 					getCausesErroredBuild.setUnavailableMethod(extraction[2])

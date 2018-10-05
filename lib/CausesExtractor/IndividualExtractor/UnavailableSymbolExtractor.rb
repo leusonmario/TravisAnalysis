@@ -4,7 +4,7 @@ class UnavailableSymbolExtractor
 
 	end
 
-	def extractionFilesInfo(buildLog, completeBuildLog)
+	def extractionFilesInfo(buildLog, completeBuildLog, hashCommit, pathToMerge)
 		stringNotFindType = "not find: type"
 		stringNotMember = "is not a member of"
 		stringErro = "ERROR"
@@ -61,7 +61,7 @@ class UnavailableSymbolExtractor
 		return categoryMissingSymbol, filesInformation, filesInformation.size
 	end
 
-	def getInfoThirdCase(buildLog)
+	def getInfoThirdCase(buildLog, hashCommit, pathToMerge)
 		filesInformation = []
 		classFiles = buildLog.to_enum(:scan, /\[ERROR\][a-zA-Z0-9\/\.\: \[\]\,\-]* error: cannot find symbol/).map { Regexp.last_match }
 		count = 0
@@ -75,7 +75,59 @@ class UnavailableSymbolExtractor
 			count = 0
 			while(count < classFiles.size)
 				classFile = classFiles[count].to_s.split(".java")[0].to_s.split('\/').last
-				filesInformation.push(["unavailableSymbolFileSpecialCase", classFile])
+
+				#Extrair linha e coluna do erro dada a linha de log correspondente
+				logErrorLine = classFiles[count]
+
+				#Extraindo o texto que contem a linha e a coluna do erro
+				logFileErrorPosition = logErrorLine.to_enum(:scan, /\[[0-9]*,[0-9]*\]/).map { Regexp.last_match }
+
+				#puts logFileErrorPosition
+
+				lineErroredPosition = logFileErrorPosition[0].to_s.split(/\[|\]|,/)[1].to_i
+				columnErroredPosition = logFileErrorPosition[0].to_s.split(/\[|\]|,/)[2].to_i
+
+				#puts lineErroredPosition
+				#puts columnErroredPosition
+
+
+				#Acessar o arquivo no path correto
+				cloneRepo = pathToClone #trocar por pathToClone
+				classFile = classFile      #trocar por classFile
+
+				#acessando o repositorio mudando o ponteiro para o commit que quebrou
+				Dir.chdir cloneRepo
+				%x(git checkout #{hashCommit})
+
+				pathToFile = cloneRepo + classFile + ".java"
+				fileErrored = File.open(pathToFile)
+
+
+				lineErrored = ""
+				lineErroredPosition.times { lineErrored = fileErrored.gets }
+				#puts "Line length " + lineErrored.length.to_s
+
+
+				unavailableSymbolName = lineErrored[columnErroredPosition..lineErrored.length-1]
+
+				#puts unavailableSymbol
+
+				symbolType = ""
+				if(/[\/a-zA-Z\_\-\.\:0-9]*\([\/a-zA-Z\_\-\.\:0-9]*\)/.match(unavailableSymbolName))then
+					symbolType = "MethodCall"
+				elsif(/new ([\/a-zA-Z\_\-\.\:0-9]*)/.match(unavailableSymbolName)) then
+					symbolType = "ClassInstantiation"
+				elsif
+				(/class ([\/a-zA-Z\_\-\.\:0-9]*)/.match(unavailableSymbolName)) then
+					symbolType = "ClassAtribution"
+				end
+
+
+
+				filesInformation.push(["unavailableSymbolFileSpecialCase", classFile, unavailableSymbolName, symbolType])
+
+
+
 				count += 1
 			end
 		end
