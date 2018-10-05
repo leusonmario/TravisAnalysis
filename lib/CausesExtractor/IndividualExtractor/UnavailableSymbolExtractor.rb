@@ -115,15 +115,16 @@ class UnavailableSymbolExtractor
 				symbolType = ""
 				if(/[\/a-zA-Z\_\-\.\:0-9]*\([\/a-zA-Z\_\-\.\:0-9]*\)/.match(unavailableSymbol))then
 					symbolType = "MethodCall"
-				end
-
-				if(/new ([\/a-zA-Z\_\-\.\:0-9]*)/.match(unavailableSymbol)) then
+				elsif(/new ([\/a-zA-Z\_\-\.\:0-9]*)/.match(unavailableSymbol)) then
 					symbolType = "ClassInstantiation"
+				elsif
+				(/class ([\/a-zA-Z\_\-\.\:0-9]*)/.match(unavailableSymbol)) then
+					symbolType = "ClassAtribution"
 				end
 
 
 
-				filesInformation.push(["unavailableSymbolFileSpecialCase", classFile, symbolType])
+				filesInformation.push(["unavailableSymbolFileSpecialCase", classFile, unavailableSymbol, symbolType])
 
 
 
