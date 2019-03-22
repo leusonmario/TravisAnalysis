@@ -17,6 +17,10 @@ class CommitInfo
 		@parentsCommit = identifyParentCommits(projectLocalPath)
 	end
 
+	def getCommitHash()
+		@commitHash
+	end
+
 	def getParentsCommit()
 		@parentsCommit
 	end

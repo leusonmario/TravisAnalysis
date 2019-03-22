@@ -867,7 +867,33 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 	end
 
 	def getStatusBuildsProjectForLocalBuilds(projectName, writeCSVAllBuilds, writeCSVBuilt, writeCSVForkAll, writeCSVForkInterval, pathGumTree, withWithoutForks, cloneProject)
+    collectLocalBuildLog()
+    validMergeScenarios = Array.new
+    @projectMergeScenarios.each do |oneMergeScenario|
+      oneMergeScenarioCommitInfo = @projectCommits[oneMergeScenario]
+      if (oneMergeScenarioCommitInfo != nil)
+        if (oneMergeScenarioCommitInfo.getLocalBuild().getBuildStatus == "errored")
+          superiorParentStatus = false
+          parentOne = @projectCommits[oneMergeScenarioCommitInfo.getParentsCommit()[0]]
+          parentTwo = @projectCommits[oneMergeScenarioCommitInfo.getParentsCommit()[1]]
+          if (parentOne.getLocalBuild().getBuildStatus != "errored" and parentTwo.getLocalBuild().getBuildStatus != "errored")
+            superiorParentStatus = true
+          end
+          validMergeScenarios.push(oneMergeScenario)
+          totalMSErrored += 1
+          if (verifyDateDifference(oneMergeScenario, validMergeScenarios))
+            stateBC = confErroredForkBuilt.findConflictCauseForLocalBuilds(oneMergeScenarioCommitInfo.getLocalBuild(), oneMergeScenario, getPathProject(), pathGumTree, true, cloneProject, superiorParentStatus)
+            effort = nil
+            print result
+            if (stateBC.size > 2)
+              effort = effortTimeExtractor.checkFixedBuild(build.commit.sha, mergeCommit, getPathProject(), pathGumTree, stateBC[3], extractorCLI, getGitProject())
+            end
 
+            writeCSVBuilt.printConflictBuild(oneMergeScenarioCommitInfo.getLocalBuild.getBuildStatus, oneMergeScenario, parentOne.getCommitHash, parentOne.getLocalBuild().getBuildStatus, parentTwo.getCommitHash, parentTwo.getLocalBuild().getBuildStatus, stateBC, projectName.gsub("/","-"), [1], superiorParentStatus)
+          end
+        end
+      end
+    end
 	end
 
 	def collectLocalBuildLog()

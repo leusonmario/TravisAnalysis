@@ -60,6 +60,37 @@ class ConflictCategoryErrored
 		return getCausesErroredBuild.getTotal()
 	end
 
+	def findConflictCauseForLocalBuilds(build, sha, pathProject, pathGumTree, mergeScenario, cloneProject, superiorParentStatus)
+		localUnavailableSymbol = 0
+		localMethodUpdate = 0
+		localMalformedExp = 0
+		localDuplicateStatement = 0
+		localDependencyProblem = 0
+		localUnimplementedMethod = 0
+		localOtherCase = 0
+		localAlternativeStatement = 0
+
+		causesFilesConflicts = CausesFilesConflicting.new()
+
+		otherCase = getCauseByBuild(build, build, causesFilesConflicts, localUnavailableSymbol, localMethodUpdate, localMalformedExp, localDuplicateStatement, localDependencyProblem, localUnimplementedMethod, localAlternativeStatement)
+		localUnavailableSymbol = otherCase[1]
+		localMethodUpdate = otherCase[2]
+		localMalformedExp = otherCase[3]
+		localDuplicateStatement = otherCase[4]
+		localDependencyProblem = otherCase[5]
+		localUnimplementedMethod = otherCase[6]
+		localAlternativeStatement = otherCase[7]
+		causesFilesConflicts = otherCase[8]
+		if (otherCase[0])
+			localOtherCase += 1
+		end
+		if (mergeScenario)
+			return causesFilesConflicts.getCausesConflict(), getFinalStatus(pathGumTree, pathProject, sha, causesFilesConflicts, localMethodUpdate, localUnavailableSymbol, localDuplicateStatement, localUnimplementedMethod, localDependencyProblem, localMalformedExp, localAlternativeStatement, cloneProject, superiorParentStatus), causesFilesConflicts.getCausesNumber(), causesFilesConflicts
+		else
+			return causesFilesConflicts.getCausesConflict()
+		end
+	end
+
 	def findConflictCauseFork(logs, sha, pathProject, pathGumTree, type, mergeScenario, cloneProject, superiorParentStatus)
 		localUnavailableSymbol = 0
 		localMethodUpdate = 0 
