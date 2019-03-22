@@ -116,7 +116,7 @@ class MainAnalysisProjects
 			if(mainGitProject.getProjectAvailable() and mainGitProject.getCloneProject().checkPomFile)
 				projectName = mainGitProject.getProjectName()
 				buildTravis = BuildTravis.new(projectName, mainGitProject, getLocalCLone())
-				mainProjectAnalysisBuilt = buildTravis.runAllAnalysisBuilt(projectName, getWriteCSVAllErroredBuilds(), getWriteCSVForkBuilt(), getWriteCSVForkAll(), getWriteCSVForkInterval(), getPathGumTree(), true, cloneProject, extractorCLI)
+				mainProjectAnalysisBuilt = buildTravis.runAllAnalysisForLocalBuilds(projectName, getWriteCSVAllErroredBuilds(), getWriteCSVForkBuilt(), getWriteCSVForkAll(), getWriteCSVForkInterval(), getPathGumTree(), true, cloneProject)
 				mainGitProject.getCloneProject().deleteProject()
 				cloneProject.getCloneProject().deleteProject()
 				extractorCLI.deleteProject()

@@ -22,5 +22,9 @@ class BuildTravis
 	def runAllAnalysisBuilt(projectName, writeCSVAllBuilds, writeCSVBuilt,  writeCSVForkAll, writeCSVForkInterval, pathGumTree, withWithoutForks, cloneProject, extractorCLI)
 		return getBuiltMergeScenariosAnalysis.getStatusBuildsProject(projectName, writeCSVAllBuilds, writeCSVBuilt, writeCSVForkAll, writeCSVForkInterval, pathGumTree, withWithoutForks, cloneProject, extractorCLI)
 	end
+
+	def runAllAnalysisForLocalBuilds(projectName, writeCSVAllBuilds, writeCSVBuilt,  writeCSVForkAll, writeCSVForkInterval, pathGumTree, withWithoutForks, cloneProject)
+		return getBuiltMergeScenariosAnalysis.getStatusBuildsProjectForLocalBuilds(projectName, writeCSVAllBuilds, writeCSVBuilt, writeCSVForkAll, writeCSVForkInterval, pathGumTree, withWithoutForks, cloneProject)
+	end
 	
 end

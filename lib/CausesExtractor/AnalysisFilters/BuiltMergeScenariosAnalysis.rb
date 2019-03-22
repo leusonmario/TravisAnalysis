@@ -866,6 +866,22 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 		end
 	end
 
+	def getStatusBuildsProjectForLocalBuilds(projectName, writeCSVAllBuilds, writeCSVBuilt, writeCSVForkAll, writeCSVForkInterval, pathGumTree, withWithoutForks, cloneProject)
+
+	end
+
+	def collectLocalBuildLog()
+		@projectMergeScenarios.each do |oneMergeScenario|
+			commitInfo = CommitInfo.new(oneMergeScenario, @pathProject)
+			@projectCommits[oneMergeScenario] = commitInfo
+			commitInfo.getParentsCommit.each do |oneParentCommit|
+				if (!@projectCommits.include? oneParentCommit)
+					@projectCommits[oneParentCommit] = CommitInfo.new(oneParentCommit, @pathProject)
+				end
+			end
+		end
+	end
+
 	def verifyBuildCurrentState(extractorCLI, sha, mergeScenarios)
 		indexCount = 0
 		idLastBuild = extractorCLI.checkIdLastBuild()
