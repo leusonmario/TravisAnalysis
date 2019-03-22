@@ -14,6 +14,73 @@ class EffortTimeExtractor
 		@projectPath = path
 	end
 
+	def checkFixedBuildForLocalBuilds(brokenCommit, mergeCommit, pathProject, pathGumTree, causesConflicts, gitProject)
+		numberBuilsTillFix = 0
+		localBrokenCommit = brokenCommit
+		allPossibleParents = []
+
+		fixCommitHash = identifyFixCommit(gitProject, brokenCommit)
+		projectCommits.each do |key, commitInfo|
+			if (key == fixCommitHash)
+				if isFixCommitStatusSuperior(commitInfo.getLocalBuild().getBuildStatus)
+					result = checkTimeEffort(brokenCommit, mergeCommit, key)
+
+					fixCommitInfo = CopyFixCommit.new(pathProject, brokenCommit, key)
+					resultRunDiff = []
+					if (!fixCommitInfo.getAllDiff)
+						resultRunDiff = fixCommitInfo.runAllDiff(pathGumTree)
+					end
+					fixCommitInfo.deleteProjectCopies()
+					fixPatterns = []
+					if causesConflicts != nil
+						causesConflicts.getCausesFilesInfoConflicts().each do |conflictsCauses|
+							fixPatterns.push(fixPatternBasedOnConflictType(conflictsCauses, resultRunDiff))
+						end
+
+						return fixCommitHash, commitInfo.getLocalBuild().getBuildStatus, result[0], numberBuilsTillFix, result[1], result[2], true, fixPatterns
+					end
+				end
+			end
+		end
+
+		localBuild = LocalBuild.new(fixCommitHash, pathProject)
+		if isFixCommitStatusSuperior(localBuild.getLocalBuild().getBuildStatus)
+			result = checkTimeEffort(brokenCommit, mergeCommit, fixCommitHash)
+
+			fixCommitInfo = CopyFixCommit.new(pathProject, brokenCommit, fixCommitHash)
+			resultRunDiff = []
+			if (!fixCommitInfo.getAllDiff)
+				resultRunDiff = fixCommitInfo.runAllDiff(pathGumTree)
+			end
+			fixCommitInfo.deleteProjectCopies()
+			fixPatterns = []
+			if causesConflicts != nil
+				causesConflicts.getCausesFilesInfoConflicts().each do |conflictsCauses|
+					fixPatterns.push(fixPatternBasedOnConflictType(conflictsCauses, resultRunDiff))
+				end
+
+				return fixCommitHash, localBuild.getLocalBuild().getBuildStatus, result[0], numberBuilsTillFix, result[1], result[2], true, fixPatterns
+			end
+		end
+
+			return "NO-FIX", "NO-FIX", "NO-FIX", "NO-FIX", "NO-FIX", "NO-FIX", false, ["NO-FIX"]
+	end
+
+	def isFixCommitStatusSuperior(status)
+		if (status == "failed" or status == "passed")
+			return true
+		end
+		return false
+	end
+
+	def identifyFixCommit(gitProject, brokenCommit)
+		gitProject.getAllCommits.each do |oneCommit|
+			if (checkFailedCommitAsParent(brokenCommit, oneCommit))
+				return oneCommit
+			end
+		end
+	end
+
 	def checkFixedBuild(brokenCommit, mergeCommit, pathProject, pathGumTree, causesConflicts, extractorCLI, gitProject)
 		numberBuilsTillFix = 0
 		localBrokenCommit = brokenCommit

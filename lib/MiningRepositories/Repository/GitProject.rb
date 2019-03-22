@@ -7,6 +7,7 @@ class GitProject
 
 	def initialize(project, localClone, login, password)
 		@projectAvailable = isProjectAvailable(project, login, password)
+		@allCommits = allCommitsOfProject()
 		if(getProjectAvailable())
 			@cloneProject = CloneProjectGit.new(localClone, project, "mainProjectClone")
 			@projetcName = project
@@ -366,5 +367,13 @@ class GitProject
 		print listCommits
 		listCommits.delete(hash)
 		return listCommits
+	end
+
+	def allCommitsOfProject()
+		Dir.chdir getPath().gsub('.travis.yml','')
+		allCommitsOut = %x(git log --pretty=format:%H)
+		allCommitsOut.each_line do |oneCommit|
+			@allCommits.push(oneCommit.gsub("\n",""))
+		end
 	end
 end
