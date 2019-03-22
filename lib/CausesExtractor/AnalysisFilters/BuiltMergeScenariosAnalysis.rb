@@ -870,7 +870,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
     collectLocalBuildLog()
     validMergeScenarios = Array.new
 		confErroredForkBuilt = ConflictCategoryErrored.new(projectName, getPathLocalClone())
-		effortTimeExtractor = EffortTimeExtractor.new()
+		effortTimeExtractor = EffortTimeExtractor.new(nil, cloneProject.getLocalClone())
 		@projectMergeScenarios.each do |oneMergeScenario|
 			mergeCommit = mergeScenariosAnalysisCommit(oneMergeScenario)
       oneMergeScenarioCommitInfo = @projectCommits[oneMergeScenario]
@@ -887,7 +887,6 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
 						validMergeScenarios.push(oneMergeScenario)
 						stateBC = confErroredForkBuilt.findConflictCauseForLocalBuilds(oneMergeScenarioCommitInfo.getLocalBuild().getBuild(), oneMergeScenario, getPathProject(), pathGumTree, true, cloneProject, superiorParentStatus)
             effort = ""
-            print result
             if (stateBC.size > 2)
               effort = effortTimeExtractor.checkFixedBuildForLocalBuilds(oneMergeScenario, mergeCommit, getPathProject(), pathGumTree, stateBC[3], getGitProject(), @projectCommits)
             end

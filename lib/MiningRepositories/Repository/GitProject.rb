@@ -23,7 +23,7 @@ class GitProject
 	end
 
 	def getAllCommits()
-
+		@allCommits
 	end
 
 	def getFirstBuild()
