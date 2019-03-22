@@ -7,7 +7,6 @@ class GitProject
 
 	def initialize(project, localClone, login, password)
 		@projectAvailable = isProjectAvailable(project, login, password)
-		@allCommits = allCommitsOfProject()
 		if(getProjectAvailable())
 			@cloneProject = CloneProjectGit.new(localClone, project, "mainProjectClone")
 			@projetcName = project
@@ -19,7 +18,12 @@ class GitProject
 			@password = password
 			@firstBuild = nil
 			@numberProjectForks = 0
+			@allCommits = allCommitsOfProject(@cloneProject.getLocalClone())
 		end
+	end
+
+	def getAllCommits()
+
 	end
 
 	def getFirstBuild()
@@ -369,11 +373,13 @@ class GitProject
 		return listCommits
 	end
 
-	def allCommitsOfProject()
-		Dir.chdir getPath().gsub('.travis.yml','')
+	def allCommitsOfProject(path)
+		Dir.chdir path
+		auxArray = Array.new
 		allCommitsOut = %x(git log --pretty=format:%H)
 		allCommitsOut.each_line do |oneCommit|
-			@allCommits.push(oneCommit.gsub("\n",""))
+			auxArray.push(oneCommit.gsub("\n",""))
 		end
+		return auxArray
 	end
 end

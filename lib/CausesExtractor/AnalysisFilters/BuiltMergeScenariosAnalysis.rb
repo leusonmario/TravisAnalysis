@@ -870,7 +870,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
     collectLocalBuildLog()
     validMergeScenarios = Array.new
 		confErroredForkBuilt = ConflictCategoryErrored.new(projectName, getPathLocalClone())
-		effortTimeExtractor = EffortTimeExtractor.new(allBuilds, @pathProject)
+		effortTimeExtractor = EffortTimeExtractor.new()
 		@projectMergeScenarios.each do |oneMergeScenario|
 			mergeCommit = mergeScenariosAnalysisCommit(oneMergeScenario)
       oneMergeScenarioCommitInfo = @projectCommits[oneMergeScenario]
@@ -889,7 +889,7 @@ class BuiltMergeScenariosAnalysis < MergeScenariosAnalysis
             effort = ""
             print result
             if (stateBC.size > 2)
-              effort = effortTimeExtractor.checkFixedBuildForLocalBuilds(oneMergeScenario, mergeCommit, getPathProject(), pathGumTree, stateBC[3], getGitProject())
+              effort = effortTimeExtractor.checkFixedBuildForLocalBuilds(oneMergeScenario, mergeCommit, getPathProject(), pathGumTree, stateBC[3], getGitProject(), @projectCommits)
             end
 
             writeCSVBuilt.printConflictBuild(oneMergeScenarioCommitInfo.getLocalBuild.getBuildStatus, oneMergeScenario, parentOne.getCommitHash, parentOne.getLocalBuild().getBuildStatus, parentTwo.getCommitHash, parentTwo.getLocalBuild().getBuildStatus, stateBC, projectName.gsub("/","-"), effort, superiorParentStatus)
