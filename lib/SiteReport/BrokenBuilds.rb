@@ -32,7 +32,7 @@ class BrokenBuilds
     files.each do |file|
       buildsProject = @projectTravis.getBuildsProject(projectNames[file.to_s.split("/").last.to_s.gsub("Errored","").gsub(".csv\n","").gsub("BCFromFailed","").gsub("-","/")])
       CSV.foreach(file.to_s.gsub("./","").gsub("\n","")) do |row|
-        if (row[8] == "true" or ((row[3] == "failed" or row[3] == "[\"failed\"]" or row[3] == "[\"passed\"]" or row[3] == "passed") and (row[5] == "failed" or row[5] == "[\"failed\"]" or row[5] == "[\"passed\"]" or row[5] == "passed") and row[21] == "false") and (row[6] != "gitProblem" and row[6] != "compilerError" and row[6] != "[" and row[6] != "r" and row[6] != "c" and row[6] != "remoteError"))
+        if (row[8] == "true" or row[8] == "[\"true\"]") and row[22] != "BuildConflict" and row[6] != "m" and row[6] != "[" #and ((row[3] == "failed" or row[3] == "[\"failed\"]" or row[3] == "[\"passed\"]" or row[3] == "passed") and (row[5] == "failed" or row[5] == "[\"failed\"]" or row[5] == "[\"passed\"]" or row[5] == "passed") and row[21] == "false") and (row[6] != "gitProblem" and row[6] != "compilerError" and row[6] != "[" and row[6] != "r" and row[6] != "c" and row[6] != "remoteError" and row[6] != "[]"))
           projectName = projectNames[file.to_s.split("/").last.to_s.gsub("Errored","").gsub(".csv\n","").gsub("BCFromFailed","").gsub("-","/")]
           textConflict += htmlTextForCoflict(projectName, adjustInfo(row[0]), adjustInfo(row[1]), row[6], adjustInfo(row[2]), adjustInfo(row[3]), adjustInfo(row[4]), adjustInfo(row[5]), adjustInfo(row[12]), adjustInfo(row[13]), adjustInfo(row[19]), buildsProject)
           if (!projectWithConflicts.include? projectName)

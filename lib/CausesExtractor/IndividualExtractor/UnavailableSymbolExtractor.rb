@@ -36,8 +36,8 @@ class UnavailableSymbolExtractor
 			classFiles = buildLog.to_enum(:scan, /\[javac\] [\/a-zA-Z\_\-\.\:0-9]* cannot find symbol[\s\S]* \[javac\] (location:)+ [a-zA-Z\. ]*/).map { Regexp.last_match }
 			callClassFiles = buildLog.to_enum(:scan, /\[javac\] [\/a-zA-Z\_\-\.\:0-9]* cannot find symbol[\s\S]* \[javac\] (location:)+ [a-zA-Z\. ]*/).map { Regexp.last_match }
 		else
-			methodNames = buildLog.to_enum(:scan, /\[ERROR\][ \t\r\n\f]*symbol[ \t\r\n\f]*:[ \t\r\n\f]*[method|class|variable|constructor|static]*[ \t\r\n\f]*[a-zA-Z0-9\(\)\.\/\,\_]*[ \t\r\n\f]*(\[INFO\] )?\[ERROR\][ \t\r\n\f]*(location)?/).map { Regexp.last_match }
-			classFiles = buildLog.to_enum(:scan, /\[ERROR\]?[ \t\r\n\f]*(location)?[ \t\r\n\f]*:[ \t\r\n\f]*(@)?[class|interface|variable instance of type|variable request of type)?|package]+[ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,\(\) ]*[\n\r]?/).map { Regexp.last_match }
+			methodNames = buildLog.to_enum(:scan, /\[ERROR\][ \t\r\n\f]*symbol[ \t\r\n\f]*:[ \t\r\n\f]*[method|class|variable|constructor|static]*[ \t\r\n\f]*[a-zA-Z0-9\(\)\.\/\,\_]*[ \t\r\n\f]*[(\[INFO\] )?\[ERROR\][ \t\r\n\f]*]?(location)?/).map { Regexp.last_match }
+			classFiles = buildLog.to_enum(:scan, /\[ERROR\][ \t\r\n\f]*(location)?[ \t\r\n\f]*:[ \t\r\n\f]*(@)?[class|interface|variable instance of type|variable request of type)?|package]+[ \t\r\n\f]*[a-zA-Z0-9\/\-\.\:\[\]\,\(\) ]*[\n\r]?/).map { Regexp.last_match }
 			callClassFiles = getCallClassFiles(completeBuildLog)
 		end
 		categoryMissingSymbol = getTypeUnavailableSymbol(methodNames[0])
@@ -102,8 +102,10 @@ class UnavailableSymbolExtractor
 		if (buildLog.include?('Retrying, 3 of 3'))
 			aux = buildLog[/BUILD FAILURE[\s\S]*/]
 			return aux.to_s.to_enum(:scan, /\[ERROR\]?[ \t\r\n\f]*[\/\-\.\:a-zA-Z\[\]0-9\,\_]* cannot find symbol/).map { Regexp.last_match }
-		else
+		elsif (buildLog.include? 'Compilation failure:')
 			return buildLog[/Compilation failure:[\s\S]*/].to_enum(:scan, /\[ERROR\]?[ \t\r\n\f]*[\/\-\.\:a-zA-Z\[\]0-9\,]* cannot find symbol/).map { Regexp.last_match }
+		else
+			return buildLog.to_enum(:scan, /\[ERROR\]?[ \t\r\n\f]*[\/\-\.\:a-zA-Z\[\]0-9\,]* cannot find symbol/).map { Regexp.last_match }
 		end
 	end
 

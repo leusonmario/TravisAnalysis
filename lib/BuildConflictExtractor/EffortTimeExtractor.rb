@@ -52,7 +52,7 @@ class EffortTimeExtractor
             fixPatterns.push(fixPatternBasedOnConflictType(conflictsCauses, resultRunDiff))
           end
 
-          return fixCommitHash, commitInfo.getLocalBuild().getBuildStatus, result[0], numberBuilsTillFix, result[1], result[2], true, fixPatterns
+          return onePossibleParent, commitInfo.getLocalBuild().getBuildStatus, result[0], numberBuilsTillFix, result[1], result[2], true, fixPatterns
         end
       end
       numberBuilsTillFix += 1
@@ -85,7 +85,7 @@ class EffortTimeExtractor
     numberBuilsTillFix = 0
     allPossibleParents.each do |onePossibleParent|
       localBuild = LocalBuild.new(onePossibleParent, pathProject)
-      if isFixCommitStatusSuperior(localBuild.getLocalBuild().getBuildStatus)
+      if isFixCommitStatusSuperior(localBuild.getBuildStatus())
         result = checkTimeEffort(brokenCommit, mergeCommit, onePossibleParent)
 
         fixCommitInfo = CopyFixCommit.new(pathProject, brokenCommit, onePossibleParent)
@@ -100,7 +100,7 @@ class EffortTimeExtractor
             fixPatterns.push(fixPatternBasedOnConflictType(conflictsCauses, resultRunDiff))
           end
 
-          return fixCommitHash, localBuild.getLocalBuild().getBuildStatus, result[0], numberBuilsTillFix, result[1], result[2], true, fixPatterns
+          return onePossibleParent, localBuild.getBuildStatus(), result[0], numberBuilsTillFix, result[1], result[2], true, fixPatterns
         end
       end
       numberBuilsTillFix += 1

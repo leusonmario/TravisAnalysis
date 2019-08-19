@@ -105,6 +105,7 @@ class MainAnalysisProjects
 		printStartAnalysis()
 		index = 1
 		@projectsList.each do |project|
+
 			printProjectInformation(index, project)
 			begin
 				mainGitProject = GitProject.new(project, getLocalCLone(), getLoginUser(), getPasswordUser())
@@ -113,10 +114,10 @@ class MainAnalysisProjects
 			rescue
 				print "\nPROJECT NOT FOUND\n"
 			end
-			if(mainGitProject.getProjectAvailable() and mainGitProject.getCloneProject().checkPomFile)
+			if(mainGitProject.getProjectAvailable())# and mainGitProject.getCloneProject().checkPomFile)
 				projectName = mainGitProject.getProjectName()
 				buildTravis = BuildTravis.new(projectName, mainGitProject, getLocalCLone())
-				mainProjectAnalysisBuilt = buildTravis.runAllAnalysisForLocalBuilds(projectName, getWriteCSVAllErroredBuilds(), getWriteCSVForkBuilt(), getWriteCSVForkAll(), getWriteCSVForkInterval(), getPathGumTree(), true, cloneProject)
+				mainProjectAnalysisBuilt = buildTravis.runAllAnalysisBuilt(projectName, getWriteCSVAllErroredBuilds(), getWriteCSVForkBuilt(), getWriteCSVForkAll(), getWriteCSVForkInterval(), getPathGumTree(), true, cloneProject, extractorCLI)
 				mainGitProject.getCloneProject().deleteProject()
 				cloneProject.getCloneProject().deleteProject()
 				extractorCLI.deleteProject()
