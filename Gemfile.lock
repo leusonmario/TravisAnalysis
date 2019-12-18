@@ -63,7 +63,7 @@ GEM
     pusher-client (0.6.2)
       json
       websocket (~> 1.0)
-    rack (2.0.1)
+    rack (2.0.8)
     require_all (1.4.0)
     rest-client (1.8.0)
       http-cookie (>= 1.0.2, < 2.0)
