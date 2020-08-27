@@ -35,7 +35,7 @@ class UnimplementedMethodExtractor
 		end
 
 		interfaceFiles = buildLog.to_enum(:scan, /#{stringNoOverride} [0-9a-zA-Z\(\)\<\>\.\,]* in [a-zA-Z\.]*[^\n]+/).map { Regexp.last_match }
-		methodInterfaces = buildLog.to_enum(:scan, /#{stringNoOverride} [0-9a-zA-Z\(\)\.\,]* in/).map { Regexp.last_match }
+		methodInterfaces = buildLog.to_enum(:scan, /#{stringNoOverride} [0-9a-zA-Z\(\)\.\,\<\>]* in/).map { Regexp.last_match }
 		count = 0
 		while(count < interfaceFiles.size)
 			classFile = ""

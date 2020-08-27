@@ -12,6 +12,8 @@ class SampleInfo
 
   def getProjectList()
     Dir.chdir @pathResults
+    Dir.chdir "/home/paulo/Documentos/PHD/PaperEMSE/home-analysis/execution"
+    #Dir.chdir "/home/paulo/Documentos/PHD/PaperEMSE/Execucao-Com-Euristica-Build5-Travis/FinalResults-Site"
     allFilesCSVProjects = Array.new
     csvFilesProjects = %x(find . -type f -name 'MergeScenariosProjects.csv')
     csvFilesProjects.each_line do |oneCSV|
@@ -24,6 +26,8 @@ class SampleInfo
 
   def getAllErroredFiles()
     Dir.chdir @pathResults
+    Dir.chdir "/home/paulo/Documentos/PHD/PaperEMSE/home-analysis/execution"
+    #Dir.chdir "/home/paulo/Documentos/PHD/PaperEMSE/Execucao-Com-Euristica-Build5-Travis/FinalResults-Site"
     allFilesCSVProjects = Array.new
     csvFilesProjects = %x(find . -type f -name 'Errored*.csv')
     csvFilesProjects.each_line do |oneCSV|

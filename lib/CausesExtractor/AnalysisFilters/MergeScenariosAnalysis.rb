@@ -15,6 +15,7 @@ class MergeScenariosAnalysis
 		@projectMergeScenarios = @gitProject.getMergeScenarios()
 		@repositoryTravisProject = nil
 		@pathLocalClone = localClone
+		@projectCommits = Hash.new
 	end
 
 	def getProjectName()

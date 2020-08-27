@@ -7,70 +7,103 @@ class BCUnavailableSymbol
 	def verifyBuildConflict(baseLeft, leftResult, baseRight, rightResult, filesConflicting, basePath, leftPath, rightPath, superiorParentStatus)
 		count = 0
 		begin
-			if(baseRight[0][filesConflicting[1]] != nil and baseRight[0][filesConflicting[1]].to_s.match(/(Delete|Move|Update) (SimpleName|QualifiedName): [a-zA-Z0-9\.\(\) ]*#{filesConflicting[2]}/))
-				if (baseLeft[0][filesConflicting[3]] != nil and baseLeft[0][filesConflicting[3]].to_s.match(/(Insert|Move) (SimpleName|QualifiedName): [a-zA-Z\.]*?#{filesConflicting[2]}[\s\S]*[\n\r]?/))
+			if(baseRight[0][filesConflicting[1]] != nil and baseRight[0][filesConflicting[1]].to_s.match(/(Delete|Move|Update) (SimpleName|QualifiedName): [a-zA-Z0-9\.\(\) ]*#{filesConflicting[2]}/) or verifyRemovedFileMyParent(basePath, leftPath, rightPath, filesConflicting[2]))
+				if (baseLeft[0][filesConflicting[3]] != nil and baseLeft[0][filesConflicting[3]].to_s.match(/(Insert|Move) (SimpleName|QualifiedName): [a-zA-Z\.]*?#{filesConflicting[2]}[\s\S]*[\n\r]?/) or checkNewMethodAddition(baseLeft[1], filesConflicting[3]))
 					if (filesConflicting[0] == "unavailableSymbolVariable" and filesConflicting[1] == filesConflicting[3])
 						#if (verifyVariableActionsSameMethod(baseRight[0][filesConflicting[count][1]], baseRight[0][filesConflicting[count][3]], filesConflicting[count][1]))
 						if (verifyVariableActionsSameMethod(baseRight[0][filesConflicting[1]], baseLeft[0][filesConflicting[1]], filesConflicting[2]))
+							print "UM UM UM \n"
 							return true
 						else
 							return false
 						end
 					else
+						print "DOIS DOIS DOIS \n"
 						return true
 					end
 				else
 					baseLeft[1].each do |item|
 						if (item.include?(filesConflicting[3].to_s)) # and baseRight[0][filesConflicting[1]] != nil)
+							print "TRES TRES TRES \n"
 							return true
 						end
 					end
 					if (superiorParentStatus)
 						if (baseRight[0][filesConflicting[3]] == nil)
+							print "QUATRO QUATRO QUATRO \n"
 							return true
 						end
 					end
 				end
 			end
-			if(baseLeft[0][filesConflicting[1]] != nil and baseLeft[0][filesConflicting[1]].to_s.match(/(Delete|Move|Update) (SimpleName|QualifiedName): [a-zA-Z0-9\.\(\) ]*#{filesConflicting[2]}/))
-				if(baseRight[0][filesConflicting[3]] != nil and baseRight[0][filesConflicting[3]].to_s.match(/(Insert|Move) (SimpleName|QualifiedName): [a-zA-Z\.]*?#{filesConflicting[2]}[\s\S]*[\n\r]?/))
+			if(baseLeft[0][filesConflicting[1]] != nil and baseLeft[0][filesConflicting[1]].to_s.match(/(Delete|Move|Update) (SimpleName|QualifiedName): [a-zA-Z0-9\.\(\) ]*#{filesConflicting[2]}/) or verifyRemovedFileMyParent(basePath, rightPath, leftPath, filesConflicting[2]))
+				if(baseRight[0][filesConflicting[3]] != nil and baseRight[0][filesConflicting[3]].to_s.match(/(Insert|Move) (SimpleName|QualifiedName): [a-zA-Z\.]*?#{filesConflicting[2]}[\s\S]*[\n\r]?/) or checkNewMethodAddition(baseRight[1], filesConflicting[3]))
 					if (filesConflicting[0] == "unavailableSymbolVariable" and filesConflicting[1] == filesConflicting[3])
 						if (verifyVariableActionsSameMethod(baseLeft[0][filesConflicting[1]], baseRight[0][filesConflicting[1]], filesConflicting[2]))
+							print "CINCO CINCO CINCO \n"
 							return true
 						else
 							return false
 						end
 					else
+						print "SEIS SEIS SEIS \n"
 						return true
 					end
 				else
 					baseRight[1].each do |item|
 						if (item.include?(filesConflicting[3].to_s)) # and baseLeft[0][filesConflicting[1]] != nil )
+							print "SETE SETE SETE \n"
 							return true
 						end
 					end
 					if (superiorParentStatus)
 						if (baseLeft[0][filesConflicting[3]] == nil)
+							print "OITO OITO OITO \n"
 							return true
 						end
 					end
 				end
 			end
+=begin
 			Dir.chdir basePath
-			pathFileBase = %x(find -name #{filesConflicting[2]}.java)
+			pathFileBase = splitFileNames(%x(find -name #{filesConflicting[2]}.java))
 			print "#{basePath} - #{pathFileBase}\n"
 			Dir.chdir leftPath
-			pathFileLeft = %x(find -name #{filesConflicting[2]}.java)
+			pathFileLeft = splitFileNames(%x(find -name #{filesConflicting[2]}.java))
 			print "#{leftPath} - #{pathFileLeft}\n"
 			Dir.chdir rightPath
-			pathFileRight = %x(find -name #{filesConflicting[2]}.java)
+			pathFileRight = splitFileNames(%x(find -name #{filesConflicting[2]}.java))
 			print "#{rightPath} - #{pathFileRight}\n"
-			if (pathFileBase != "" and (pathFileLeft != "" or pathFileRight != "") and pathFileLeft != pathFileRight)
-				return true
+
+			pathFileBase.each do |file|
+				if ((pathFileLeft.include? file and !pathFileRight.include? file) or (!pathFileLeft.include? file and pathFileRight.include? file))
+					return true
+				end
 			end
+=end
 			count += 1
 		rescue
 			print "PROBLEM ON GUMTREE LOG"
+		end
+		print "DEZ DEZ DEZ \n"
+		return false
+	end
+
+  def verifyRemovedFileMyParent(basePath, parentOnePath, parentTwoPath, fileName)
+		Dir.chdir basePath
+		pathFileBase = splitFileNames(%x(find -name #{fileName}.java))
+		print "#{basePath} - #{pathFileBase}\n"
+		Dir.chdir parentOnePath
+		pathFileParentOne = splitFileNames(%x(find -name #{fileName}.java))
+		print "#{parentOnePath} - #{pathFileParentOne}\n"
+		Dir.chdir parentTwoPath
+		pathFileParentTwo = splitFileNames(%x(find -name #{fileName}.java))
+		print "#{parentTwoPath} - #{pathFileParentTwo}\n"
+
+		pathFileBase.each do |file|
+			if ((pathFileParentOne.include? file) and !(pathFileParentTwo.include? file))
+				return true
+			end
 		end
 		return false
 	end
@@ -101,16 +134,52 @@ class BCUnavailableSymbol
 			print "NO INFO FROM GUMTREE"
 		end
 
-		Dir.chdir pathLeft
-		pathFileLeft = %x(find -name #{filesConflicting[2]}.java)
-		Dir.chdir pathRight
-		pathFileRight = %x(find -name #{filesConflicting[2]}.java)
-		if ((pathFileLeft != "" or pathFileRight != "") and (pathLeft != pathRight))
-			#if (pathFileLeft == "" or pathFileRight == "")
-			#return true
-			return true
+=begin
+		Dir.chdir basePath
+		pathFileBase = splitFileNames(%x(find -name #{filesConflicting[2]}.java))
+		print "#{basePath} - #{pathFileBase}\n"
+		Dir.chdir leftPath
+		pathFileLeft = splitFileNames(%x(find -name #{filesConflicting[2]}.java))
+		print "#{leftPath} - #{pathFileLeft}\n"
+		Dir.chdir rightPath
+		pathFileRight = splitFileNames(%x(find -name #{filesConflicting[2]}.java))
+		print "#{rightPath} - #{pathFileRight}\n"
+
+		pathFileBase.each do |file|
+			if ((pathFileLeft.include? file and !pathFileRight.include? file) or (!pathFileLeft.include? file and pathFileRight.include? file))
+				return true
+			end
 		end
-		return true
+
+
+
+		Dir.chdir pathLeft
+		pathFileLeft = splitFileNames(%x(find -name #{filesConflicting[2]}.java))
+		Dir.chdir pathRight
+		pathFileRight = splitFileNames(%x(find -name #{filesConflicting[2]}.java))
+
+		pathFileRight.each do |file|
+			if ()
+		end
+		countFiles = 0
+		condition = pathFileLeft.size
+		if (pathFileRight > condition)
+			condition = pathFileRight.size
+		end
+
+		while(condition > countFiles)
+			begin
+				if ((pathFileLeft[countFiles] != "" or pathFileRight[countFiles] != "") and (pathLeft[countFiles] != pathRight[countFiles]))
+					return true
+				end
+				countFiles += 1
+			rescue
+
+			end
+		end
+=end
+		print "NOVE NOVE NOVE \n"
+		return false
 	end
 
 	def verifyBCDependencyMethod(pathLeft, pathRight, filesConflicting, bcMethodUpdate)
@@ -119,10 +188,10 @@ class BCUnavailableSymbol
 		leftPathMethods = bcMethodUpdate.verifyMethodAvailable(pathLeft, filesConflicting[1], filesConflicting[2])
 		rightPathMethods = bcMethodUpdate.verifyMethodAvailable(pathRight, filesConflicting[1], filesConflicting[2])
 
-		if (leftPathMethods == true or rightPathMethods == true)
+		if leftPathMethods == true or rightPathMethods == true or (leftPathMethods == false and rightPathMethods == false)
 			return false
 		end
-
+		print "ONZE ONZE ONZE \n"
 		return true
 	end
 
@@ -174,6 +243,27 @@ class BCUnavailableSymbol
 			end
 		end
 		return methods
+	end
+
+  def splitFileNames(filePaths)
+		files = Array.new
+		filePaths.each_line do |line|
+			files.push(line)
+		end
+		return files
+	end
+
+	def checkNewMethodAddition(listAddedFiles, file)
+		begin
+			listAddedFiles.each do |oneFile|
+				if (oneFile.include? file)
+					return true
+				end
+			end
+			return false
+		rescue
+			return false
+		end
 	end
 
 end

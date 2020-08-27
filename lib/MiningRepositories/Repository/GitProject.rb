@@ -18,7 +18,12 @@ class GitProject
 			@password = password
 			@firstBuild = nil
 			@numberProjectForks = 0
+			@allCommits = allCommitsOfProject(@cloneProject.getLocalClone())
 		end
+	end
+
+	def getAllCommits()
+		@allCommits
 	end
 
 	def getFirstBuild()
@@ -366,5 +371,15 @@ class GitProject
 		print listCommits
 		listCommits.delete(hash)
 		return listCommits
+	end
+
+	def allCommitsOfProject(path)
+		Dir.chdir path
+		auxArray = Array.new
+		allCommitsOut = %x(git log --pretty=format:%H)
+		allCommitsOut.each_line do |oneCommit|
+			auxArray.push(oneCommit.gsub("\n",""))
+		end
+		return auxArray
 	end
 end

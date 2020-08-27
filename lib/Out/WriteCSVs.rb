@@ -172,6 +172,7 @@ class WriteCSVs
 					state[0].each do |oneExit|
 						if (effort != nil)
 							if (state[1].size > 2 and effort.size == 8)
+								print "#{build}, #{hash}, #{buildOne}, #{statusParentOne}, #{buildTwo}, #{statusParentTwo}, #{oneExit[0]}, #{state[2]}, #{state[1][0][count]}, #{state[1][1]}, #{state[1][2]}, #{state[1][3][count]}, #{effort[0]}, #{effort[1]}, #{effort[2]}, #{effort[3]}, #{effort[4]}, #{effort[5]}, #{effort[6]}, #{effort[7][count]}, #{oneExit}, #{statusModified}"
 								csv << [build, hash, buildOne, statusParentOne, buildTwo, statusParentTwo, oneExit[0], state[2], state[1][0][count], state[1][1], state[1][2], state[1][3][count], effort[0], effort[1], effort[2], effort[3], effort[4], effort[5], effort[6], effort[7][count], oneExit, statusModified]
 							elsif (state[1].size > 2 and effort.size == 7)
 								csv << [build, hash, buildOne, statusParentOne, buildTwo, statusParentTwo, oneExit[0], state[2], state[1][0][count], state[1][1], state[1][2], state[1][3][count], effort[0], effort[1], effort[2], effort[3], effort[4], effort[5], effort[6],"", oneExit, statusModified]

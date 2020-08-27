@@ -60,7 +60,39 @@ class ConflictCategoryErrored
 		return getCausesErroredBuild.getTotal()
 	end
 
-	def findConflictCauseFork(logs, sha, pathProject, pathGumTree, type, mergeScenario, cloneProject, superiorParentStatus)
+	def findConflictCauseForLocalBuilds(build, sha, pathProject, pathGumTree, mergeScenario, cloneProject, superiorParentStatus)
+		localUnavailableSymbol = 0
+		localMethodUpdate = 0
+		localMalformedExp = 0
+		localDuplicateStatement = 0
+		localDependencyProblem = 0
+		localUnimplementedMethod = 0
+		localOtherCase = 0
+		localAlternativeStatement = 0
+
+		causesFilesConflicts = CausesFilesConflicting.new()
+
+		body = build[/COMPILATION ERROR[\s\S]*/]
+		otherCase = getCauseByBuild(body, body, causesFilesConflicts, localUnavailableSymbol, localMethodUpdate, localMalformedExp, localDuplicateStatement, localDependencyProblem, localUnimplementedMethod, localAlternativeStatement)
+		localUnavailableSymbol = otherCase[1]
+		localMethodUpdate = otherCase[2]
+		localMalformedExp = otherCase[3]
+		localDuplicateStatement = otherCase[4]
+		localDependencyProblem = otherCase[5]
+		localUnimplementedMethod = otherCase[6]
+		localAlternativeStatement = otherCase[7]
+		causesFilesConflicts = otherCase[8]
+		if (otherCase[0])
+			localOtherCase += 1
+		end
+		if (mergeScenario)
+			return causesFilesConflicts.getCausesConflict(), getFinalStatus(pathGumTree, pathProject, sha, causesFilesConflicts, localMethodUpdate, localUnavailableSymbol, localDuplicateStatement, localUnimplementedMethod, localDependencyProblem, localMalformedExp, localAlternativeStatement, cloneProject, superiorParentStatus, nil, nil, nil, nil, nil), causesFilesConflicts.getCausesNumber(), causesFilesConflicts
+		else
+			return causesFilesConflicts.getCausesConflict()
+		end
+	end
+
+	def findConflictCauseFork(logs, sha, pathProject, pathGumTree, type, mergeScenario, cloneProject, superiorParentStatus, extractorCLI, result, gitProject, leftSha, rightSha)
 		localUnavailableSymbol = 0
 		localMethodUpdate = 0 
 		localMalformedExp = 0 
@@ -96,13 +128,13 @@ class ConflictCategoryErrored
 		end
 
 		if (mergeScenario)
-			return causesFilesConflicts.getCausesConflict(), getFinalStatus(pathGumTree, pathProject, sha, causesFilesConflicts, localMethodUpdate, localUnavailableSymbol, localDuplicateStatement, localUnimplementedMethod, localDependencyProblem, localMalformedExp, localAlternativeStatement, cloneProject, superiorParentStatus), causesFilesConflicts.getCausesNumber()
+			return causesFilesConflicts.getCausesConflict(), getFinalStatus(pathGumTree, pathProject, sha, causesFilesConflicts, localMethodUpdate, localUnavailableSymbol, localDuplicateStatement, localUnimplementedMethod, localDependencyProblem, localMalformedExp, localAlternativeStatement, cloneProject, superiorParentStatus, extractorCLI, result, gitProject, leftSha, rightSha), causesFilesConflicts.getCausesNumber()
 		else
 			return causesFilesConflicts.getCausesConflict()
 		end
 	end
 
-	def findConflictCause(build, pathProject, pathGumTree, type, mergeScenario, cloneProject, superiorParentStatus)
+	def findConflictCause(build, pathProject, pathGumTree, type, mergeScenario, cloneProject, superiorParentStatus, extractorCLI, result, gitProject, leftSha, rightSha)
 		localUnavailableSymbol = 0
 		localMethodUpdate = 0 
 		localMalformedExp = 0 
@@ -145,7 +177,7 @@ class ConflictCategoryErrored
 			indexJob += 1
 		end
 		if (mergeScenario)
-			return causesFilesConflicts.getCausesConflict(), getFinalStatus(pathGumTree, pathProject, build.commit.sha, causesFilesConflicts, localMethodUpdate, localUnavailableSymbol, localDuplicateStatement, localUnimplementedMethod, localDependencyProblem, localMalformedExp, localAlternativeStatement, cloneProject, superiorParentStatus), causesFilesConflicts.getCausesNumber(), causesFilesConflicts
+			return causesFilesConflicts.getCausesConflict(), getFinalStatus(pathGumTree, pathProject, build.commit.sha, causesFilesConflicts, localMethodUpdate, localUnavailableSymbol, localDuplicateStatement, localUnimplementedMethod, localDependencyProblem, localMalformedExp, localAlternativeStatement, cloneProject, superiorParentStatus, extractorCLI, result, gitProject, leftSha, rightSha), causesFilesConflicts.getCausesNumber(), causesFilesConflicts
 		else
 			return causesFilesConflicts.getCausesConflict()
 		end
@@ -194,7 +226,7 @@ class ConflictCategoryErrored
 			indexJob += 1
 		end
 		if (mergeScenario)
-			return causesFilesConflicts.getCausesConflict(), getFinalStatus(pathGumTree, pathProject, build.commit.sha, causesFilesConflicts, localMethodUpdate, localUnavailableSymbol, localDuplicateStatement, localUnimplementedMethod, localDependencyProblem, localMalformedExp, localAlternativeStatement, cloneProject, superiorParentStatus), causesFilesConflicts.getCausesNumber(), causesFilesConflicts
+			return causesFilesConflicts.getCausesConflict(), getFinalStatus(pathGumTree, pathProject, build.commit.sha, causesFilesConflicts, localMethodUpdate, localUnavailableSymbol, localDuplicateStatement, localUnimplementedMethod, localDependencyProblem, localMalformedExp, localAlternativeStatement, cloneProject, superiorParentStatus, nil, nil, nil, nil, nil), causesFilesConflicts.getCausesNumber(), causesFilesConflicts
 		else
 			return causesFilesConflicts.getCausesConflict()
 		end
@@ -381,14 +413,14 @@ class ConflictCategoryErrored
 		return otherCase, localUnavailableSymbol, localMethodUpdate, localMalformedExp, localDuplicateStatement, localDependencyProblem, localUnimplementedMethod, localAlternativeStatemnt, causesFilesConflicts
 	end
 
-	def getFinalStatus(pathGumTree, pathProject, sha, conflictCauses, localMethodUpdate, localUnavailableSymbol, localDuplicateStatement, localUnimplementedMethod, localDependencyProblem, localMalformedExp, localAlternativeStatement, cloneProject, superiorParentStatus)
+	def getFinalStatus(pathGumTree, pathProject, sha, conflictCauses, localMethodUpdate, localUnavailableSymbol, localDuplicateStatement, localUnimplementedMethod, localDependencyProblem, localMalformedExp, localAlternativeStatement, cloneProject, superiorParentStatus, extractorCLI, result, gitProject, leftSha, rightSha)
 		gtAnalysis = GTAnalysis.new(pathGumTree, @projectName, getPathLocalClone())
 		if(localMethodUpdate > 0 || localUnavailableSymbol > 0 || localDuplicateStatement > 0 || localUnimplementedMethod > 0 || localDependencyProblem > 0 || localMalformedExp > 0 || localAlternativeStatement  > 0)
 			if(localUnimplementedMethod > 0 or localUnavailableSymbol > 0 or localDuplicateStatement > 0 or localMethodUpdate > 0 or localDependencyProblem > 0 || localMalformedExp > 0)
 				if (conflictCauses.getFilesConflict().size < 1)
 					return false, nil
 				else
-					return gtAnalysis.getGumTreeAnalysis(pathProject, sha, conflictCauses, cloneProject, superiorParentStatus)
+					return gtAnalysis.getGumTreeAnalysis(pathProject, sha, conflictCauses, cloneProject, superiorParentStatus, extractorCLI, result, gitProject, leftSha, rightSha)
 				end
 			end
 			return false, nil

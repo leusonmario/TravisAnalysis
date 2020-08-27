@@ -41,14 +41,14 @@ class GTAnalysis
 		@copyProjectDirectories
 	end
 
-	def getGumTreeAnalysis(pathProject, sha, conflictCauses, cloneProject, superiorParentStatus)
+	def getGumTreeAnalysis(pathProject, sha, conflictCauses, cloneProject, superiorParentStatus, extractorCLI, result, gitProject, leftSha, rightSha)
 		parents = @mergeCommit.getParentsMergeIfTrue(pathProject, sha)
 		actualPath = Dir.pwd
 
 		pathCopies = @copyDirectories.createCopyProject(sha, parents, pathProject)
 
 		#  		   					result 		  left 			right 			MergeCommit 	parent1 		parent2 	problemas
-		out = gumTreeDiffByBranch(sha, pathCopies[1], pathCopies[2], pathCopies[3], pathCopies[4], conflictCauses, pathProject, parents, cloneProject, superiorParentStatus)
+		out = gumTreeDiffByBranch(sha, pathCopies[1], pathCopies[2], pathCopies[3], pathCopies[4], conflictCauses, pathProject, parents, cloneProject, superiorParentStatus, extractorCLI, result, gitProject, leftSha, rightSha)
 		@copyDirectories.deleteProjectCopies(pathCopies)
 		Dir.chdir actualPath
 		return out
@@ -70,7 +70,7 @@ class GTAnalysis
 		@copyDirectories.deleteProjectCopies(pathCopies)
 	end
 
-	def gumTreeDiffByBranch(mergeCommit, result, left, right, base, conflictCauses, pathProject, parents, cloneProject, superiorParentStatus)
+	def gumTreeDiffByBranch(mergeCommit, result, left, right, base, conflictCauses, pathProject, parents, cloneProject, superiorParentStatus, extractorCLI, resultParents, gitProject, leftSha, rightSha)
 		print conflictCauses
 		statusModified = cloneProject.verifyBadlyMergeScenario(parents[0], parents[1], mergeCommit)
 		conflictingContributions = []
@@ -80,7 +80,7 @@ class GTAnalysis
 		leftResult = @parentMSDiff.runAllDiff(left, result)
 		rightResult = @parentMSDiff.runAllDiff(right, result)
 		# passar como parametro o caminho dos diretorios (base, left, right, result). Por enquanto apenas o left e right
-		return verifyModificationStatus(mergeCommit, baseLeft, leftResult, baseRight, rightResult, conflictCauses, base, left, right, pathProject, parents, cloneProject, statusModified, superiorParentStatus)
+		return verifyModificationStatus(mergeCommit, baseLeft, leftResult, baseRight, rightResult, conflictCauses, base, left, right, pathProject, parents, cloneProject, statusModified, superiorParentStatus, extractorCLI, resultParents, gitProject, leftSha, rightSha)
 	end
 
 	def gumTreeDiffTCByBranch(mergeCommit, result, left, right, base, pathProject, parents, cloneProject)
@@ -117,10 +117,14 @@ class GTAnalysis
 		end
 	end
 
-	def verifyModificationStatus(mergeCommit, baseLeft, leftResult, baseRight, rightResult, conflictCauses, basePath, leftPath, rightPath, pathProject, parents, cloneProject, contributionsState, superiorParentStatus)
+	def verifyModificationStatus(mergeCommit, baseLeft, leftResult, baseRight, rightResult, conflictCauses, basePath, leftPath, rightPath, pathProject, parents, cloneProject, contributionsState, superiorParentStatus, extractorCLI, result, gitProject, leftSha, rightSha)
+		checkEuristic = true
 		conflictingContributions = []
 		allIntegratedContributions = true
 		bcDependency = []
+		parentEuristicTrue = false
+		changesAfterMerge = superiorParentStatus
+		superiorParentStatus = result[0]
 		if (!contributionsState)
 			statusModified = verifyModifiedFile(baseLeft[0], leftResult[0], baseRight[0], rightResult[0])
 			statusAdded = verifyAddedDeletedFile(baseLeft[1], leftResult[1], baseRight[1], rightResult[1])
@@ -202,14 +206,14 @@ class GTAnalysis
 				#end
 			elsif (conflictCause[0] == "methodParameterListSize")
 				bcMethodUpdate = BCMethodUpdate.new(getGumTreePath())
-				if (bcMethodUpdate.verifyBuildConflict(leftPath, rightPath, conflictCause) == false)
-					if (bcMethodUpdate.verifyBCDependency(leftPath, rightPath, conflictCause) == false)
+				if (bcMethodUpdate.verifyBuildConflict(basePath, leftPath, rightPath, conflictCause, baseLeft, baseRight) == false)
+					# if (bcMethodUpdate.verifyBCDependency(leftPath, rightPath, conflictCause) == false)
 						conflictingContributions[indexValue] = false
 						bcDependency[indexValue] = false
-					else
-						conflictingContributions[indexValue] = true
-						bcDependency[indexValue] = true
-					end
+					#else
+					#	conflictingContributions[indexValue] = true
+					#	bcDependency[indexValue] = true
+					#end
 				else
 					conflictingContributions[indexValue] = true
 					bcDependency[indexValue] = false
@@ -251,9 +255,25 @@ class GTAnalysis
 				brokenBuild = false
 				#end
 			else
-				#add tratamento para unavailablesymbol "Special Case"
 				bcDependency[indexValue] = false
 				conflictingContributions[indexValue] = false
+			end
+
+			if (!checkEuristic and !conflictingContributions[indexValue])
+				print "#{statusModified} #{changesAfterMerge} : #{result} : #{mergeCommit}\n\n"
+				if ((result[3] == ["passed"] or (result[3] == ["failed"])) and (result[4] == ["passed"] or (result[4] == ["failed"])) and !changesAfterMerge)
+					print "FOIFOIFOIFOIFOFIFOIF"
+					sleep (20)
+					parentEuristicTrue =	evaluateSuperiorParentEuristic(extractorCLI, leftSha, rightSha, gitProject)
+				end
+				checkEuristic = true
+			end
+			if (parentEuristicTrue)
+				print "CABARE AQUI\n"
+				bcDependency[indexValue] = true
+				conflictingContributions[indexValue] = true
+			else
+
 			end
 			indexValue += 1
 		end
@@ -302,6 +322,77 @@ class GTAnalysis
 		rescue
 			return false
 		end
+	end
+
+
+	def evaluateSuperiorParentEuristic(extractorCLI, left, right, gitProject)
+		if (!extractorCLI.getProjectActive)
+			extractorCLI.activeForkProject()
+		end
+		count = 0
+		resultLeftParent = Array.new
+		resultRightParent = Array.new
+		while (count < 5)
+			resultLeftParent.push(verifyBuildCurrentState(extractorCLI, left, nil, gitProject))
+			resultRightParent.push(verifyBuildCurrentState(extractorCLI, right, nil, gitProject))
+			count += 1
+		end
+
+		passedLeft = 0
+		passedRight = 0
+		resultLeftParent.each do |oneResult|
+			begin
+				if (oneResult[0] == "passed" or oneResult[0] == "[passed]" or oneResult[0] == "failed" or oneResult[0] == "[failed]")
+					passedLeft += 1
+				end
+			rescue
+				print "NO INFORMATION AVAILABLE"
+			end
+		end
+
+		resultRightParent.each do |oneResult|
+			begin
+				if (oneResult[0] == "passed" or oneResult[0] == "[passed]" or oneResult[0] == "failed" or oneResult[0] == "[failed]")
+					passedRight += 1
+				end
+			rescue
+				print "NO INFORMATION AVAILABLE"
+			end
+		end
+
+		if (passedLeft > 2 and passedRight > 2)
+			return true
+		else
+			return false
+		end
+	end
+
+	def verifyBuildCurrentState(extractorCLI, sha, mergeScenarios, gitProject)
+		indexCount = 0
+		idLastBuild = extractorCLI.checkIdLastBuild()
+		state = false
+		if (mergeScenarios == nil)
+			state = extractorCLI.replayBuildOnTravis(sha, gitProject.getMainProjectBranch())
+		end
+		if (state)
+			while (idLastBuild == extractorCLI.checkIdLastBuild() and state == true)
+				sleep(10)
+				indexCount += 1
+				if (indexCount == 5)
+					return nil
+				end
+			end
+
+			status = extractorCLI.checkStatusBuild()
+			while (status == "started" and indexCount < 5)
+				sleep(20)
+				print "Merge Scenario Parents not built yet\n"
+				status = extractorCLI.checkStatusBuild()
+			end
+
+			return extractorCLI.getInfoLastBuild()
+		end
+		return nil
 	end
 
 end

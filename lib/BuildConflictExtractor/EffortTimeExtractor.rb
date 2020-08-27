@@ -12,6 +12,138 @@ class EffortTimeExtractor
 	def initialize(projectBuilds, path)
 		@projectBuildsMap = projectBuilds
 		@projectPath = path
+  end
+
+  def findFixCommitWithSuperiorStatus(projectCommits, fixCommitHash)
+    projectCommits.each do |key, commitInfo|
+      if (key == fixCommitHash and isFixCommitStatusSuperior(commitInfo.getLocalBuild().getBuildStatus))
+        return true
+      else
+        return false
+      end
+     end
+  end
+
+	def checkFixedBuildForLocalBuilds(brokenCommit, mergeCommit, pathProject, pathGumTree, causesConflicts, gitProject, projectCommits)
+		numberBuilsTillFix = 0
+		localBrokenCommit = brokenCommit
+		allPossibleParents = []
+
+		fixCommitHash = identifyFixCommit(gitProject, localBrokenCommit)
+    while(fixCommitHash != "NO-COMMIT")
+      allPossibleParents.push(fixCommitHash)
+      localBrokenCommit = fixCommitHash
+      fixCommitHash = identifyFixCommit(gitProject, localBrokenCommit)
+    end
+
+    allPossibleParents.each do |onePossibleParent|
+      if (findFixCommitWithSuperiorStatus(projectCommits, onePossibleParent))
+        result = checkTimeEffort(brokenCommit, mergeCommit, onePossibleParent)
+
+        fixCommitInfo = CopyFixCommit.new(pathProject, brokenCommit, onePossibleParent)
+        resultRunDiff = []
+        if (!fixCommitInfo.getAllDiff)
+          resultRunDiff = fixCommitInfo.runAllDiff(pathGumTree)
+        end
+        fixCommitInfo.deleteProjectCopies()
+        fixPatterns = []
+        if causesConflicts != nil
+          causesConflicts.getCausesFilesInfoConflicts().each do |conflictsCauses|
+            fixPatterns.push(fixPatternBasedOnConflictType(conflictsCauses, resultRunDiff))
+          end
+
+          return onePossibleParent, commitInfo.getLocalBuild().getBuildStatus, result[0], numberBuilsTillFix, result[1], result[2], true, fixPatterns
+        end
+      end
+      numberBuilsTillFix += 1
+    end
+
+=begin
+		projectCommits.each do |key, commitInfo|
+			if (findFixCommitWithSuperiorStatus(projectCommits, fixCommitHash))
+        result = checkTimeEffort(localBrokenCommit, mergeCommit, key)
+
+        fixCommitInfo = CopyFixCommit.new(pathProject, localBrokenCommit, key)
+        resultRunDiff = []
+        if (!fixCommitInfo.getAllDiff)
+          resultRunDiff = fixCommitInfo.runAllDiff(pathGumTree)
+        end
+        fixCommitInfo.deleteProjectCopies()
+        fixPatterns = []
+        if causesConflicts != nil
+          causesConflicts.getCausesFilesInfoConflicts().each do |conflictsCauses|
+            fixPatterns.push(fixPatternBasedOnConflictType(conflictsCauses, resultRunDiff))
+          end
+
+          return fixCommitHash, commitInfo.getLocalBuild().getBuildStatus, result[0], numberBuilsTillFix, result[1], result[2], true, fixPatterns
+        end
+      else
+        localBrokenCommit = key
+      end
+    end
+=end
+    numberBuilsTillFix = 0
+    allPossibleParents.each do |onePossibleParent|
+      localBuild = LocalBuild.new(onePossibleParent, pathProject)
+      if isFixCommitStatusSuperior(localBuild.getBuildStatus())
+        result = checkTimeEffort(brokenCommit, mergeCommit, onePossibleParent)
+
+        fixCommitInfo = CopyFixCommit.new(pathProject, brokenCommit, onePossibleParent)
+        resultRunDiff = []
+        if (!fixCommitInfo.getAllDiff)
+          resultRunDiff = fixCommitInfo.runAllDiff(pathGumTree)
+        end
+        fixCommitInfo.deleteProjectCopies()
+        fixPatterns = []
+        if causesConflicts != nil
+          causesConflicts.getCausesFilesInfoConflicts().each do |conflictsCauses|
+            fixPatterns.push(fixPatternBasedOnConflictType(conflictsCauses, resultRunDiff))
+          end
+
+          return onePossibleParent, localBuild.getBuildStatus(), result[0], numberBuilsTillFix, result[1], result[2], true, fixPatterns
+        end
+      end
+      numberBuilsTillFix += 1
+    end
+
+=begin
+		localBuild = LocalBuild.new(fixCommitHash, pathProject)
+		if isFixCommitStatusSuperior(localBuild.getLocalBuild().getBuildStatus)
+			result = checkTimeEffort(brokenCommit, mergeCommit, fixCommitHash)
+
+			fixCommitInfo = CopyFixCommit.new(pathProject, brokenCommit, fixCommitHash)
+			resultRunDiff = []
+			if (!fixCommitInfo.getAllDiff)
+				resultRunDiff = fixCommitInfo.runAllDiff(pathGumTree)
+			end
+			fixCommitInfo.deleteProjectCopies()
+			fixPatterns = []
+			if causesConflicts != nil
+				causesConflicts.getCausesFilesInfoConflicts().each do |conflictsCauses|
+					fixPatterns.push(fixPatternBasedOnConflictType(conflictsCauses, resultRunDiff))
+				end
+
+				return fixCommitHash, localBuild.getLocalBuild().getBuildStatus, result[0], numberBuilsTillFix, result[1], result[2], true, fixPatterns
+			end
+		end
+=end
+			return "NO-FIX", "NO-FIX", "NO-FIX", "NO-FIX", "NO-FIX", "NO-FIX", false, ["NO-FIX"]
+	end
+
+	def isFixCommitStatusSuperior(status)
+		if (status == "failed" or status == "passed")
+			return true
+		end
+		return false
+	end
+
+	def identifyFixCommit(gitProject, brokenCommit)
+		gitProject.getAllCommits.each do |oneCommit|
+			if (checkFailedCommitAsParent(brokenCommit, oneCommit))
+				return oneCommit
+			end
+    end
+    return "NO-COMMIT"
 	end
 
 	def checkFixedBuild(brokenCommit, mergeCommit, pathProject, pathGumTree, causesConflicts, extractorCLI, gitProject)

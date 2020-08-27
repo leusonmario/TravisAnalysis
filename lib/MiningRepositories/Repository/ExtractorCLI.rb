@@ -91,7 +91,7 @@ class ExtractorCLI
 			checkTravis = %x(find -name '.travis.yml')
 			currentHead = %x(#{head})
 			if (previousHead != currentHead and checkTravis != "")
-				%x(#{forcePush})
+#				%x(#{forcePush})
 				changeOnHead = true
 			end
 		rescue
@@ -275,7 +275,7 @@ class ExtractorCLI
 			Dir.chdir getDownloadDir()
 			Dir.chdir getName()
 			travisShow = "travis show"
-			historyBuild = %x(#{travisShow})
+#			historyBuild = %x(#{travisShow})
 			idBuild = historyBuild.match(/(Build|Job)[\s\S]*State/).to_s.match(/(Build|Job)[ 0-9\.\#]*:/).to_s.match(/#[\s\S]*:/).to_s.gsub(":","")
 		rescue 
 			print "NOT CHECKOUT EXECUTED"
