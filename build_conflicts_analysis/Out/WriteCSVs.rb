@@ -249,7 +249,6 @@ class WriteCSVs
 	end
 
 	def printAllConflictTest(build, hash, buildOne, buildTwo, projectName, buildParentOneStatus, buildParentTwoStatus)
-		print "AQUI"
 		Dir.chdir getPathFailedCases()
 		if (File.exists?("AllFailed"+projectName+".csv"))
 			CSV.open("AllFailed"+projectName+".csv", "a+") do |csv|

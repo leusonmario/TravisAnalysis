@@ -35,13 +35,11 @@ class BCMethodUpdate
 			rightPathMethods = []
       basePathMethods = []
 			if (filesConflicting[4] == "method")
-        print "METHOD"
-				leftPathMethods = getParametersListSizeForMethod(leftPath, filesConflicting[3], filesConflicting[2])
+        leftPathMethods = getParametersListSizeForMethod(leftPath, filesConflicting[3], filesConflicting[2])
 				rightPathMethods = getParametersListSizeForMethod(rightPath, filesConflicting[3], filesConflicting[2])
         basePathMethods = getParametersListSizeForMethod(basePath, filesConflicting[3], filesConflicting[2])
         return verifyConflictByMethod(basePathMethods, leftPathMethods, rightPathMethods, baseLeft, baseRight, filesConflicting)
 			elsif (filesConflicting[4] == "constructor")
-        print "CONSTRUCTOR"
         leftPathMethods = getParametersListSizeForConstructor(leftPath, filesConflicting[3], filesConflicting[2])
 				rightPathMethods = getParametersListSizeForConstructor(rightPath, filesConflicting[3], filesConflicting[2])
         basePathMethods = getParametersListSizeForConstructor(basePath, filesConflicting[3], filesConflicting[2])
@@ -54,13 +52,10 @@ class BCMethodUpdate
   def verifyConflictByConstructor(basePathMethods, leftPathMethods, rightPathMethods, baseLeft, baseRight, filesConflicting)
     begin
     if (leftPathMethods != nil and rightPathMethods != nil and leftPathMethods[0].size != rightPathMethods[0].size and basePathMethods[0] != nil and basePathMethods[0].size != 0)
-      print "IF Interno \n"
       if (baseLeft[0][filesConflicting[5]] != nil and baseLeft[0][filesConflicting[5]].to_s.match(/(Insert|Update|Move) Simple(Name|Type): #{filesConflicting[3]}\([0-9]*\) into SimpleType: #{filesConflicting[3]}/) and (((basePathMethods[0] == nil or basePathMethods[0].size == 0) and (rightPathMethods[0] != nil and rightPathMethods[0].size > 0)) or rightPathMethods[0].size != basePathMethods[0].size or checkNewMethodAddition(baseRight[1], filesConflicting[5]) or baseRight[0][filesConflicting[5]].to_s.match(/(Insert|Update|Move|Delete) Simple(Name|Type):[a-zA-Z0-9\(\)\<\>\.\[\] \:]*on Method #{filesConflicting[1]}/)))
-        print "FOI AQUI 1\n"
         return true
       end
       if (baseRight[0][filesConflicting[5]] != nil and baseRight[0][filesConflicting[5]].to_s.match(/(Insert|Update|Move) Simple(Name|Type): #{filesConflicting[3]}\([0-9]*\) into SimpleType: #{filesConflicting[3]}/) and (((basePathMethods[0] == nil or basePathMethods[0].size == 0) and (leftPathMethods[0] != nil and leftPathMethods[0].size > 0)) or leftPathMethods[0].size != basePathMethods[0].size or checkNewMethodAddition(baseLeft[1], filesConflicting[5]) or baseLeft[0][filesConflicting[5]].to_s.match(/(Insert|Update|Move|Delete) Simple(Name|Type):[a-zA-Z0-9\(\)\<\>\.\[\] \:]*on Method #{filesConflicting[1]}/)))
-        print "FOI AQUI 2\n"
         return true
       end
       #if ((basePathMethods[0] == nil or basePathMethods[0].size == 0) and ((leftPathMethods[0] != nil and leftPathMethods[0].size > 0) or (rightPathMethods[0] != nil and rightPathMethods[0].size > 0)))
@@ -69,11 +64,9 @@ class BCMethodUpdate
       return false
     elsif ((leftPathMethods != nil or rightPathMethods != nil) and (basePathMethods[0] == nil or basePathMethods[0].size == 0))
       if (baseLeft[0][filesConflicting[5]] != nil and baseLeft[0][filesConflicting[5]].to_s.match(/(Insert|Update|Move) Simple(Name|Type): #{filesConflicting[3]}\([0-9]*\) into SimpleType: #{filesConflicting[3]}/) and ((basePathMethods[0] == nil or basePathMethods[0].size == 0) and (rightPathMethods[0] != nil and rightPathMethods[0].size > 0)))
-        print "FOI AQUI 1\n"
         return true
       end
       if (baseRight[0][filesConflicting[5]] != nil and baseRight[0][filesConflicting[5]].to_s.match(/(Insert|Update|Move) Simple(Name|Type): #{filesConflicting[3]}\([0-9]*\) into SimpleType: #{filesConflicting[3]}/) and ((basePathMethods[0] == nil or basePathMethods[0].size == 0) and (leftPathMethods[0] != nil and leftPathMethods[0].size > 0)))
-        print "FOI AQUI 2\n"
         return true
       end
       #if ((basePathMethods[0] == nil or basePathMethods[0].size == 0) and ((leftPathMethods[0] != nil and leftPathMethods[0].size > 0) or (rightPathMethods[0] != nil and rightPathMethods[0].size > 0)))
@@ -81,7 +74,6 @@ class BCMethodUpdate
       #end
       return false
     else
-      print "ELSE externo \n"
       equalParametersNumberLeft = 0
       equalParametersNumberRight = 0
       leftPathMethods[1].each do |leftMethod|
@@ -104,11 +96,9 @@ class BCMethodUpdate
         end
       end
       if (baseLeft[0][filesConflicting[5]] != nil and baseLeft[0][filesConflicting[5]].to_s.match(/(Insert|Update|Move) Simple(Name|Type): #{filesConflicting[3]}\([0-9]*\) into SimpleType: #{filesConflicting[3]}/) and ((checkNewMethodAddition(baseRight[1], filesConflicting[5]) or basePathMethods[0].size != equalParametersNumberRight or baseRight[0][filesConflicting[5]].to_s.match(/(Insert|Update|Move|Delete) Simple(Name|Type):[a-zA-Z0-9\(\)\<\>\.\[\] \:]*on Method #{filesConflicting[1]}/))))
-        print "FOI AQUI 1\n"
         return true
       end
       if (baseRight[0][filesConflicting[5]] != nil and baseRight[0][filesConflicting[5]].to_s.match(/(Insert|Update|Move) Simple(Name|Type): #{filesConflicting[3]}\([0-9]*\) into SimpleType: #{filesConflicting[3]}/) and ((checkNewMethodAddition(baseLeft[1], filesConflicting[5]) or basePathMethods[0].size != equalParametersNumberLeft or baseLeft[0][filesConflicting[5]].to_s.match(/(Insert|Update|Move|Delete) Simple(Name|Type):[a-zA-Z0-9\(\)\<\>\.\[\] \:]*on Method #{filesConflicting[1]}/))))
-        print "FOI AQUI 2\n"
         return true
       end
     end
@@ -121,31 +111,22 @@ class BCMethodUpdate
   def verifyConflictByMethod(basePathMethods, leftPathMethods, rightPathMethods, baseLeft, baseRight, filesConflicting)
     begin
     if (leftPathMethods != nil and rightPathMethods != nil and leftPathMethods[0].size != rightPathMethods[0].size)
-      print "IF Interno \n"
       if ((checkNewMethodAddition(baseLeft[1], filesConflicting[1]) or (baseLeft[0][filesConflicting[1]] != nil and baseLeft[0][filesConflicting[1]].to_s.match(/(Insert|Update|Move) Simple(Name|Type):[a-zA-Z0-9\(\)\<\>\.\[\] ]*#{filesConflicting[2]}/))) and ((rightPathMethods[0].size != basePathMethods[0].size)  or baseRight[0][filesConflicting[3]].to_s.match(/(Insert|Update|Move|Delete) Simple(Name|Type):[a-zA-Z0-9\(\)\<\>\.\[\] \:]*#{filesConflicting[2]}/)))
-        print "FOI AQUI 1\n"
         return true
       end
       if ((checkNewMethodAddition(baseRight[1], filesConflicting[1]) or (baseRight[0][filesConflicting[1]] != nil and baseRight[0][filesConflicting[1]].to_s.match(/(Insert|Update|Move) Simple(Name|Type):[a-zA-Z0-9\(\)\<\>\.\[\] ]*#{filesConflicting[2]}/))) and ((leftPathMethods[0].size != basePathMethods[0].size)  or baseLeft[0][filesConflicting[3]].to_s.match(/(Insert|Update|Move|Delete) Simple(Name|Type):[a-zA-Z0-9\(\)\<\>\.\[\] \:]*#{filesConflicting[2]}/)))
-        print "FOI AQUI 2\n"
         return true
       end
       return false
     elsif ((leftPathMethods != nil or rightPathMethods != nil) and (basePathMethods[0] == nil or basePathMethods[0].size == 0))
       if ((checkNewMethodAddition(baseLeft[1], filesConflicting[1]) or (baseLeft[0][filesConflicting[1]] != nil and baseLeft[0][filesConflicting[1]].to_s.match(/(Insert|Update|Move) Simple(Name|Type):[a-zA-Z0-9\(\)\<\>\.\[\] ]*#{filesConflicting[2]}/))) and ((basePathMethods[0] == nil or basePathMethods[0].size == 0) and (rightPathMethods[0] != nil and rightPathMethods[0].size > 0)))
-        print "FOI AQUI 1\n"
         return true
       end
       if ((checkNewMethodAddition(baseRight[1], filesConflicting[1]) or (baseRight[0][filesConflicting[1]] != nil and baseRight[0][filesConflicting[1]].to_s.match(/(Insert|Update|Move) Simple(Name|Type):[a-zA-Z0-9\(\)\<\>\.\[\] ]*#{filesConflicting[2]}/))) and ((basePathMethods[0] == nil or basePathMethods[0].size == 0) and (leftPathMethods[0] != nil and leftPathMethods[0].size > 0)))
-        print "FOI AQUI 2\n"
         return true
       end
-      #if ((basePathMethods[0] == nil or basePathMethods[0].size == 0) and ((leftPathMethods[0] != nil and leftPathMethods[0].size > 0) or (rightPathMethods[0] != nil and rightPathMethods[0].size > 0)))
-      #  return true
-      #end
       return false
     else
-      print "ELSE externo \n"
       equalParametersNumberLeft = 0
       equalParametersNumberRight = 0
       leftPathMethods[1].each do |leftMethod|
@@ -173,24 +154,16 @@ class BCMethodUpdate
             return true
           end
         else
-          print "FOI AQUI 1\n"
           return true
         end
       end
       text = filesConflicting[1].split("\/").last.gsub(".java","")
-      if (baseRight[1].include? text or (baseRight[0][filesConflicting[1]] != nil and baseRight[0][filesConflicting[1]].to_s.match(/(Insert|Update|Move) Simple(Name|Type):[a-zA-Z0-9\(\)\<\>\.\[\] ]*#{filesConflicting[2]}/)))
-        print "FOI NESSE AQUI ONE"
-      end
-      if (basePathMethods[0].size != equalParametersNumberLeft  or baseLeft[0][filesConflicting[3]].to_s.match(/(Insert|Update|Move) Simple(Name|Type):[a-zA-Z0-9\(\)\<\>\.\[\] \:]*#{filesConflicting[2]}/))
-        print "FOI NESSE AQUI TWO"
-      end
       if ((checkNewMethodAddition(baseRight[1], filesConflicting[1]) or (baseRight[0][filesConflicting[1]] != nil and baseRight[0][filesConflicting[1]].to_s.match(/(Insert|Update|Move|Delete) SimpleName:[a-zA-Z0-9\(\)\<\>\.\[\] ]*#{filesConflicting[2]}/))) and (basePathMethods[0].size != equalParametersNumberLeft  or baseLeft[0][filesConflicting[3]].to_s.match(/(Insert|Update|Move) Simple(Name|Type):[a-zA-Z0-9\(\)\<\>\.\[\] \:]*#{filesConflicting[2]}/)))
         if (baseRight[0][filesConflicting[3]] != nil and baseLeft[0][filesConflicting[3]] != nil)
           if (verificationOfChangedMethodCall(baseRight[0][filesConflicting[3]], filesConflicting[2]))
             return true
           end
         else
-          print "FOI AQUI 2\n"
           return true
         end
       end

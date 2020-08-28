@@ -12,25 +12,21 @@ class BCUnavailableSymbol
 					if (filesConflicting[0] == "unavailableSymbolVariable" and filesConflicting[1] == filesConflicting[3])
 						#if (verifyVariableActionsSameMethod(baseRight[0][filesConflicting[count][1]], baseRight[0][filesConflicting[count][3]], filesConflicting[count][1]))
 						if (verifyVariableActionsSameMethod(baseRight[0][filesConflicting[1]], baseLeft[0][filesConflicting[1]], filesConflicting[2]))
-							print "UM UM UM \n"
 							return true
 						else
 							return false
 						end
 					else
-						print "DOIS DOIS DOIS \n"
 						return true
 					end
 				else
 					baseLeft[1].each do |item|
 						if (item.include?(filesConflicting[3].to_s)) # and baseRight[0][filesConflicting[1]] != nil)
-							print "TRES TRES TRES \n"
 							return true
 						end
 					end
 					if (superiorParentStatus)
 						if (baseRight[0][filesConflicting[3]] == nil)
-							print "QUATRO QUATRO QUATRO \n"
 							return true
 						end
 					end
@@ -40,52 +36,30 @@ class BCUnavailableSymbol
 				if(baseRight[0][filesConflicting[3]] != nil and baseRight[0][filesConflicting[3]].to_s.match(/(Insert|Move) (SimpleName|QualifiedName): [a-zA-Z\.]*?#{filesConflicting[2]}[\s\S]*[\n\r]?/) or checkNewMethodAddition(baseRight[1], filesConflicting[3]))
 					if (filesConflicting[0] == "unavailableSymbolVariable" and filesConflicting[1] == filesConflicting[3])
 						if (verifyVariableActionsSameMethod(baseLeft[0][filesConflicting[1]], baseRight[0][filesConflicting[1]], filesConflicting[2]))
-							print "CINCO CINCO CINCO \n"
 							return true
 						else
 							return false
 						end
 					else
-						print "SEIS SEIS SEIS \n"
 						return true
 					end
 				else
 					baseRight[1].each do |item|
 						if (item.include?(filesConflicting[3].to_s)) # and baseLeft[0][filesConflicting[1]] != nil )
-							print "SETE SETE SETE \n"
 							return true
 						end
 					end
 					if (superiorParentStatus)
 						if (baseLeft[0][filesConflicting[3]] == nil)
-							print "OITO OITO OITO \n"
 							return true
 						end
 					end
 				end
 			end
-=begin
-			Dir.chdir basePath
-			pathFileBase = splitFileNames(%x(find -name #{filesConflicting[2]}.java))
-			print "#{basePath} - #{pathFileBase}\n"
-			Dir.chdir leftPath
-			pathFileLeft = splitFileNames(%x(find -name #{filesConflicting[2]}.java))
-			print "#{leftPath} - #{pathFileLeft}\n"
-			Dir.chdir rightPath
-			pathFileRight = splitFileNames(%x(find -name #{filesConflicting[2]}.java))
-			print "#{rightPath} - #{pathFileRight}\n"
-
-			pathFileBase.each do |file|
-				if ((pathFileLeft.include? file and !pathFileRight.include? file) or (!pathFileLeft.include? file and pathFileRight.include? file))
-					return true
-				end
-			end
-=end
 			count += 1
 		rescue
 			print "PROBLEM ON GUMTREE LOG"
 		end
-		print "DEZ DEZ DEZ \n"
 		return false
 	end
 
@@ -133,52 +107,6 @@ class BCUnavailableSymbol
 		rescue
 			print "NO INFO FROM GUMTREE"
 		end
-
-=begin
-		Dir.chdir basePath
-		pathFileBase = splitFileNames(%x(find -name #{filesConflicting[2]}.java))
-		print "#{basePath} - #{pathFileBase}\n"
-		Dir.chdir leftPath
-		pathFileLeft = splitFileNames(%x(find -name #{filesConflicting[2]}.java))
-		print "#{leftPath} - #{pathFileLeft}\n"
-		Dir.chdir rightPath
-		pathFileRight = splitFileNames(%x(find -name #{filesConflicting[2]}.java))
-		print "#{rightPath} - #{pathFileRight}\n"
-
-		pathFileBase.each do |file|
-			if ((pathFileLeft.include? file and !pathFileRight.include? file) or (!pathFileLeft.include? file and pathFileRight.include? file))
-				return true
-			end
-		end
-
-
-
-		Dir.chdir pathLeft
-		pathFileLeft = splitFileNames(%x(find -name #{filesConflicting[2]}.java))
-		Dir.chdir pathRight
-		pathFileRight = splitFileNames(%x(find -name #{filesConflicting[2]}.java))
-
-		pathFileRight.each do |file|
-			if ()
-		end
-		countFiles = 0
-		condition = pathFileLeft.size
-		if (pathFileRight > condition)
-			condition = pathFileRight.size
-		end
-
-		while(condition > countFiles)
-			begin
-				if ((pathFileLeft[countFiles] != "" or pathFileRight[countFiles] != "") and (pathLeft[countFiles] != pathRight[countFiles]))
-					return true
-				end
-				countFiles += 1
-			rescue
-
-			end
-		end
-=end
-		print "NOVE NOVE NOVE \n"
 		return false
 	end
 
@@ -191,7 +119,6 @@ class BCUnavailableSymbol
 		if leftPathMethods == true or rightPathMethods == true or (leftPathMethods == false and rightPathMethods == false)
 			return false
 		end
-		print "ONZE ONZE ONZE \n"
 		return true
 	end
 

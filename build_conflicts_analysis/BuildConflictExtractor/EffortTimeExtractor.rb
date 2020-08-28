@@ -211,10 +211,8 @@ class EffortTimeExtractor
 #=end
 			result = checkFixedBuildCommitCloser(brokenCommit, mergeCommit)
 			if (result.size > 2)
-				print "EffortTimeExtractor-1"
 				return result
 			else
-				print "EffortTimeExtractor-2"
 				return result[1], "NO-FIX", "NO-FIX", numberBuilsTillFix+result[0], "NO-FIX", "NO-FIX", false
 			end
 		end
