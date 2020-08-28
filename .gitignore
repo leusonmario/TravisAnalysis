@@ -1,4 +1,4 @@
-lib/FinalResults/
-lib/R/AllErroredBuilds/
-lib/R/FrequencyAnalysis/
-lib/R/MergeScenariosBuilds/
+build_conflicts_analysis/FinalResults/
+build_conflicts_analysis/R/AllErroredBuilds/
+build_conflicts_analysis/R/FrequencyAnalysis/
+build_conflicts_analysis/R/MergeScenariosBuilds/
