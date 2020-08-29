@@ -3,7 +3,6 @@
 In this project, we investigate the occurrence and categories of build conflicts on Java projects hosted on GitHub and Travis CI.
 
 
-
 ## Running the study
 
 To run the analysis, we recommend the adoption of the next steps.: 
